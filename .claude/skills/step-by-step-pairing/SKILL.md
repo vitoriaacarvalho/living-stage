@@ -17,7 +17,7 @@ The user is an experienced developer who wants to be part of every step of the i
 
 ## Loop for each requirement
 
-1. **Confirm the requirement.** Restate the requirement ID and what it means in one or two sentences. Ask about anything ambiguous before discussing implementation.
+1. **Confirm the requirement.** Read it in `docs/plan.md`, and its feature plan in `docs/features/` if one exists. Restate the requirement ID and what it means in one or two sentences. Ask about anything ambiguous before discussing implementation.
 2. **Discuss first.** Offer two or three approaches with trade-offs. Wait for the user to pick.
 3. **Agree who types.** Suggest a mode for this piece and let the user confirm:
    - **User writes, Claude reviews:** for code the user wants to fully own (core logic, algorithms, concurrency, security-sensitive code). Claude reviews what they wrote: correctness, edge cases, naming, tests.
