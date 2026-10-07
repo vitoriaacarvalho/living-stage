@@ -236,7 +236,9 @@ EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 
 ## 6. Design direction
 
-The interface stays calm so the dancers on the dark stage are the most colorful thing on screen. Proposed palette: "Pointe" (not yet confirmed).
+The interface stays calm so the dancers on the dark stage are the most colorful thing on screen. Palette: "Pointe". Light theme only; the stage is always dark.
+
+The full design system (tokens, components, screens) lives in Claude Design (link kept private, outside the repo). The `living-stage-design` skill reads it.
 
 | Use | Color |
 |---|---|
@@ -252,7 +254,9 @@ The interface stays calm so the dancers on the dark stage are the most colorful 
 
 **Dancer colors** (one per role, 12 max): `#E4572E` `#F3A712` `#7BB661` `#29A3A3` `#3F7FBF` `#7A5CC9` `#D05AA8` `#8C5A3C` `#A8B820` `#5AB8E0` `#E88AA0` `#9AA0A6`
 
-**Alternatives considered:** "Velvet curtain" (dark theater, gold, crimson), a candidate for dark mode and presentation mode; "Studio mirror" (cool neutral, teal, coral).
+**Fonts:** Instrument Sans for the interface; Cormorant Garamond for large titles only (show names, screen titles, 24px and up).
+
+**Alternatives considered:** "Velvet curtain" (dark theater, gold, crimson); "Studio mirror" (cool neutral, teal, coral). No dark mode.
 
 ### Screens
 
@@ -277,7 +281,7 @@ Phase 2 alone replaces the teacher's hand-drawn formations, so it is the first m
 5. **Live viewing** — edit lock and realtime updates (Part F)
 6. **Show manager** — shows, acts, ordering, costume photos, running time (Part H)
 7. **Presentation and export** — presentation mode, PDF export (Parts G, I)
-8. **Polish** — PWA, iPhone editor, dark mode (K3, K4)
+8. **Polish** — PWA, iPhone editor (K3, K4)
 
 ### Open questions to settle in each part's planning session
 
@@ -285,7 +289,7 @@ Phase 2 alone replaces the teacher's hand-drawn formations, so it is the first m
 - [x] ORM: Prisma
 - [x] i18n: react-i18next, JSON per language and screen area
 - [ ] Hosting: confirm the proposal in section 3
-- [ ] Palette: confirm "Pointe", and whether to add a dark mode
+- [x] Palette: "Pointe", light theme only
 - [x] Undo/redo: per figure
 - [x] Counts: the teacher chooses tapped counts or BPM per song
 - [x] PDF export: in the browser

@@ -6,6 +6,7 @@ Responsive web app where dance schools plan group choreography and shows: place 
 
 - `docs/plan.md` — the full project plan: decisions, stack, requirements (IDs like A1, C8), data model, design, build phases. Read the relevant section before working on a requirement.
 - `docs/features/` — one plan per phase or part, written as each is planned. Takes precedence over `docs/plan.md` where they differ.
+- Design system — lives in Claude Design; the link is in `CLAUDE.local.md` (not committed). Load the `living-stage-design` skill before any UI work.
 
 ## Stack
 
