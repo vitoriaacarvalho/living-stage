@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Claude Code local instructions (private links)
 CLAUDE.local.md
+
+# Prisma generated client
+apps/backend/src/generated

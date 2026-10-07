@@ -16,4 +16,5 @@ TypeScript npm workspaces monorepo: `apps/frontend` (React + Vite, SVG stage), `
 
 - Use the `step-by-step-pairing` skill: one requirement at a time, the user drives, no code unless asked.
 - Commit messages start with the requirement ID, e.g. `B1: add dancer create route`.
+- When a requirement is done, update its status in `docs/features/README.md` (✅ on the requirement, 🟨 or ✅ on its plan row) in the same commit.
 - When a decision contradicts `docs/plan.md`, say so, so the plan can be updated.

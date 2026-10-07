@@ -6,6 +6,8 @@ Each plan is a vertical slice: shared types, API and the screens it needs, built
 
 Status: ⬜ not started · 🟨 in progress · ✅ done
 
+Keep statuses current: when a requirement is done, mark it ✅ in its list and set its plan's row to 🟨 (some requirements done) or ✅ (all done and its "Done when" check passes), in the same commit as the work.
+
 ## Open before starting
 
 - [x] Backend framework: Express (as in `docs/plan.md` §3).
@@ -14,18 +16,18 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 ## Part S — Setup
 
-- **S1.** npm workspaces monorepo with `apps/frontend`, `apps/backend`, `packages/shared`.
-- **S2.** Shared TypeScript, lint and format config.
-- **S3.** Local PostgreSQL and Prisma, first migration.
-- **S4.** API skeleton with a health route.
-- **S5.** Web skeleton (React + Vite) that calls the API.
-- **S6.** CI: typecheck, lint, test on every push.
+- ✅ **S1.** npm workspaces monorepo with `apps/frontend`, `apps/backend`, `packages/shared`.
+- ✅ **S2.** Shared TypeScript, lint and format config.
+- ✅ **S3.** Local PostgreSQL and Prisma, first migration.
+- ⬜ **S4.** API skeleton with a health route.
+- ⬜ **S5.** Web skeleton (React + Vite) that calls the API.
+- ⬜ **S6.** CI: typecheck, lint, test on every push.
 
 ## Phase 1 — Foundation
 
 | # | Plan | Requirements | Screens | Depends on | Done when | Status |
 |---|---|---|---|---|---|---|
-| 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | ⬜ |
+| 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | 🟨 |
 | 1.2 | Sign in | A1 | `Access` | 1.1 | Sign in and out with Google (Apple can follow once the developer account exists) | ⬜ |
 | 1.3 | Schools and data isolation | A2, A4, A5, A6 | `Access` | 1.2 | Create a school, switch schools; another school's data returns 404 | ⬜ |
 | 1.4 | Invites | A3 | `Access` | 1.3 | An invited teacher joins by email or link | ⬜ |

@@ -102,7 +102,7 @@ Requirements are grouped into parts, each with IDs, so each part can be planned 
 - **S4.** API skeleton with a health route.
 - **S5.** Web skeleton (React + Vite) that calls the API.
 - **S6.** CI: typecheck, lint, test on every push.
-
+ 
 ### Part A — Accounts and schools
 
 - **A1.** A user can sign up and sign in with Google or Apple (OAuth).
