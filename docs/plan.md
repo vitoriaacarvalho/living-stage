@@ -199,6 +199,7 @@ Requirements are grouped into parts, each with IDs, so each part can be planned 
 - **K2.** Touch targets are large enough for finger dragging on a tablet.
 - **K3.** On iPhone, the editor is optimized for viewing and quick edits; landscape is suggested for heavy editing.
 - **K4.** The app is installable to the home screen and opens full-screen (PWA).
+- **K5.** The interface follows the Living Stage design system (tokens, fonts, icons, base components).
 
 ## 5. Data model (first draft)
 
@@ -274,7 +275,7 @@ Design mockups will be produced in Claude Design, starting with the dance editor
 
 Phase 2 alone replaces the teacher's hand-drawn formations, so it is the first milestone to put in front of real teachers.
 
-1. **Foundation** — monorepo setup, auth, schools, invites, dancer roster, languages, responsive shell (Parts S, A, B, J, K1, K2)
+1. **Foundation** — monorepo setup, auth, schools, invites, dancer roster, languages, responsive shell (Parts S, A, B, J, K1, K2, K5)
 2. **Formation editor** — stage, figures, dragging, wings, straight-line playback (Parts C, D1, D4, D5)
 3. **Paths** — curves, waypoints, circles (D2, D3)
 4. **Music** — upload, waveform, counts, sync (Part E)

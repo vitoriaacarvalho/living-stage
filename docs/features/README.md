@@ -28,7 +28,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 1.3 | Schools and data isolation | A2, A4, A5, A6 | 1.2 | Create a school, switch schools; another school's data returns 404 | ⬜ |
 | 1.4 | Invites | A3 | 1.3 | An invited teacher joins by email or link | ⬜ |
 | 1.5 | Languages | J1, J2, J3 | 1.1 | Every screen so far works in pt-BR and English; default follows the browser | ⬜ |
-| 1.6 | Responsive app shell | K1, K2 | 1.5 | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
+| 1.6a | Design foundation | K5 | 1.1 | Design tokens are CSS variables, fonts load, and the icons, `Button`, `SegmentedControl` and focus ring render on a test page | ⬜ |
+| 1.6 | Responsive app shell | K1, K2 | 1.5, 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
 | 1.7 | Dancer roster | B1, B2, B3, B4, B5 | 1.3 | Add, edit, remove, search and sort dancers | ⬜ |
 | 1.8 | Photo upload | B6 | 1.7 | A HEIC photo from an iPhone uploads resized to 400 px | ⬜ |
 
