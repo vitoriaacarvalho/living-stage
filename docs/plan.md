@@ -79,8 +79,8 @@ The web app and the API both import the shared package, so a figure or path mean
 ```
 living-stage/
   package.json        workspaces root
-  apps/web            React + Vite
-  apps/api            Node + Express
+  apps/frontend       React + Vite
+  apps/backend        Node + Express
   packages/shared     shared types, validation, animation math
 ```
 
@@ -96,7 +96,7 @@ Requirements are grouped into parts, each with IDs, so each part can be planned 
 
 ### Part S — Setup
 
-- **S1.** npm workspaces monorepo with `apps/web`, `apps/api`, `packages/shared`.
+- **S1.** npm workspaces monorepo with `apps/frontend`, `apps/backend`, `packages/shared`.
 - **S2.** Shared TypeScript, lint and format config.
 - **S3.** Local PostgreSQL and Prisma, first migration.
 - **S4.** API skeleton with a health route.

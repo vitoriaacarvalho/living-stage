@@ -12,7 +12,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 
 ## Part S — Setup
 
-- **S1.** npm workspaces monorepo with `apps/web`, `apps/api`, `packages/shared`.
+- **S1.** npm workspaces monorepo with `apps/frontend`, `apps/backend`, `packages/shared`.
 - **S2.** Shared TypeScript, lint and format config.
 - **S3.** Local PostgreSQL and Prisma, first migration.
 - **S4.** API skeleton with a health route.

@@ -9,7 +9,7 @@ Responsive web app where dance schools plan group choreography and shows: place 
 
 ## Stack
 
-TypeScript npm workspaces monorepo: `apps/web` (React + Vite, SVG stage), `apps/api` (Node + Express, REST + WebSockets), `packages/shared` (types, validation, animation math). PostgreSQL + Prisma, Better Auth, S3-compatible storage (R2), react-i18next (pt-BR and English).
+TypeScript npm workspaces monorepo: `apps/frontend` (React + Vite, SVG stage), `apps/backend` (Node + Express, REST + WebSockets), `packages/shared` (types, validation, animation math). PostgreSQL + Prisma, Better Auth, S3-compatible storage (R2), react-i18next (pt-BR and English).
 
 ## How we work
 
