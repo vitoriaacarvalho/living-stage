@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc",
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:generate": "prisma generate",
@@ -11,11 +12,15 @@
   },
   "dependencies": {
     "@living-stage/shared": "*",
-    "@prisma/client": "7.10.0"
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "express": "5.2.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^24.19.1",
     "dotenv": "18.0.6",
-    "prisma": "7.10.0"
+    "prisma": "7.10.0",
+    "tsx": "^4.23.15"
   }
 }
