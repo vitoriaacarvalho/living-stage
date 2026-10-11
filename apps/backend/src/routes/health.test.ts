@@ -19,19 +19,19 @@ afterAll(() => {
   server.close();
 });
 
-describe('GET /health', () => {
+describe('GET /api/health', () => {
   describe('when the database answers', () => {
     beforeEach(() => {
       vi.mocked(prisma.$queryRaw).mockResolvedValue([]);
     });
 
     test('responds 200', async () => {
-      const res = await fetch(`${baseUrl}/health`);
+      const res = await fetch(`${baseUrl}/api/health`);
       expect(res.status).toBe(200);
     });
 
     test('reports the database as ok', async () => {
-      const res = await fetch(`${baseUrl}/health`);
+      const res = await fetch(`${baseUrl}/api/health`);
       expect(await res.json()).toEqual({ status: 'ok', database: 'ok' });
     });
   });
@@ -42,12 +42,12 @@ describe('GET /health', () => {
     });
 
     test('responds 503', async () => {
-      const res = await fetch(`${baseUrl}/health`);
+      const res = await fetch(`${baseUrl}/api/health`);
       expect(res.status).toBe(503);
     });
 
     test('reports the database as unreachable', async () => {
-      const res = await fetch(`${baseUrl}/health`);
+      const res = await fetch(`${baseUrl}/api/health`);
       expect(await res.json()).toEqual({ status: 'error', database: 'unreachable' });
     });
   });

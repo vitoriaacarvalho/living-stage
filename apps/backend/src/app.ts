@@ -4,6 +4,6 @@ import { healthRouter } from './routes/health.ts';
 export function createApp() {
   const app = express();
   app.use(express.json());
-  app.use(healthRouter);
+  app.use('/api', healthRouter);
   return app;
 }
