@@ -20,7 +20,7 @@ Keep statuses current: when a requirement is done, mark it ✅ in its list and s
 - ✅ **S2.** Shared TypeScript, lint and format config.
 - ✅ **S3.** Local PostgreSQL and Prisma, first migration.
 - ✅ **S4.** API skeleton with a health route.
-- ⬜ **S5.** Web skeleton (React + Vite) that calls the API.
+- ✅ **S5.** Web skeleton (React + Vite) that calls the API.
 - ⬜ **S6.** CI: typecheck, lint, test on every push.
 
 ## Phase 1 — Foundation
