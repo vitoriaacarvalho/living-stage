@@ -56,7 +56,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Realtime | WebSockets | Pushes a dance's changes to viewers; edit lock heartbeat |
 | Database | PostgreSQL + Prisma | Prisma chosen as the ORM |
 | File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, dancer photos, costume photos |
-| Auth | OAuth via Better Auth | Google and Apple sign-in; Prisma adapter; organization plugin can model schools and invites. Apple sign-in needs a paid Apple Developer account |
+| Auth | Better Auth | Google sign-in (OAuth) and email and password; Prisma adapter; organization plugin can model schools and invites |
 | i18n | react-i18next | pt-BR and English; one JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
 | PDF export | In the browser: jsPDF + svg2pdf.js | The simpler option: no server rendering, reuses the SVG stage |
 
@@ -107,7 +107,7 @@ Requirements are grouped into parts, each with IDs, so each part can be planned 
  
 ### Part A — Accounts and schools
 
-- **A1.** A user can sign up and sign in with Google or Apple (OAuth).
+- **A1.** A user can sign up and sign in with Google (OAuth) or with email and password.
 - **A2.** A user can create a school and becomes its first member.
 - **A3.** A member can invite other teachers by email or invite link.
 - **A4.** A user can belong to more than one school and switch between them.
@@ -288,7 +288,7 @@ Phase 2 alone replaces the teacher's hand-drawn formations, so it is the first m
 
 ### Open questions to settle in each part's planning session
 
-- [x] Auth: OAuth (Google, Apple) via Better Auth
+- [x] Auth: Better Auth with Google (OAuth) and email and password; no Apple
 - [x] ORM: Prisma
 - [x] i18n: react-i18next, JSON per language and screen area
 - [ ] Hosting: confirm the proposal in section 3
