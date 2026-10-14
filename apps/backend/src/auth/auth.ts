@@ -13,4 +13,11 @@ export const auth = betterAuth({
       maxAge: 5 * 60,
     },
   },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => ({ data: { ...session, ipAddress: null } }),
+      },
+    },
+  },
 });
