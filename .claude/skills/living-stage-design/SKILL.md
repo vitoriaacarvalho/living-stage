@@ -47,4 +47,4 @@ These hold even before you read the artifact. If the artifact disagrees, the art
 
 - The app is **Living Stage**. The artifact may still say "[App name]"; use "Living Stage".
 - Devices: iPad landscape is the main editor, then iPhone portrait, then desktop. See `project/README.md` › Layout by device.
-- When a design decision contradicts `docs/plan.md`, say so, so the plan can be updated.
+- When the design contradicts `docs/plan.md`, follow the plan: build what the plan says and leave out what it doesn't have. Mention the difference so the design can be updated.

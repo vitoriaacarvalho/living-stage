@@ -6,7 +6,7 @@ Responsive web app where dance schools plan group choreography and shows: place 
 
 - `docs/plan.md` — the source of truth: decisions, stack, requirements (IDs like A1, C8) with their status, data model, design, and the roadmap of build plans with their status. Read the relevant section before working on a requirement.
 - `docs/features/` — optional detail for a single build plan (decisions, data model, commit slices). `docs/plan.md` wins where they differ.
-- Design system — lives in Claude Design; the link is in `CLAUDE.local.md` (not committed). Load the `living-stage-design` skill before any UI work.
+- Design system — lives in Claude Design; the link is in `CLAUDE.local.md` (not committed). Load the `living-stage-design` skill before any UI work. When the design disagrees with `docs/plan.md`, follow the plan.
 
 ## Stack
 
