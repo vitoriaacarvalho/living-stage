@@ -3,6 +3,7 @@ import express from 'express';
 import { auth } from './auth/auth.ts';
 import { healthRouter } from './routes/health.ts';
 import { meRouter } from './routes/me.ts';
+import { schoolsRouter } from './routes/schools.ts';
 
 export function createApp() {
   const app = express();
@@ -11,5 +12,6 @@ export function createApp() {
   app.use(express.json());
   app.use('/api', healthRouter);
   app.use('/api', meRouter);
+  app.use('/api', schoolsRouter);
   return app;
 }
