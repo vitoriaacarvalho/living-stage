@@ -4,8 +4,8 @@ Responsive web app where dance schools plan group choreography and shows: place 
 
 ## Where things live
 
-- `docs/plan.md` — the full project plan: decisions, stack, requirements (IDs like A1, C8), data model, design, build phases. Read the relevant section before working on a requirement.
-- `docs/features/` — one plan per phase or part, written as each is planned. Takes precedence over `docs/plan.md` where they differ.
+- `docs/plan.md` — the source of truth: decisions, stack, requirements (IDs like A1, C8) with their status, data model, design, and the roadmap of build plans with their status. Read the relevant section before working on a requirement.
+- `docs/features/` — optional detail for a single build plan (decisions, data model, commit slices). `docs/plan.md` wins where they differ.
 - Design system — lives in Claude Design; the link is in `CLAUDE.local.md` (not committed). Load the `living-stage-design` skill before any UI work.
 
 ## Stack
@@ -16,5 +16,5 @@ TypeScript npm workspaces monorepo: `apps/frontend` (React + Vite, SVG stage), `
 
 - Use the `step-by-step-pairing` skill: one requirement at a time, the user drives, no code unless asked.
 - Commit messages start with the requirement ID, e.g. `B1: add dancer create route`.
-- When a requirement is done, update its status in `docs/features/README.md` (✅ on the requirement, 🟨 or ✅ on its plan row) in the same commit.
-- When a decision contradicts `docs/plan.md`, say so, so the plan can be updated.
+- When a requirement is done, update its status in `docs/plan.md` (✅ on the requirement in §4, 🟨 or ✅ on its plan row in §7) in the same commit.
+- When a decision changes the plan, update `docs/plan.md` in the same commit.
