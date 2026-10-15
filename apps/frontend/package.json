@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/instrument-sans": "^5.3.0",
     "@living-stage/shared": "*",
     "better-auth": "^1.7.10",
     "react": "19.3.0",
