@@ -25,7 +25,8 @@ Living Stage is a responsive web app where dance schools plan group choreography
 |---|---|
 | Users | Ballet teachers and school managers; dancers have no accounts |
 | Permissions | All members of a school have the same rights |
-| School required | A signed-in user with no school must create one or join an existing one before using the app |
+| School required | A signed-in user with no school must create one or join one with an invitation code before using the app. With one school she goes straight into it; with several she picks one at sign-in and can switch inside the app |
+| Invitations | One reusable code per school, valid 7 days; any teacher can make a new one, which replaces the old. Shared as a short code to type or as a link carrying it. Joining shows the school's name before confirming. Schools are never listed or searchable. Email invites come later |
 | Tenancy | Many schools, each a private space; several teachers share one school's environment |
 | Editing model | One person edits a dance at a time; others watch changes live |
 | Casts | One cast per dance |
@@ -110,7 +111,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **A1.** A user can sign up and sign in with email and password.
 - **A2.** A user can create a school and becomes its first member.
-- **A3.** A member can invite other teachers by email or invite link. This also adds the "Join an existing school" option to the no-school screen, hidden until then.
+- **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email.
 - **A4.** A user can belong to more than one school and switch between them.
 - **A5.** All members of a school have equal rights over its dancers, dances and shows.
 - **A6.** A school's data is visible only to its members.
@@ -212,7 +213,7 @@ Everything belongs to a school; dances live at school level and are linked into 
 ```
 School        id, name, createdAt, createdById, teachers[]   (teachers: many-to-many with User, equal rights)
 User          id, name, email, language
-Invite        id, schoolId, email?, token, expiresAt
+Invite        id, schoolId, code, expiresAt, createdById   (one active code per school; email invites later)
 
 Dancer        id, schoolId, name, photoUrl?, color?
 
@@ -294,8 +295,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 | 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ✅ |
 | 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ⬜ |
 | 1.6a | Design foundation and styled sign-in | K5 | `Access` (sign in, sign up), `Button`, `SegmentedControl` | 1.2 | Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop | ⬜ |
-| 1.3 | Schools and data isolation | A2, A4, A5, A6 | `Access` (create school), school switcher | 1.6a | Create a school and switch schools from screens that match the design; another school's data returns 404 | ⬜ |
-| 1.4 | Invites | A3 | `Access` | 1.3 | An invited teacher joins by email or link | ⬜ |
+| 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | ⬜ |
+| 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
 | 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
 | 1.7 | Dancer roster | B1, B2, B3, B4, B5 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | ⬜ |
 | 1.8 | Photo upload | B6 | `DancerRoster` | 1.7 | A HEIC photo from an iPhone uploads resized to 400 px | ⬜ |
