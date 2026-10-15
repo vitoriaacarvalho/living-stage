@@ -5,7 +5,7 @@ import { App } from './App.tsx';
 import { authClient } from './auth/client.ts';
 
 vi.mock('./auth/client.ts', () => ({
-  authClient: { useSession: vi.fn() },
+  authClient: { useSession: vi.fn(), signOut: vi.fn() },
 }));
 vi.mock('./api/health.ts', () => ({
   fetchHealth: () => new Promise(() => {}),
@@ -22,9 +22,16 @@ test('shows sign-in without a session', () => {
 });
 
 test('shows the app with a session', () => {
-  mockSession({ data: { user: { id: 'user-1' } }, isPending: false });
+  mockSession({ data: { user: { id: 'user-1', name: 'Ana' } }, isPending: false });
   render(<App />);
   expect(screen.getByRole('heading', { name: APP_NAME })).toBeInTheDocument();
+});
+
+test('shows the signed-in user and a sign-out button', () => {
+  mockSession({ data: { user: { id: 'user-1', name: 'Ana' } }, isPending: false });
+  render(<App />);
+  expect(screen.getByText('Ana')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
 });
 
 test('shows nothing while the session loads', () => {

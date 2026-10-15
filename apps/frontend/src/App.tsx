@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { fetchHealth } from './api/health.ts';
 import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
+import { SignOutButton } from './auth/SignOutButton.tsx';
 
 type ApiStatus = HealthResponse | 'loading' | 'unreachable';
 
@@ -10,15 +11,17 @@ export function App() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) return null;
-  return session ? <Home /> : <Access />;
+  return session ? <Home userName={session.user.name} /> : <Access />;
 }
 
-function Home() {
+function Home({ userName }: { userName: string }) {
   const apiStatus = useApiStatus();
 
   return (
     <main>
       <h1>{APP_NAME}</h1>
+      <p>{userName}</p>
+      <SignOutButton />
       <p>{describe(apiStatus)}</p>
     </main>
   );
