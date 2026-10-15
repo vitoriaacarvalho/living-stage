@@ -15,10 +15,10 @@ function mockSession(state: { data: object | null; isPending: boolean }) {
   vi.mocked(authClient.useSession).mockReturnValue(state as never);
 }
 
-test('shows sign-up without a session', () => {
+test('shows sign-in without a session', () => {
   mockSession({ data: null, isPending: false });
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Crie sua conta' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Entre na sua conta' })).toBeInTheDocument();
 });
 
 test('shows the app with a session', () => {
