@@ -28,7 +28,7 @@ Keep statuses current: when a requirement is done, mark it ✅ in its list and s
 | # | Plan | Requirements | Screens | Depends on | Done when | Status |
 |---|---|---|---|---|---|---|
 | 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | 🟨 |
-| 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password and with Google | ⬜ |
+| 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ⬜ |
 | 1.3 | Schools and data isolation | A2, A4, A5, A6 | `Access` | 1.2 | Create a school, switch schools; another school's data returns 404 | ⬜ |
 | 1.4 | Invites | A3 | `Access` | 1.3 | An invited teacher joins by email or link | ⬜ |
 | 1.5 | Languages | J1, J2, J3 | — | 1.1 | Every screen so far works in pt-BR and English; default follows the browser | ⬜ |
