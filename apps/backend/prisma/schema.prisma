@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id             String    @id
+  name           String
+  email          String
+  emailVerified  Boolean   @default(false)
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sessions       Session[]
+  accounts       Account[]
+  schoolsCreated School[]  @relation("SchoolCreator")
+  schools        School[]  @relation("SchoolTeachers")
 
   @@unique([email])
   @@map("user")
@@ -68,4 +70,15 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model School {
+  id          String   @id @default(cuid())
+  name        String
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   User     @relation("SchoolCreator", fields: [createdById], references: [id])
+  teachers    User[]   @relation("SchoolTeachers")
+
+  @@map("school")
 }

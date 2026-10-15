@@ -25,6 +25,7 @@ Living Stage is a responsive web app where dance schools plan group choreography
 |---|---|
 | Users | Ballet teachers and school managers; dancers have no accounts |
 | Permissions | All members of a school have the same rights |
+| School required | A signed-in user with no school must create one or join an existing one before using the app |
 | Tenancy | Many schools, each a private space; several teachers share one school's environment |
 | Editing model | One person edits a dance at a time; others watch changes live |
 | Casts | One cast per dance |
@@ -208,9 +209,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 Everything belongs to a school; dances live at school level and are linked into shows.
 
 ```
-School        id, name
+School        id, name, createdAt, createdById, teachers[]   (teachers: many-to-many with User, equal rights)
 User          id, name, email, language
-Membership    userId, schoolId                    (equal rights)
 Invite        id, schoolId, email?, token, expiresAt
 
 Dancer        id, schoolId, name, photoUrl?, color?
