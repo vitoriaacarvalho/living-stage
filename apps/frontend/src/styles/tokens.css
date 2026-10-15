@@ -1,0 +1,73 @@
+/* Mirrors project/tokens.json in the Living Stage design system. */
+:root {
+  --bg: #fbf8f6;
+  --surface: #ffffff;
+  --surface-sunken: #f3eeeb;
+  --hairline: #e9e1de;
+  --border-control: #968897;
+  --primary: #b4476e;
+  --primary-strong: #9a3a5d;
+  --primary-soft: #f6dde6;
+  --on-primary: #ffffff;
+  --ink: #2b1e2f;
+  --ink-muted: #7a6b7d;
+
+  --stage-floor: #2a2730;
+  --stage-line: #4a4552;
+  --stage-wing: #1c1a21;
+  --stage-ink: #f3eef2;
+  --stage-ink-muted: #a69daa;
+  --stage-accent: #e9a8bf;
+
+  --dancer-1: #e4572e;
+  --dancer-2: #f3a712;
+  --dancer-3: #7bb661;
+  --dancer-4: #29a3a3;
+  --dancer-5: #3f7fbf;
+  --dancer-6: #7a5cc9;
+  --dancer-7: #d05aa8;
+  --dancer-8: #8c5a3c;
+  --dancer-9: #a8b820;
+  --dancer-10: #5ab8e0;
+  --dancer-11: #e88aa0;
+  --dancer-12: #9aa0a6;
+
+  --font-sans: 'Instrument Sans', 'Helvetica Neue', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Cormorant', Georgia, serif;
+
+  /* Each text style is a `font` shorthand; display and overline also need their letter-spacing. */
+  --text-display: 500 44px/48px var(--font-serif);
+  --text-display-tracking: -0.01em;
+  --text-title-1: 500 30px/36px var(--font-serif);
+  --text-title-2: 600 20px/26px var(--font-sans);
+  --text-title-3: 600 16px/22px var(--font-sans);
+  --text-body: 400 15px/22px var(--font-sans);
+  --text-body-strong: 600 15px/22px var(--font-sans);
+  --text-label: 500 13px/18px var(--font-sans);
+  --text-caption: 400 12px/16px var(--font-sans);
+  --text-overline: 600 11px/14px var(--font-sans);
+  --text-overline-tracking: 0.14em;
+  --text-numeric: 500 15px/20px var(--font-sans);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --touch-min: 44px;
+  --touch-tool: 48px;
+  --dancer-dot-ipad: 40px;
+  --dancer-dot-phone: 26px;
+  --dancer-hit: 56px;
+
+  --shadow-card: 0 1px 2px rgba(43, 30, 47, 0.06), 0 4px 16px rgba(43, 30, 47, 0.05);
+  --shadow-sheet: 0 -8px 32px rgba(43, 30, 47, 0.14);
+}

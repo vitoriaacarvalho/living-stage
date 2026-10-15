@@ -60,6 +60,9 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, dancer photos, costume photos |
 | Auth | Better Auth | Email and password (no third-party sign-in for now); Prisma adapter; organization plugin can model schools and invites |
 | i18n | react-i18next | Added in plan 8.3; until then copy is plain English in the components. One JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
+| Styling | CSS variables + CSS Modules | Design tokens are CSS variables in `styles/tokens.css`; each component has its own CSS Module; no CSS framework |
+| Fonts | Self-hosted with `@fontsource` | Instrument Sans and Cormorant Garamond ship with the app; no request to Google |
+| Icons | The design system's own line icons | Ported as React components, only the ones in use |
 | PDF export | In the browser: jsPDF + svg2pdf.js | The simpler option: no server rendering, reuses the SVG stage |
 
 ### Architecture
