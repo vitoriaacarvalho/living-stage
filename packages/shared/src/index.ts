@@ -7,5 +7,6 @@ export {
   parseSchoolName,
   type CreateSchoolRequest,
   type CreateSchoolResponse,
+  type ListSchoolsResponse,
   type School,
 } from './school.ts';

@@ -10,7 +10,7 @@ vi.mock('../auth/auth.ts', () => ({
 }));
 
 vi.mock('../db.ts', () => ({
-  prisma: { school: { create: vi.fn() } },
+  prisma: { school: { create: vi.fn(), findMany: vi.fn() } },
 }));
 
 const user = {
@@ -123,6 +123,64 @@ describe('POST /api/schools', () => {
     test('does not create a school for an invalid name', async () => {
       await postSchool({ name: '' });
       expect(prisma.school.create).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('GET /api/schools', () => {
+  beforeEach(() => {
+    vi.mocked(prisma.school.findMany).mockReset();
+  });
+
+  describe('without a session', () => {
+    beforeEach(() => {
+      vi.mocked(auth.api.getSession).mockResolvedValue(null);
+    });
+
+    test('responds 401', async () => {
+      const res = await fetch(`${baseUrl}/api/schools`);
+      expect(res.status).toBe(401);
+    });
+
+    test('does not look up schools', async () => {
+      await fetch(`${baseUrl}/api/schools`);
+      expect(prisma.school.findMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('with a session', () => {
+    beforeEach(() => {
+      vi.mocked(auth.api.getSession).mockResolvedValue({
+        user,
+        session: { id: 'session-1', userId: user.id } as never,
+      });
+    });
+
+    test('responds 200', async () => {
+      vi.mocked(prisma.school.findMany).mockResolvedValue([]);
+      const res = await fetch(`${baseUrl}/api/schools`);
+      expect(res.status).toBe(200);
+    });
+
+    test('returns an empty list when the user has no school', async () => {
+      vi.mocked(prisma.school.findMany).mockResolvedValue([]);
+      const res = await fetch(`${baseUrl}/api/schools`);
+      expect(await res.json()).toEqual({ schools: [] });
+    });
+
+    test('returns the schools the user teaches at', async () => {
+      vi.mocked(prisma.school.findMany).mockResolvedValue([createdSchool] as never);
+      const res = await fetch(`${baseUrl}/api/schools`);
+      expect(await res.json()).toEqual({
+        schools: [{ id: 'school-1', name: 'Escola Ana', createdAt: '2026-10-15T12:00:00.000Z' }],
+      });
+    });
+
+    test('only looks up schools where the signed-in user is a teacher', async () => {
+      vi.mocked(prisma.school.findMany).mockResolvedValue([]);
+      await fetch(`${baseUrl}/api/schools`);
+      const [args] = vi.mocked(prisma.school.findMany).mock.lastCall!;
+      expect(args?.where).toEqual({ teachers: { some: { id: 'user-1' } } });
     });
   });
 });
