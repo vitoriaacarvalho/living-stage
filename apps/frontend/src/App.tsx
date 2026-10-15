@@ -1,10 +1,19 @@
 import { APP_NAME, type HealthResponse } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { fetchHealth } from './api/health.ts';
+import { authClient } from './auth/client.ts';
+import { SignUpForm } from './auth/SignUpForm.tsx';
 
 type ApiStatus = HealthResponse | 'loading' | 'unreachable';
 
 export function App() {
+  const { data: session, isPending } = authClient.useSession();
+
+  if (isPending) return null;
+  return session ? <Home /> : <SignUpForm />;
+}
+
+function Home() {
   const apiStatus = useApiStatus();
 
   return (
