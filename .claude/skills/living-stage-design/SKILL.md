@@ -38,7 +38,7 @@ These hold even before you read the artifact. If the artifact disagrees, the art
 4. **Use tokens, never raw values.** No hex or px in components when a token exists.
 5. **Fonts:** Instrument Sans for the interface. Cormorant Garamond only for `display` and `title-1`, never below 24px and never in controls.
 6. **Touch:** every control is at least `touch-min` (44px). Dancers get a `dancer-hit` (56px) drag area.
-7. **Copy:** pt-BR first, sentence case, short and warm, no exclamation marks, no emoji. Leave about 35% extra room for English; nothing truncates a verb.
+7. **Copy:** English first (the design's copy is pt-BR: translate it), sentence case, short and warm, no exclamation marks, no emoji. Leave about 35% extra room for Portuguese, which comes later; nothing truncates a verb.
 8. **Numbers** use tabular numerals (`numeric` style): `3:40`, `00:58 / 03:40`, `0,75×`.
 9. **Motion** is calm: 150–200 ms ease-out, nothing bounces.
 10. **Color is never the only cue:** a name or role label is always available.

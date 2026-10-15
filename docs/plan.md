@@ -31,7 +31,7 @@ Living Stage is a responsive web app where dance schools plan group choreography
 | Casts | One cast per dance |
 | Roles | Free text per dance; the teacher decides whether to show and color by role |
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
-| Languages | Portuguese (pt-BR) and English |
+| Languages | English first; Portuguese (pt-BR) added near the end with i18n |
 | Stage | Standard rectangular stage with wings; no custom proportions |
 | Music | Uploaded audio files; no Spotify (its API no longer supports this use) |
 | Offline | Not required |
@@ -58,7 +58,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Database | PostgreSQL + Prisma | Prisma chosen as the ORM |
 | File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, dancer photos, costume photos |
 | Auth | Better Auth | Email and password (no third-party sign-in for now); Prisma adapter; organization plugin can model schools and invites |
-| i18n | react-i18next | pt-BR and English; one JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
+| i18n | react-i18next | Added in plan 8.3; until then copy is plain English in the components. One JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
 | PDF export | In the browser: jsPDF + svg2pdf.js | The simpler option: no server rendering, reuses the SVG stage |
 
 ### Architecture
@@ -195,6 +195,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **J1.** The whole interface is available in Portuguese (pt-BR) and English.
 - **J2.** Each user picks her language; the default follows the browser.
 - **J3.** User-entered content (names, roles, titles) is never translated.
+- **J4.** The interface is written in English first; Portuguese is added later through J1.
 
 ### Part K — Responsiveness and devices
 
@@ -279,6 +280,8 @@ Phase 2 alone replaces the teacher's hand-drawn formations, so it is the first m
 
 The build is split into small plans that each fit a sitting or two. Work top to bottom; a plan starts only when the plans it depends on are done. Each plan is a vertical slice: shared types, API and the screens it needs, built together. The Screens column names the design system components it builds (load the `living-stage-design` skill).
 
+**Every plan ships its UI.** When a plan starts, check the design system for the screens it touches. A plan with a screen builds that screen to the design in the same plan, never as plain HTML to style later, and its "Done when" is checked in the browser against the design. Order the slices so the screen appears early: the first API route, then its screen, then the next route and its screen, so each sitting ends with something visible. Small sub-slices can stay backend-only.
+
 A plan that needs more than this table (decisions, data model, commit slices) gets its own file in `docs/features/` (e.g. `1.2-auth.md`). Those files hold detail only: any decision that changes this plan is copied here too, and this file wins where they differ.
 
 Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is done, mark it ✅ in section 4 and set its plan's row to 🟨 (some requirements done) or ✅ (all done and its "Done when" check passes), in the same commit as the work.
@@ -289,11 +292,11 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 |---|---|---|---|---|---|---|
 | 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | 🟨 |
 | 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ✅ |
-| 1.3 | Schools and data isolation | A2, A4, A5, A6 | `Access` | 1.2 | Create a school, switch schools; another school's data returns 404 | ⬜ |
+| 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ⬜ |
+| 1.6a | Design foundation and styled sign-in | K5 | `Access` (sign in, sign up), `Button`, `SegmentedControl` | 1.2 | Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop | ⬜ |
+| 1.3 | Schools and data isolation | A2, A4, A5, A6 | `Access` (create school), school switcher | 1.6a | Create a school and switch schools from screens that match the design; another school's data returns 404 | ⬜ |
 | 1.4 | Invites | A3 | `Access` | 1.3 | An invited teacher joins by email or link | ⬜ |
-| 1.5 | Languages | J1, J2, J3 | — | 1.1 | Every screen so far works in pt-BR and English; default follows the browser | ⬜ |
-| 1.6a | Design foundation | K5 | `Button`, `SegmentedControl` | 1.1 | Design tokens are CSS variables, fonts load, and the icons, `Button`, `SegmentedControl` and focus ring render on a test page | ⬜ |
-| 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.5, 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
+| 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
 | 1.7 | Dancer roster | B1, B2, B3, B4, B5 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | ⬜ |
 | 1.8 | Photo upload | B6 | `DancerRoster` | 1.7 | A HEIC photo from an iPhone uploads resized to 400 px | ⬜ |
 
@@ -360,12 +363,13 @@ First milestone to show real teachers.
 |---|---|---|---|---|---|---|
 | 8.1 | Installable app | K4 | — | 1.6 | Add to home screen on iPad; opens full-screen | ⬜ |
 | 8.2 | iPhone editor | K3 | `DanceEditorIPhone` | 2.5 | Quick edits work on iPhone; landscape hint for heavy editing | ⬜ |
+| 8.3 | Languages | J1, J2, J3 | — | 1.6 | Every screen works in pt-BR and English; default follows the browser | ⬜ |
 
 ### Open questions to settle in each part's planning session
 
 - [x] Auth: Better Auth with email and password; no third-party sign-in (Google, Apple) for now
 - [x] ORM: Prisma
-- [x] i18n: react-i18next, JSON per language and screen area
+- [x] i18n: react-i18next, JSON per language and screen area; English first, pt-BR added in plan 8.3
 - [ ] Hosting: confirm the proposal in section 3
 - [x] Palette: "Pointe", light theme only
 - [x] Undo/redo: per figure
