@@ -17,9 +17,9 @@ function respondWithError(code: string) {
 async function fillAndSubmit() {
   const user = userEvent.setup();
   render(<SignInForm />);
-  await user.type(screen.getByLabelText('E-mail'), 'ana@example.com');
-  await user.type(screen.getByLabelText('Senha'), 'pas-de-deux');
-  await user.click(screen.getByRole('button', { name: 'Entrar' }));
+  await user.type(screen.getByLabelText('Email'), 'ana@example.com');
+  await user.type(screen.getByLabelText('Password'), 'pas-de-deux');
+  await user.click(screen.getByRole('button', { name: 'Sign in' }));
 }
 
 beforeEach(() => {
@@ -43,14 +43,14 @@ test('shows no error when sign-in succeeds', async () => {
 test('disables the button while the request runs', async () => {
   signInEmail.mockReturnValue(new Promise(() => {}) as never);
   await fillAndSubmit();
-  expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Sign in' })).toBeDisabled();
 });
 
 describe('error messages', () => {
   test.each([
-    ['INVALID_EMAIL_OR_PASSWORD', 'E-mail ou senha incorretos.'],
-    ['INVALID_EMAIL', 'Confira o e-mail digitado.'],
-    ['SOMETHING_NEW', 'Não foi possível entrar. Tente de novo.'],
+    ['INVALID_EMAIL_OR_PASSWORD', 'Wrong email or password.'],
+    ['INVALID_EMAIL', 'Check the email address.'],
+    ['SOMETHING_NEW', 'Could not sign in. Try again.'],
   ])('%s', async (code, message) => {
     respondWithError(code);
     await fillAndSubmit();
@@ -60,12 +60,12 @@ describe('error messages', () => {
   test('network failure shows the generic message', async () => {
     signInEmail.mockRejectedValue(new TypeError('Failed to fetch'));
     await fillAndSubmit();
-    expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível entrar. Tente de novo.');
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not sign in. Try again.');
   });
 
   test('keeps what the user typed', async () => {
     respondWithError('INVALID_EMAIL_OR_PASSWORD');
     await fillAndSubmit();
-    expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
+    expect(screen.getByLabelText('Email')).toHaveValue('ana@example.com');
   });
 });

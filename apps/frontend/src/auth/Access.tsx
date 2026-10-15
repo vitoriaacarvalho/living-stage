@@ -12,9 +12,9 @@ export function Access() {
       <main>
         <SignInForm />
         <p>
-          Não tem conta?{' '}
+          Don't have an account?{' '}
           <button type="button" onClick={() => setMode('signUp')}>
-            Criar conta
+            Create account
           </button>
         </p>
       </main>
@@ -25,9 +25,9 @@ export function Access() {
     <main>
       <SignUpForm />
       <p>
-        Já tem conta?{' '}
+        Already have an account?{' '}
         <button type="button" onClick={() => setMode('signIn')}>
-          Entrar
+          Sign in
         </button>
       </p>
     </main>

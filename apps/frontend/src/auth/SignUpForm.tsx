@@ -4,12 +4,12 @@ import { authClient } from './client.ts';
 type SignUpFields = { name: string; email: string; password: string };
 
 const errorMessages: Record<string, string> = {
-  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'Já existe uma conta com esse e-mail.',
-  PASSWORD_TOO_SHORT: 'A senha precisa ter pelo menos 8 caracteres.',
-  PASSWORD_TOO_LONG: 'A senha pode ter no máximo 128 caracteres.',
-  INVALID_EMAIL: 'Confira o e-mail digitado.',
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'An account with this email already exists.',
+  PASSWORD_TOO_SHORT: 'The password needs at least 8 characters.',
+  PASSWORD_TOO_LONG: 'The password can have at most 128 characters.',
+  INVALID_EMAIL: 'Check the email address.',
 };
-const fallbackError = 'Não foi possível criar a conta. Tente de novo.';
+const fallbackError = 'Could not create the account. Try again.';
 
 // A plain onSubmit instead of a React 19 form action: actions reset the form when they finish,
 // which would wipe what the user typed whenever sign-up fails.
@@ -34,22 +34,22 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h1>Crie sua conta</h1>
+      <h1>Create your account</h1>
       <label>
-        Nome
+        Name
         <input name="name" autoComplete="name" required />
       </label>
       <label>
-        E-mail
+        Email
         <input name="email" type="email" autoComplete="email" required />
       </label>
       <label>
-        Senha
+        Password
         <input name="password" type="password" autoComplete="new-password" required />
       </label>
       {error && <p role="alert">{error}</p>}
       <button type="submit" disabled={pending}>
-        Criar conta
+        Create account
       </button>
     </form>
   );

@@ -13,7 +13,7 @@ const signOut = vi.mocked(authClient.signOut);
 async function clickSignOut() {
   const user = userEvent.setup();
   render(<SignOutButton />);
-  await user.click(screen.getByRole('button', { name: 'Sair' }));
+  await user.click(screen.getByRole('button', { name: 'Sign out' }));
 }
 
 beforeEach(() => {
@@ -34,17 +34,17 @@ test('shows no error when sign-out succeeds', async () => {
 test('disables the button while the request runs', async () => {
   signOut.mockReturnValue(new Promise(() => {}) as never);
   await clickSignOut();
-  expect(screen.getByRole('button', { name: 'Sair' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Sign out' })).toBeDisabled();
 });
 
 test('shows a message when Better Auth returns an error', async () => {
   signOut.mockResolvedValue({ data: null, error: { status: 500 } } as never);
   await clickSignOut();
-  expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível sair. Tente de novo.');
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not sign out. Try again.');
 });
 
 test('shows a message on network failure', async () => {
   signOut.mockRejectedValue(new TypeError('Failed to fetch'));
   await clickSignOut();
-  expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível sair. Tente de novo.');
+  expect(screen.getByRole('alert')).toHaveTextContent('Could not sign out. Try again.');
 });

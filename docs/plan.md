@@ -196,7 +196,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **J1.** The whole interface is available in Portuguese (pt-BR) and English.
 - **J2.** Each user picks her language; the default follows the browser.
 - **J3.** User-entered content (names, roles, titles) is never translated.
-- **J4.** The interface is written in English first; Portuguese is added later through J1.
+- ✅ **J4.** The interface is written in English first; Portuguese is added later through J1.
 
 ### Part K — Responsiveness and devices
 
@@ -293,7 +293,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 |---|---|---|---|---|---|---|
 | 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | 🟨 |
 | 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ✅ |
-| 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ⬜ |
+| 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ✅ |
 | 1.6a | Design foundation and styled sign-in | K5 | `Access` (sign in, sign up), `Button`, `SegmentedControl` | 1.2 | Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop | ⬜ |
 | 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | ⬜ |
 | 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |

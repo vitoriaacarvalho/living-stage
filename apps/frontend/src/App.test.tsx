@@ -18,7 +18,7 @@ function mockSession(state: { data: object | null; isPending: boolean }) {
 test('shows sign-in without a session', () => {
   mockSession({ data: null, isPending: false });
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Entre na sua conta' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
 });
 
 test('shows the app with a session', () => {
@@ -31,7 +31,7 @@ test('shows the signed-in user and a sign-out button', () => {
   mockSession({ data: { user: { id: 'user-1', name: 'Ana' } }, isPending: false });
   render(<App />);
   expect(screen.getByText('Ana')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
 });
 
 test('shows nothing while the session loads', () => {

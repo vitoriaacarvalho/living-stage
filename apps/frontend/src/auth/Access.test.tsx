@@ -9,20 +9,20 @@ vi.mock('./client.ts', () => ({
 
 test('opens on sign-in', () => {
   render(<Access />);
-  expect(screen.getByRole('heading', { name: 'Entre na sua conta' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
 });
 
 test('switches to sign-up', async () => {
   const user = userEvent.setup();
   render(<Access />);
-  await user.click(screen.getByRole('button', { name: 'Criar conta' }));
-  expect(screen.getByRole('heading', { name: 'Crie sua conta' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Create account' }));
+  expect(screen.getByRole('heading', { name: 'Create your account' })).toBeInTheDocument();
 });
 
 test('switches back to sign-in', async () => {
   const user = userEvent.setup();
   render(<Access />);
-  await user.click(screen.getByRole('button', { name: 'Criar conta' }));
-  await user.click(screen.getByRole('button', { name: 'Entrar' }));
-  expect(screen.getByRole('heading', { name: 'Entre na sua conta' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Create account' }));
+  await user.click(screen.getByRole('button', { name: 'Sign in' }));
+  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { authClient } from './client.ts';
 
-const errorMessage = 'Não foi possível sair. Tente de novo.';
+const errorMessage = 'Could not sign out. Try again.';
 
 export function SignOutButton() {
   const [failed, setFailed] = useState(false);
@@ -17,7 +17,7 @@ export function SignOutButton() {
   return (
     <>
       <button type="button" onClick={handleClick} disabled={pending}>
-        Sair
+        Sign out
       </button>
       {failed && <p role="alert">{errorMessage}</p>}
     </>

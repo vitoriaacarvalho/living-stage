@@ -17,10 +17,10 @@ function respondWithError(code: string) {
 async function fillAndSubmit() {
   const user = userEvent.setup();
   render(<SignUpForm />);
-  await user.type(screen.getByLabelText('Nome'), 'Ana');
-  await user.type(screen.getByLabelText('E-mail'), 'ana@example.com');
-  await user.type(screen.getByLabelText('Senha'), 'pas-de-deux');
-  await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+  await user.type(screen.getByLabelText('Name'), 'Ana');
+  await user.type(screen.getByLabelText('Email'), 'ana@example.com');
+  await user.type(screen.getByLabelText('Password'), 'pas-de-deux');
+  await user.click(screen.getByRole('button', { name: 'Create account' }));
 }
 
 beforeEach(() => {
@@ -45,16 +45,16 @@ test('shows no error when sign-up succeeds', async () => {
 test('disables the button while the request runs', async () => {
   signUpEmail.mockReturnValue(new Promise(() => {}) as never);
   await fillAndSubmit();
-  expect(screen.getByRole('button', { name: 'Criar conta' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Create account' })).toBeDisabled();
 });
 
 describe('error messages', () => {
   test.each([
-    ['USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL', 'Já existe uma conta com esse e-mail.'],
-    ['PASSWORD_TOO_SHORT', 'A senha precisa ter pelo menos 8 caracteres.'],
-    ['PASSWORD_TOO_LONG', 'A senha pode ter no máximo 128 caracteres.'],
-    ['INVALID_EMAIL', 'Confira o e-mail digitado.'],
-    ['SOMETHING_NEW', 'Não foi possível criar a conta. Tente de novo.'],
+    ['USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL', 'An account with this email already exists.'],
+    ['PASSWORD_TOO_SHORT', 'The password needs at least 8 characters.'],
+    ['PASSWORD_TOO_LONG', 'The password can have at most 128 characters.'],
+    ['INVALID_EMAIL', 'Check the email address.'],
+    ['SOMETHING_NEW', 'Could not create the account. Try again.'],
   ])('%s', async (code, message) => {
     respondWithError(code);
     await fillAndSubmit();
@@ -64,14 +64,12 @@ describe('error messages', () => {
   test('network failure shows the generic message', async () => {
     signUpEmail.mockRejectedValue(new TypeError('Failed to fetch'));
     await fillAndSubmit();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Não foi possível criar a conta. Tente de novo.',
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not create the account. Try again.');
   });
 
   test('keeps what the user typed', async () => {
     respondWithError('PASSWORD_TOO_SHORT');
     await fillAndSubmit();
-    expect(screen.getByLabelText('E-mail')).toHaveValue('ana@example.com');
+    expect(screen.getByLabelText('Email')).toHaveValue('ana@example.com');
   });
 });

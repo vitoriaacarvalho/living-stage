@@ -4,10 +4,10 @@ import { authClient } from './client.ts';
 type SignInFields = { email: string; password: string };
 
 const errorMessages: Record<string, string> = {
-  INVALID_EMAIL_OR_PASSWORD: 'E-mail ou senha incorretos.',
-  INVALID_EMAIL: 'Confira o e-mail digitado.',
+  INVALID_EMAIL_OR_PASSWORD: 'Wrong email or password.',
+  INVALID_EMAIL: 'Check the email address.',
 };
-const fallbackError = 'Não foi possível entrar. Tente de novo.';
+const fallbackError = 'Could not sign in. Try again.';
 
 // A plain onSubmit for the same reason as SignUpForm: a form action would clear the fields on failure.
 export function SignInForm() {
@@ -30,18 +30,18 @@ export function SignInForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h1>Entre na sua conta</h1>
+      <h1>Sign in to your account</h1>
       <label>
-        E-mail
+        Email
         <input name="email" type="email" autoComplete="email" required />
       </label>
       <label>
-        Senha
+        Password
         <input name="password" type="password" autoComplete="current-password" required />
       </label>
       {error && <p role="alert">{error}</p>}
       <button type="submit" disabled={pending}>
-        Entrar
+        Sign in
       </button>
     </form>
   );
