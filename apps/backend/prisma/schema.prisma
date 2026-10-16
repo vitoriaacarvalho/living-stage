@@ -19,6 +19,7 @@ model User {
   accounts       Account[]
   schoolsCreated School[]  @relation("SchoolCreator")
   schools        School[]  @relation("SchoolTeachers")
+  invitesCreated Invite[]
 
   @@unique([email])
   @@map("user")
@@ -79,6 +80,20 @@ model School {
   createdById String
   createdBy   User     @relation("SchoolCreator", fields: [createdById], references: [id])
   teachers    User[]   @relation("SchoolTeachers")
+  invite      Invite?
 
   @@map("school")
+}
+
+model Invite {
+  id          String   @id @default(cuid())
+  schoolId    String   @unique
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  code        String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@map("invite")
 }
