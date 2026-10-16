@@ -19,10 +19,11 @@ export function useSchools() {
   }, []);
 
   function addSchool(school: School) {
-    setState((current) => ({
-      status: 'ready',
-      schools: current.status === 'ready' ? [...current.schools, school] : [school],
-    }));
+    setState((current) => {
+      const schools = current.status === 'ready' ? current.schools : [];
+      if (schools.some(({ id }) => id === school.id)) return current;
+      return { status: 'ready', schools: [...schools, school] };
+    });
   }
 
   return { state, addSchool };

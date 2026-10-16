@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CardPage } from '../ui/CardPage.tsx';
-import styles from './Access.module.css';
+import styles from '../ui/Form.module.css';
 import { SignInForm } from './SignInForm.tsx';
 import { SignUpForm } from './SignUpForm.tsx';
 

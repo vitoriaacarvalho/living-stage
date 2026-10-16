@@ -1,0 +1,70 @@
+.code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  text-align: center;
+}
+
+.codeLabel {
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.codeValue {
+  font: var(--text-title-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.expiry {
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.status {
+  margin: 0;
+  font: var(--text-label);
+  text-align: center;
+}
+
+.replace {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.replace span {
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}
+
+.note {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 10px var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font: var(--text-label);
+  font-weight: 400;
+}
+
+.note svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--ink-muted);
+}
