@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CardPage } from '../ui/CardPage.tsx';
 import styles from './Access.module.css';
 import { SignInForm } from './SignInForm.tsx';
 import { SignUpForm } from './SignUpForm.tsx';
@@ -25,16 +26,14 @@ export function Access() {
   const { Form, prompt, action, other } = screens[mode];
 
   return (
-    <main className={styles.page}>
-      <section className={styles.card}>
-        <Form />
-        <p className={styles.switch}>
-          {prompt}{' '}
-          <button type="button" className={styles.link} onClick={() => setMode(other)}>
-            {action}
-          </button>
-        </p>
-      </section>
-    </main>
+    <CardPage>
+      <Form />
+      <p className={styles.switch}>
+        {prompt}{' '}
+        <button type="button" className={styles.link} onClick={() => setMode(other)}>
+          {action}
+        </button>
+      </p>
+    </CardPage>
   );
 }

@@ -113,7 +113,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part A — Accounts and schools
 
 - ✅ **A1.** A user can sign up and sign in with email and password.
-- **A2.** A user can create a school and becomes its first member.
+- ✅ **A2.** A user can create a school and becomes its first member.
 - **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email.
 - **A4.** A user can belong to more than one school and switch between them.
 - **A5.** All members of a school have equal rights over its dancers, dances and shows.
@@ -298,7 +298,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 | 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ✅ |
 | 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ✅ |
 | 1.6a | Design foundation and styled sign-in | K5 | `Access` (sign in, sign up), `Button`, `SegmentedControl` | 1.2 | Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop | ✅ |
-| 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | ⬜ |
+| 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | 🟨 |
 | 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
 | 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
 | 1.7 | Dancer roster | B1, B2, B3, B4, B5 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | ⬜ |

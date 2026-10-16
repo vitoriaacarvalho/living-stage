@@ -1,0 +1,27 @@
+.page {
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--space-7) var(--space-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 420px;
+  height: fit-content;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 600px) {
+  .page {
+    align-items: center;
+    padding-inline: var(--space-5);
+  }
+}

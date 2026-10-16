@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button.tsx';
 import { PasswordField } from '../ui/PasswordField.tsx';
 import { TextField } from '../ui/TextField.tsx';
-import styles from './AuthForm.module.css';
+import styles from '../ui/Form.module.css';
 import { authClient } from './client.ts';
 
 type SignInFields = { email: string; password: string };
