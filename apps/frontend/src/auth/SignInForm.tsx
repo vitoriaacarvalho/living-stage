@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { Button } from '../ui/Button.tsx';
+import { TextField } from '../ui/TextField.tsx';
+import styles from './AuthForm.module.css';
 import { authClient } from './client.ts';
 
 type SignInFields = { email: string; password: string };
@@ -29,20 +32,27 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Sign in to your account</h1>
-      <label>
-        Email
-        <input name="email" type="email" autoComplete="email" required />
-      </label>
-      <label>
-        Password
-        <input name="password" type="password" autoComplete="current-password" required />
-      </label>
-      {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={pending}>
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Welcome back</h1>
+        <p className={styles.lead}>Plan figures, music and shows for your school.</p>
+      </header>
+      <TextField label="Email" name="email" type="email" autoComplete="email" required />
+      <TextField
+        label="Password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+      />
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+      <Button variant="primary" type="submit" width="full" disabled={pending}>
         Sign in
-      </button>
+      </Button>
     </form>
   );
 }

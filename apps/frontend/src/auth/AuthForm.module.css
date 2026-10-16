@@ -1,0 +1,29 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-title-1);
+}
+
+.lead {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.error {
+  margin: 0;
+  padding: 10px var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+  font: var(--text-label);
+}

@@ -9,7 +9,7 @@ vi.mock('./client.ts', () => ({
 
 test('opens on sign-in', () => {
   render(<Access />);
-  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
 });
 
 test('switches to sign-up', async () => {
@@ -24,5 +24,5 @@ test('switches back to sign-in', async () => {
   render(<Access />);
   await user.click(screen.getByRole('button', { name: 'Create account' }));
   await user.click(screen.getByRole('button', { name: 'Sign in' }));
-  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
 });

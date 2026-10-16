@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { Button } from '../ui/Button.tsx';
+import { TextField } from '../ui/TextField.tsx';
+import styles from './AuthForm.module.css';
 import { authClient } from './client.ts';
 
 type SignUpFields = { name: string; email: string; password: string };
@@ -33,24 +36,29 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Create your account</h1>
-      <label>
-        Name
-        <input name="name" autoComplete="name" required />
-      </label>
-      <label>
-        Email
-        <input name="email" type="email" autoComplete="email" required />
-      </label>
-      <label>
-        Password
-        <input name="password" type="password" autoComplete="new-password" required />
-      </label>
-      {error && <p role="alert">{error}</p>}
-      <button type="submit" disabled={pending}>
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Create your account</h1>
+        <p className={styles.lead}>Plan figures, music and shows for your school.</p>
+      </header>
+      <TextField label="Name" name="name" autoComplete="name" required />
+      <TextField label="Email" name="email" type="email" autoComplete="email" required />
+      <TextField
+        label="Password"
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        help="At least 8 characters."
+        required
+      />
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+      <Button variant="primary" type="submit" width="full" disabled={pending}>
         Create account
-      </button>
+      </Button>
     </form>
   );
 }

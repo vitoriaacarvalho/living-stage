@@ -18,7 +18,7 @@ function mockSession(state: { data: object | null; isPending: boolean }) {
 test('shows sign-in without a session', () => {
   mockSession({ data: null, isPending: false });
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Sign in to your account' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
 });
 
 test('shows the app with a session', () => {
