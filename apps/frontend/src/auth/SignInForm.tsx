@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button.tsx';
+import { PasswordField } from '../ui/PasswordField.tsx';
 import { TextField } from '../ui/TextField.tsx';
 import styles from './AuthForm.module.css';
 import { authClient } from './client.ts';
@@ -38,13 +39,7 @@ export function SignInForm() {
         <p className={styles.lead}>Plan figures, music and shows for your school.</p>
       </header>
       <TextField label="Email" name="email" type="email" autoComplete="email" required />
-      <TextField
-        label="Password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-      />
+      <PasswordField label="Password" name="password" autoComplete="current-password" required />
       {error && (
         <p role="alert" className={styles.error}>
           {error}

@@ -23,6 +23,28 @@
     box-shadow 150ms ease-out;
 }
 
+.control {
+  position: relative;
+}
+
+.withTrailing {
+  padding-right: var(--touch-min);
+}
+
+/* Sits inside the input's 1px border, so its button shrinks to fit. */
+.trailing {
+  position: absolute;
+  inset-block: 1px;
+  right: 1px;
+  display: flex;
+}
+
+.trailing > button {
+  width: calc(var(--touch-min) - 2px);
+  min-height: 0;
+  border-radius: calc(var(--radius-md) - 1px);
+}
+
 .input::placeholder {
   color: var(--ink-muted);
 }

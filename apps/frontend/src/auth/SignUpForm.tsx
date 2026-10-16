@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button.tsx';
+import { PasswordField } from '../ui/PasswordField.tsx';
 import { TextField } from '../ui/TextField.tsx';
 import styles from './AuthForm.module.css';
 import { authClient } from './client.ts';
@@ -43,10 +44,9 @@ export function SignUpForm() {
       </header>
       <TextField label="Name" name="name" autoComplete="name" required />
       <TextField label="Email" name="email" type="email" autoComplete="email" required />
-      <TextField
+      <PasswordField
         label="Password"
         name="password"
-        type="password"
         autoComplete="new-password"
         help="At least 8 characters."
         required
