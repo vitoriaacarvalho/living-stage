@@ -34,6 +34,14 @@ schoolsRouter.post('/schools', requireSession, async (req, res) => {
   res.status(201).json({ school: toSchool(school) } satisfies CreateSchoolResponse);
 });
 
-function toSchool({ id, name, createdAt }: { id: string; name: string; createdAt: Date }): School {
+export function toSchool({
+  id,
+  name,
+  createdAt,
+}: {
+  id: string;
+  name: string;
+  createdAt: Date;
+}): School {
   return { id, name, createdAt: createdAt.toISOString() };
 }
