@@ -22,6 +22,7 @@ vi.mock('./api/invites.ts', () => ({
 }));
 
 const school = { id: 'school-1', name: 'Escola Ana', createdAt: '2026-10-15T12:00:00.000Z' };
+const other = { id: 'school-2', name: 'Escola Bia', createdAt: '2026-10-16T12:00:00.000Z' };
 
 function mockSession(state: { data: object | null; isPending: boolean }) {
   vi.mocked(authClient.useSession).mockReturnValue(state as never);
@@ -40,6 +41,7 @@ beforeEach(() => {
 
 afterEach(() => {
   window.history.replaceState(null, '', '/');
+  sessionStorage.clear();
 });
 
 test('shows sign-in without a session', () => {
@@ -127,6 +129,91 @@ describe('signed in', () => {
   });
 });
 
+describe('with several schools', () => {
+  beforeEach(() => {
+    signIn();
+    vi.mocked(fetchSchools).mockResolvedValue([school, other]);
+  });
+
+  test('asks which school to go into', async () => {
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Your schools' })).toBeInTheDocument();
+  });
+
+  test('goes into the picked school', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Escola Bia' }));
+    expect(screen.getByRole('heading', { name: APP_NAME })).toBeInTheDocument();
+  });
+
+  test('goes back into the picked school after a reload', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Escola Bia' }));
+    unmount();
+    render(<App />);
+    expect(await screen.findByText('Escola Bia')).toBeInTheDocument();
+  });
+
+  test('switches to another school from inside one', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Escola Ana' }));
+    await user.click(screen.getByRole('button', { name: 'Your schools' }));
+    await user.click(screen.getByRole('button', { name: 'Escola Bia' }));
+    expect(screen.getByText('Escola Bia')).toBeInTheDocument();
+  });
+
+  test('lets the user sign out before picking', async () => {
+    render(<App />);
+    expect(await screen.findByRole('button', { name: 'Sign out' })).toBeInTheDocument();
+  });
+});
+
+describe('adding another school', () => {
+  beforeEach(() => {
+    signIn();
+    vi.mocked(fetchSchools).mockResolvedValue([school]);
+  });
+
+  async function openAddSchool() {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Your schools' }));
+    await user.click(screen.getByRole('button', { name: 'Add a school' }));
+    return user;
+  }
+
+  test('offers to create a school', async () => {
+    await openAddSchool();
+    expect(screen.getByRole('heading', { name: 'Your school' })).toBeInTheDocument();
+  });
+
+  test('goes into the new school once it is created', async () => {
+    vi.mocked(createSchool).mockResolvedValue(other);
+    const user = await openAddSchool();
+    await user.type(screen.getByLabelText('School name'), 'Escola Bia');
+    await user.click(screen.getByRole('button', { name: 'Create school' }));
+    expect(await screen.findByText('Escola Bia')).toBeInTheDocument();
+  });
+
+  test('lists the new school next to the others', async () => {
+    vi.mocked(createSchool).mockResolvedValue(other);
+    const user = await openAddSchool();
+    await user.type(screen.getByLabelText('School name'), 'Escola Bia');
+    await user.click(screen.getByRole('button', { name: 'Create school' }));
+    await user.click(await screen.findByRole('button', { name: 'Your schools' }));
+    expect(screen.getByRole('button', { name: 'Escola Ana' })).toBeInTheDocument();
+  });
+
+  test('goes back to the list of schools', async () => {
+    const user = await openAddSchool();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Your schools' })).toBeInTheDocument();
+  });
+});
+
 describe('arriving from a join link', () => {
   beforeEach(() => {
     signIn();
@@ -156,6 +243,15 @@ describe('arriving from a join link', () => {
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Join school' }));
     expect(window.location.pathname).toBe('/');
+  });
+
+  test('goes into the joined school when the user already has another', async () => {
+    vi.mocked(fetchSchools).mockResolvedValue([other]);
+    vi.mocked(joinSchool).mockResolvedValue(school);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Join school' }));
+    expect(await screen.findByText('Escola Ana')).toBeInTheDocument();
   });
 
   test('falls back to the usual screen when dismissed', async () => {

@@ -114,8 +114,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **A1.** A user can sign up and sign in with email and password.
 - ✅ **A2.** A user can create a school and becomes its first member.
-- **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email. Code and link done; email comes with plan 1.4.
-- **A4.** A user can belong to more than one school and switch between them.
+- ✅ **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email. Code and link done; email comes with plan 1.4.
+- ✅ **A4.** A user can belong to more than one school and switch between them.
 - **A5.** All members of a school have equal rights over its dancers, dances and shows.
 - **A6.** A school's data is visible only to its members.
 

@@ -4,13 +4,17 @@ import { fetchHealth } from './api/health.ts';
 import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
 import { SignOutButton } from './auth/SignOutButton.tsx';
+import { AddSchool } from './schools/AddSchool.tsx';
 import { InviteTeachers } from './schools/InviteTeachers.tsx';
 import { readJoinCode } from './schools/join-link.ts';
 import { JoinFromLink } from './schools/JoinFromLink.tsx';
 import { NoSchool } from './schools/NoSchool.tsx';
+import { SchoolPicker } from './schools/SchoolPicker.tsx';
+import { findChosenSchool, useChosenSchoolId } from './schools/useChosenSchool.ts';
 import { useSchools } from './schools/useSchools.ts';
 import { Button } from './ui/Button.tsx';
 import { CardPage } from './ui/CardPage.tsx';
+import formStyles from './ui/Form.module.css';
 
 type ApiStatus = HealthResponse | 'loading' | 'unreachable';
 
@@ -21,9 +25,23 @@ export function App() {
   return session ? <SignedIn userName={session.user.name} /> : <Access />;
 }
 
+type Screen = 'school' | 'picker' | 'adding';
+
 function SignedIn({ userName }: { userName: string }) {
   const { state, addSchool } = useSchools();
+  const { chosenId, choose } = useChosenSchoolId();
+  const [screen, setScreen] = useState<Screen>('school');
   const [joinCode, setJoinCode] = useState(() => readJoinCode(window.location.pathname));
+
+  function pick(school: School) {
+    choose(school.id);
+    setScreen('school');
+  }
+
+  function enter(school: School) {
+    addSchool(school);
+    pick(school);
+  }
 
   function leaveJoinLink() {
     window.history.replaceState(null, '', '/');
@@ -31,7 +49,7 @@ function SignedIn({ userName }: { userName: string }) {
   }
 
   function joinFromLink(school: School) {
-    addSchool(school);
+    enter(school);
     leaveJoinLink();
   }
 
@@ -40,9 +58,32 @@ function SignedIn({ userName }: { userName: string }) {
   if (joinCode) {
     return <JoinFromLink code={joinCode} onJoined={joinFromLink} onDismiss={leaveJoinLink} />;
   }
-  const [school] = state.schools;
-  if (!school) return <NoSchool onSchool={addSchool} />;
-  return <Home userName={userName} school={school} />;
+  if (state.schools.length === 0) return <NoSchool onSchool={enter} />;
+  if (screen === 'adding') {
+    return (
+      <AddSchool onSchool={enter}>
+        <Button variant="secondary" onClick={() => setScreen('picker')}>
+          Back
+        </Button>
+      </AddSchool>
+    );
+  }
+  const school = findChosenSchool(state.schools, chosenId);
+  if (school && screen === 'school') {
+    return <Home userName={userName} school={school} onSwitch={() => setScreen('picker')} />;
+  }
+  return (
+    <CardPage>
+      <SchoolPicker schools={state.schools} currentId={school?.id ?? null} onPick={pick} />
+      <p className={formStyles.switch}>
+        Teach at another school too?{' '}
+        <button type="button" className={formStyles.link} onClick={() => setScreen('adding')}>
+          Add a school
+        </button>
+      </p>
+      <SignOutButton />
+    </CardPage>
+  );
 }
 
 function SchoolsUnavailable() {
@@ -54,7 +95,9 @@ function SchoolsUnavailable() {
   );
 }
 
-function Home({ userName, school }: { userName: string; school: School }) {
+type HomeProps = { userName: string; school: School; onSwitch: () => void };
+
+function Home({ userName, school, onSwitch }: HomeProps) {
   const apiStatus = useApiStatus();
   const [inviting, setInviting] = useState(false);
 
@@ -72,6 +115,9 @@ function Home({ userName, school }: { userName: string; school: School }) {
       <p>{userName}</p>
       <Button variant="secondary" onClick={() => setInviting(true)}>
         Invite teachers
+      </Button>
+      <Button variant="secondary" onClick={onSwitch}>
+        Your schools
       </Button>
       <SignOutButton />
       <p>{describe(apiStatus)}</p>
