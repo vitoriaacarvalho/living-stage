@@ -2,9 +2,11 @@ import type { Dancer, School } from '@living-stage/shared';
 import { useState, type CSSProperties } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
+import { TextField } from '../ui/TextField.tsx';
 import { dancerColorName, dancerColorVar, initials } from './dancer-colors.ts';
 import { DancerForm } from './DancerForm.tsx';
 import styles from './DancerRoster.module.css';
+import { matchesName } from './match-name.ts';
 import { useDancers } from './useDancers.ts';
 
 const loadError = 'Could not load the dancers. Go back and try again.';
@@ -16,6 +18,7 @@ type DancerRosterProps = { school: School; onDone: () => void };
 export function DancerRoster({ school, onDone }: DancerRosterProps) {
   const { state, ...actions } = useDancers(school.id);
   const [editing, setEditing] = useState<Editing>(null);
+  const [query, setQuery] = useState('');
 
   return (
     <main className={editing ? `${styles.page} ${styles.editing}` : styles.page}>
@@ -39,9 +42,21 @@ export function DancerRoster({ school, onDone }: DancerRosterProps) {
             {loadError}
           </p>
         )}
+        {state.status === 'ready' && state.dancers.length > 0 && (
+          <div className={styles.search}>
+            <TextField
+              label="Search by name"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              autoComplete="off"
+            />
+          </div>
+        )}
         {state.status === 'ready' && (
           <DancerList
             dancers={state.dancers}
+            query={query}
             selectedId={editing?.dancer?.id ?? null}
             onEdit={(dancer) => setEditing({ dancer })}
           />
@@ -63,19 +78,24 @@ export function DancerRoster({ school, onDone }: DancerRosterProps) {
 
 type DancerListProps = {
   dancers: Dancer[];
+  query: string;
   selectedId: string | null;
   onEdit: (dancer: Dancer) => void;
 };
 
-function DancerList({ dancers, selectedId, onEdit }: DancerListProps) {
+function DancerList({ dancers, query, selectedId, onEdit }: DancerListProps) {
   if (dancers.length === 0) {
     return (
       <p className={styles.empty}>No dancers yet. Add them once and cast them in every dance.</p>
     );
   }
+  const found = dancers.filter((dancer) => matchesName(dancer.name, query));
+  if (found.length === 0) {
+    return <p className={styles.empty}>No dancers match “{query.trim()}”.</p>;
+  }
   return (
     <ul className={styles.list} aria-label="Dancers">
-      {dancers.map((dancer) => (
+      {found.map((dancer) => (
         <li
           key={dancer.id}
           className={dancer.id === selectedId ? `${styles.row} ${styles.selected}` : styles.row}

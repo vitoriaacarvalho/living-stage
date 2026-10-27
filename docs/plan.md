@@ -124,7 +124,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **B1.** A member can add, edit and remove dancers in the school roster.
 - **B2.** A dancer has a name, an optional photo and an optional default color.
 - **B3.** The same roster is reused across all dances and shows; no retyping.
-- **B4.** The roster can be searched and sorted by name.
+- ✅ **B4.** The roster can be searched and sorted by name.
 - **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
 - **B6.** Photos are resized in the browser before upload (dancer photos to 400 px, costume photos to 1600 px on the long edge); originals up to 10 MB are accepted, including iPhone HEIC.
 

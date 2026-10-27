@@ -1,6 +1,7 @@
 import type { Dancer, DancerInput } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { createDancer, deleteDancer, fetchDancers, updateDancer } from '../api/dancers.ts';
+import { byName } from './match-name.ts';
 
 export type DancersState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; dancers: Dancer[] };
@@ -17,7 +18,7 @@ export function useDancers(schoolId: string): { state: DancersState } & DancerAc
   useEffect(() => {
     const controller = new AbortController();
     fetchDancers(schoolId, controller.signal)
-      .then((dancers) => setState({ status: 'ready', dancers }))
+      .then((dancers) => setState({ status: 'ready', dancers: dancers.sort(byName) }))
       .catch(() => {
         if (!controller.signal.aborted) setState({ status: 'failed' });
       });
@@ -47,8 +48,4 @@ export function useDancers(schoolId: string): { state: DancersState } & DancerAc
   }
 
   return { state, add, save, remove };
-}
-
-function byName(a: Dancer, b: Dancer) {
-  return a.name.localeCompare(b.name);
 }

@@ -166,3 +166,32 @@ describe('removing', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not remove the dancer.');
   });
 });
+
+describe('searching', () => {
+  test('shows only the dancers whose name matches', async () => {
+    const user = userEvent.setup();
+    renderRoster();
+    await user.type(await screen.findByLabelText('Search by name'), 'julia');
+    expect(await names()).toEqual(['JJúliaChestnut']);
+  });
+
+  test('says so when no dancer matches', async () => {
+    const user = userEvent.setup();
+    renderRoster();
+    await user.type(await screen.findByLabelText('Search by name'), 'Carla');
+    expect(screen.getByText('No dancers match “Carla”.')).toBeInTheDocument();
+  });
+
+  test('hides the search while the roster is empty', async () => {
+    vi.mocked(fetchDancers).mockResolvedValue([]);
+    renderRoster();
+    await screen.findByText(/No dancers yet/);
+    expect(screen.queryByLabelText('Search by name')).not.toBeInTheDocument();
+  });
+});
+
+test('sorts the dancers by name whatever order they arrive in', async () => {
+  vi.mocked(fetchDancers).mockResolvedValue([julia, bia]);
+  renderRoster();
+  expect(await names()).toEqual(['BLBia LimaTeal', 'JJúliaChestnut']);
+});
