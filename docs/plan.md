@@ -123,7 +123,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **B1.** A member can add, edit and remove dancers in the school roster.
 - ✅ **B2.** A dancer has a name and an optional default color. Dancers have no photo.
-- **B3.** The same roster is reused across all dances and shows; no retyping.
+- ✅ **B3.** The same roster is reused across all dances and shows; no retyping.
 - ✅ **B4.** The roster can be searched and sorted by name.
 - **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
 - **B6.** Costume photos are resized in the browser to 1600 px on the long edge before upload; originals up to 10 MB are accepted, including iPhone HEIC.
@@ -301,7 +301,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 | 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | 🟨 |
 | 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
 | 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
-| 1.7 | Dancer roster | B1, B2, B3, B4 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | 🟨 |
+| 1.7 | Dancer roster | B1, B2, B3, B4 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | ✅ |
 
 ### Phase 2 — Formation editor
 
