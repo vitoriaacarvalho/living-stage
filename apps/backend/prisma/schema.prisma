@@ -82,6 +82,7 @@ model School {
   teachers    User[]   @relation("SchoolTeachers")
   invite      Invite?
   dancers     Dancer[]
+  dances      Dance[]
 
   @@map("school")
 }
@@ -109,4 +110,15 @@ model Dancer {
 
   @@index([schoolId])
   @@map("dancer")
+}
+
+model Dance {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@map("dance")
 }
