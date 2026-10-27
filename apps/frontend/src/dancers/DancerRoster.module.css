@@ -1,0 +1,148 @@
+.page {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  max-width: 1200px;
+  padding: var(--space-5) var(--space-4);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.school {
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-title-1);
+}
+
+.headActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-6) var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  transition: background-color 150ms ease-out;
+}
+
+.row + .row {
+  border-top: 1px solid var(--hairline);
+}
+
+.selected {
+  background: var(--primary-soft);
+}
+
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 3px var(--ring);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font: var(--text-body-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.color {
+  font: var(--text-caption);
+  color: var(--ink-muted);
+}
+
+.selected .color {
+  color: var(--primary-strong);
+}
+
+.panel {
+  padding: var(--space-5) var(--space-4);
+  background: var(--surface);
+}
+
+/* Phones have no room beside the list, so the panel takes the screen while it is open. */
+@media (max-width: 899px) {
+  .editing .main {
+    display: none;
+  }
+
+  .editing .panel {
+    flex: 1;
+  }
+}
+
+@media (min-width: 600px) {
+  .main {
+    padding: var(--space-6) var(--space-5);
+  }
+}
+
+@media (min-width: 900px) {
+  .panel {
+    flex: none;
+    width: 380px;
+    padding: var(--space-5);
+    border-left: 1px solid var(--hairline);
+  }
+}

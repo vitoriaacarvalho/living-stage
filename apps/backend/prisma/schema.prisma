@@ -81,6 +81,7 @@ model School {
   createdBy   User     @relation("SchoolCreator", fields: [createdById], references: [id])
   teachers    User[]   @relation("SchoolTeachers")
   invite      Invite?
+  dancers     Dancer[]
 
   @@map("school")
 }
@@ -96,4 +97,16 @@ model Invite {
   createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@map("invite")
+}
+
+model Dancer {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  color     Int?
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
+  @@map("dancer")
 }

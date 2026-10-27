@@ -4,6 +4,7 @@ import { fetchHealth } from './api/health.ts';
 import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
 import { SignOutButton } from './auth/SignOutButton.tsx';
+import { DancerRoster } from './dancers/DancerRoster.tsx';
 import { AddSchool } from './schools/AddSchool.tsx';
 import { InviteTeachers } from './schools/InviteTeachers.tsx';
 import { readJoinCode } from './schools/join-link.ts';
@@ -99,21 +100,25 @@ type HomeProps = { userName: string; school: School; onSwitch: () => void };
 
 function Home({ userName, school, onSwitch }: HomeProps) {
   const apiStatus = useApiStatus();
-  const [inviting, setInviting] = useState(false);
+  const [view, setView] = useState<'home' | 'inviting' | 'dancers'>('home');
 
-  if (inviting) {
+  if (view === 'inviting') {
     return (
       <CardPage>
-        <InviteTeachers schoolId={school.id} onDone={() => setInviting(false)} />
+        <InviteTeachers schoolId={school.id} onDone={() => setView('home')} />
       </CardPage>
     );
   }
+  if (view === 'dancers') return <DancerRoster school={school} onDone={() => setView('home')} />;
   return (
     <main>
       <h1>{APP_NAME}</h1>
       <p>{school.name}</p>
       <p>{userName}</p>
-      <Button variant="secondary" onClick={() => setInviting(true)}>
+      <Button variant="secondary" onClick={() => setView('dancers')}>
+        Dancers
+      </Button>
+      <Button variant="secondary" onClick={() => setView('inviting')}>
         Invite teachers
       </Button>
       <Button variant="secondary" onClick={onSwitch}>

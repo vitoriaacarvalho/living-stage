@@ -1,5 +1,17 @@
 export const APP_NAME = 'Living Stage';
 
+export {
+  DANCER_COLOR_COUNT,
+  DANCER_NAME_MAX_LENGTH,
+  isDancerColor,
+  parseDancerInput,
+  parseDancerName,
+  type Dancer,
+  type DancerColor,
+  type DancerInput,
+  type DancerResponse,
+  type ListDancersResponse,
+} from './dancer.ts';
 export type { HealthResponse } from './health.ts';
 export {
   INVITE_CODE_ALPHABET,
