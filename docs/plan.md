@@ -301,7 +301,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 | 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | 🟨 |
 | 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
 | 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
-| 1.7 | Dancer roster | B1, B2, B3, B4, B5 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | 🟨 |
+| 1.7 | Dancer roster | B1, B2, B3, B4 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | 🟨 |
 | 1.8 | Photo upload | B6 | `DancerRoster` | 1.7 | A HEIC photo from an iPhone uploads resized to 400 px | ⬜ |
 
 ### Phase 2 — Formation editor
@@ -311,7 +311,7 @@ First milestone to show real teachers.
 | # | Plan | Requirements | Screens | Depends on | Done when | Status |
 |---|---|---|---|---|---|---|
 | 2.1 | Stage | C1, C2, C3 | `Stage`, `DanceEditorIPad` | 1.6 | Empty stage with wings and toggleable guide lines | ⬜ |
-| 2.2 | Casting | C4, C5, C6 | `CastList` | 2.1, 1.7 | Cast dancers with roles; label and color modes switch | ⬜ |
+| 2.2 | Casting | C4, C5, C6, B5 | `CastList` | 2.1, 1.7 | Cast dancers with roles; label and color modes switch; a removed dancer's spot stays as a placeholder | ⬜ |
 | 2.3 | Figures | C7 | `Toolbar`, `Timeline` (figure markers) | 2.2 | Add, duplicate, rename, reorder, delete figures | ⬜ |
 | 2.4 | Dragging and selection | C8, C9 | `Stage` | 2.3 | Drag one or many dancers, with optional snapping, by finger and mouse | ⬜ |
 | 2.5 | Layout tools and ghost view | C10, C11 | `Toolbar` | 2.4 | Mirror, align, spread, circle; previous figure shown faintly | ⬜ |
