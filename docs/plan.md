@@ -57,7 +57,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Backend | Node + Express | REST API |
 | Realtime | WebSockets | Pushes a dance's changes to viewers; edit lock heartbeat |
 | Database | PostgreSQL + Prisma | Prisma chosen as the ORM |
-| File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, dancer photos, costume photos |
+| File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, costume photos |
 | Auth | Better Auth | Email and password (no third-party sign-in for now); Prisma adapter; organization plugin can model schools and invites |
 | i18n | react-i18next | Added in plan 8.3; until then copy is plain English in the components. One JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
 | Styling | CSS variables + CSS Modules | Design tokens are CSS variables in `styles/tokens.css`; each component has its own CSS Module; no CSS framework |
@@ -122,11 +122,11 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part B — Dancer roster
 
 - ✅ **B1.** A member can add, edit and remove dancers in the school roster.
-- **B2.** A dancer has a name, an optional photo and an optional default color.
+- ✅ **B2.** A dancer has a name and an optional default color. Dancers have no photo.
 - **B3.** The same roster is reused across all dances and shows; no retyping.
 - ✅ **B4.** The roster can be searched and sorted by name.
 - **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
-- **B6.** Photos are resized in the browser before upload (dancer photos to 400 px, costume photos to 1600 px on the long edge); originals up to 10 MB are accepted, including iPhone HEIC.
+- **B6.** Costume photos are resized in the browser to 1600 px on the long edge before upload; originals up to 10 MB are accepted, including iPhone HEIC.
 
 ### Part C — Formation editor
 
@@ -218,7 +218,7 @@ School        id, name, createdAt, createdById, teachers[]   (teachers: many-to-
 User          id, name, email, language
 Invite        id, schoolId, code, expiresAt, createdById   (one active code per school; email invites later)
 
-Dancer        id, schoolId, name, photoUrl?, color?   (color: 1–12, the number of a dancer-N token)
+Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
 
 Dance         id, schoolId, title, audioId?, durationMs, labelMode, colorMode
 CastMember    id, danceId, dancerId?, role?, color?   (dancerId is set to null when the dancer is removed: the placeholder of B5)
@@ -302,7 +302,6 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 | 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
 | 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
 | 1.7 | Dancer roster | B1, B2, B3, B4 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | 🟨 |
-| 1.8 | Photo upload | B6 | `DancerRoster` | 1.7 | A HEIC photo from an iPhone uploads resized to 400 px | ⬜ |
 
 ### Phase 2 — Formation editor
 
@@ -330,7 +329,7 @@ First milestone to show real teachers.
 
 | # | Plan | Requirements | Screens | Depends on | Done when | Status |
 |---|---|---|---|---|---|---|
-| 4.1 | Audio upload | E1, E7 | — | 1.8, 2.3 | Upload a 30 MB MP3 and reuse it in a second dance | ⬜ |
+| 4.1 | Audio upload | E1, E7 | — | 2.3 | Upload a 30 MB MP3 and reuse it in a second dance | ⬜ |
 | 4.2 | Waveform | E2, E8 | `Timeline` | 4.1 | Waveform and playhead open instantly on reload | ⬜ |
 | 4.3 | Transport controls | E5 | `Timeline` | 4.2 | Play, pause, scrub, loop, 0.5× / 0.75× / 1× | ⬜ |
 | 4.4 | Counts | E3 | `Timeline` | 4.2 | Tap counts or generate them from BPM and offset | ⬜ |
@@ -351,7 +350,7 @@ First milestone to show real teachers.
 | 6.1 | Shows and acts | H1, H2 | `ShowManager`, `ShowCard`, `DanceRow` | 2.3 | Create a show with acts holding dances | ⬜ |
 | 6.2 | Reordering | H3 | `ShowManager` | 6.1 | Drag acts and dances into a new order | ⬜ |
 | 6.3 | Reuse and duplicate dances | H7 | `DanceRow` | 6.1 | One dance in two shows; duplicate a dance | ⬜ |
-| 6.4 | Costume photos | H5 | `ShowManager` | 1.8, 6.1 | Upload costume photos to a dance | ⬜ |
+| 6.4 | Costume photos | H5, B6 | `ShowManager` | 6.1 | A HEIC costume photo from an iPhone uploads resized to 1600 px | ⬜ |
 | 6.5 | Show details and running time | H4, H6 | `ShowManager`, `DanceRow` | 4.1, 6.4 | Each dance shows song, duration, cast, photos; show total time is right | ⬜ |
 
 ### Phase 7 — Presentation and export
