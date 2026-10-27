@@ -8,7 +8,6 @@ import {
   type SchoolInviteResponse,
 } from '@living-stage/shared';
 import { Router } from 'express';
-import { requireSchoolMember } from '../auth/require-school-member.ts';
 import { requireSession } from '../auth/require-session.ts';
 import { prisma } from '../db.ts';
 import { generateInviteCode } from '../invites/generate-invite-code.ts';
@@ -16,41 +15,33 @@ import { toSchool } from './schools.ts';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+export const schoolInviteRouter = Router();
+
+schoolInviteRouter.get('/invite', async (_req, res) => {
+  const invite = await prisma.invite.findFirst({
+    where: { schoolId: res.locals.schoolId, expiresAt: { gt: new Date() } },
+  });
+
+  res.json({ invite: invite && toInvite(invite) } satisfies SchoolInviteResponse);
+});
+
+schoolInviteRouter.post('/invite', async (_req, res) => {
+  const schoolId = res.locals.schoolId;
+  const fields = {
+    code: generateInviteCode(),
+    expiresAt: new Date(Date.now() + INVITE_VALID_DAYS * DAY_MS),
+    createdById: res.locals.auth.user.id,
+  };
+  const invite = await prisma.invite.upsert({
+    where: { schoolId },
+    create: { schoolId, ...fields },
+    update: fields,
+  });
+
+  res.status(201).json({ invite: toInvite(invite) } satisfies CreateInviteResponse);
+});
+
 export const invitesRouter = Router();
-
-invitesRouter.get(
-  '/schools/:schoolId/invite',
-  requireSession,
-  requireSchoolMember,
-  async (_req, res) => {
-    const invite = await prisma.invite.findFirst({
-      where: { schoolId: res.locals.schoolId, expiresAt: { gt: new Date() } },
-    });
-
-    res.json({ invite: invite && toInvite(invite) } satisfies SchoolInviteResponse);
-  },
-);
-
-invitesRouter.post(
-  '/schools/:schoolId/invite',
-  requireSession,
-  requireSchoolMember,
-  async (_req, res) => {
-    const schoolId = res.locals.schoolId;
-    const fields = {
-      code: generateInviteCode(),
-      expiresAt: new Date(Date.now() + INVITE_VALID_DAYS * DAY_MS),
-      createdById: res.locals.auth.user.id,
-    };
-    const invite = await prisma.invite.upsert({
-      where: { schoolId },
-      create: { schoolId, ...fields },
-      update: fields,
-    });
-
-    res.status(201).json({ invite: toInvite(invite) } satisfies CreateInviteResponse);
-  },
-);
 
 invitesRouter.get('/invites/:code', requireSession, async (req, res) => {
   const invite = await findActiveInvite(req.params.code);

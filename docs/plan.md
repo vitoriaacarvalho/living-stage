@@ -27,7 +27,7 @@ Living Stage is a responsive web app where dance schools plan group choreography
 | Permissions | All members of a school have the same rights |
 | School required | A signed-in user with no school must create one or join one with an invitation code before using the app. With one school she goes straight into it; with several she picks one at sign-in and can switch inside the app |
 | Invitations | One reusable code per school, valid 7 days; any teacher can make a new one, which replaces the old. Shared as a short code to type (8 letters and digits without look-alikes, shown as `ABCD-2345`) or as a link carrying it (`/join/<code>`, kept through sign-in). Joining shows the school's name before confirming. Schools are never listed or searchable. Email invites come later |
-| Tenancy | Many schools, each a private space; several teachers share one school's environment |
+| Tenancy | Many schools, each a private space; several teachers share one school's environment. Every route for a school's data lives under `/api/schools/:schoolId`, where one membership check answers 404 to non-members, so another school's data looks like it does not exist. No route checks who created the school |
 | Editing model | One person edits a dance at a time; others watch changes live |
 | Casts | One cast per dance |
 | Roles | Free text per dance; the teacher decides whether to show and color by role |
@@ -116,8 +116,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **A2.** A user can create a school and becomes its first member.
 - ✅ **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email. Code and link done; email comes with plan 1.4.
 - ✅ **A4.** A user can belong to more than one school and switch between them.
-- **A5.** All members of a school have equal rights over its dancers, dances and shows.
-- **A6.** A school's data is visible only to its members.
+- ✅ **A5.** All members of a school have equal rights over its dancers, dances and shows.
+- ✅ **A6.** A school's data is visible only to its members.
 
 ### Part B — Dancer roster
 
