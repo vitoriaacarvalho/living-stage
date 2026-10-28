@@ -244,7 +244,7 @@ Invite        id, schoolId, code, expiresAt, createdById   (one active code per 
 
 Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
 
-Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode   (durationMs typed by hand in the MVP)
+Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
 CastMember    id, danceId, dancerId?, role?, color?   (dancerId is set to null when the dancer is removed: the placeholder of B5)
 Figure        id, danceId, order, name?, timeMs? | count?
 Position      figureId, castMemberId, x, y

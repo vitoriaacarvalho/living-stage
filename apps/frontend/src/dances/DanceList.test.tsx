@@ -11,10 +11,16 @@ vi.mock('../api/dances.ts', () => ({
   deleteDance: vi.fn(),
 }));
 
-const kitri = { id: 'dance-1', title: 'Kitri variation', createdAt: '2026-10-20T12:00:00.000Z' };
+const kitri = {
+  id: 'dance-1',
+  title: 'Kitri variation',
+  showGuides: true,
+  createdAt: '2026-10-20T12:00:00.000Z',
+};
 const waltz = {
   id: 'dance-2',
   title: 'Waltz of the flowers',
+  showGuides: true,
   createdAt: '2026-10-27T12:00:00.000Z',
 };
 
@@ -140,11 +146,11 @@ describe('renaming', () => {
     await user.clear(screen.getByLabelText('Title'));
     await user.type(screen.getByLabelText('Title'), ' Kitri, act I ');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(updateDance).toHaveBeenCalledWith('school-1', { ...kitri, title: 'Kitri, act I' });
+    expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { title: 'Kitri, act I' });
   });
 
   test('keeps the form open when the dance cannot be renamed', async () => {
-    vi.mocked(updateDance).mockRejectedValue(new Error('PUT dance answered 500'));
+    vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
     const user = await openRename();
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not rename the dance.');

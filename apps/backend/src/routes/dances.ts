@@ -1,5 +1,6 @@
 import {
   parseDanceInput,
+  parseDanceUpdate,
   type Dance,
   type DanceResponse,
   type ListDancesResponse,
@@ -30,16 +31,16 @@ schoolDancesRouter.post('/dances', async (req, res) => {
   res.status(201).json({ dance: toDance(dance) } satisfies DanceResponse);
 });
 
-schoolDancesRouter.put('/dances/:danceId', async (req, res) => {
-  const input = parseDanceInput(req.body);
-  if (!input) {
+schoolDancesRouter.patch('/dances/:danceId', async (req, res) => {
+  const update = parseDanceUpdate(req.body);
+  if (!update) {
     res.status(400).json({ error: 'invalid_dance' });
     return;
   }
 
   const [dance] = await prisma.dance.updateManyAndReturn({
     where: { id: req.params.danceId, schoolId: res.locals.schoolId },
-    data: input,
+    data: update,
   });
   if (!dance) {
     res.status(404).json({ error: 'not_found' });
@@ -61,6 +62,8 @@ schoolDancesRouter.delete('/dances/:danceId', async (req, res) => {
   res.status(204).end();
 });
 
-function toDance({ id, title, createdAt }: { id: string; title: string; createdAt: Date }): Dance {
-  return { id, title, createdAt: createdAt.toISOString() };
+type DanceRow = { id: string; title: string; showGuides: boolean; createdAt: Date };
+
+function toDance({ id, title, showGuides, createdAt }: DanceRow): Dance {
+  return { id, title, showGuides, createdAt: createdAt.toISOString() };
 }

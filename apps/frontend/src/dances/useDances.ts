@@ -37,7 +37,7 @@ export function useDances(schoolId: string): { state: DancesState } & DanceActio
   }
 
   async function rename(dance: Dance) {
-    const saved = await updateDance(schoolId, dance);
+    const saved = await updateDance(schoolId, dance.id, { title: dance.title });
     change((dances) => dances.map((each) => (each.id === saved.id ? saved : each)));
   }
 

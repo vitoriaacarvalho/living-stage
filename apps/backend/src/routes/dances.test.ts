@@ -35,12 +35,14 @@ const kitri = {
   id: 'dance-1',
   schoolId: 'school-1',
   title: 'Kitri variation',
+  showGuides: true,
   createdAt: new Date('2026-10-27T12:00:00.000Z'),
 };
 
 const kitriJson = {
   id: 'dance-1',
   title: 'Kitri variation',
+  showGuides: true,
   createdAt: '2026-10-27T12:00:00.000Z',
 };
 
@@ -135,18 +137,18 @@ describe('POST /api/schools/:schoolId/dances', () => {
   });
 });
 
-describe('PUT /api/schools/:schoolId/dances/:danceId', () => {
+describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
   const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
 
   test('responds with the renamed dance', async () => {
     vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([{ ...kitri, title: 'Kitri' }]);
-    const res = await fetch(url(), send('PUT', { title: 'Kitri' }));
+    const res = await fetch(url(), send('PATCH', { title: 'Kitri' }));
     expect(await res.json()).toEqual({ dance: { ...kitriJson, title: 'Kitri' } });
   });
 
   test('renames only a dance of this school', async () => {
     vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
-    await fetch(url(), send('PUT', { title: ' Kitri variation ' }));
+    await fetch(url(), send('PATCH', { title: ' Kitri variation ' }));
     expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith({
       where: { id: 'dance-1', schoolId: 'school-1' },
       data: { title: 'Kitri variation' },
@@ -155,12 +157,34 @@ describe('PUT /api/schools/:schoolId/dances/:danceId', () => {
 
   test('responds 404 for a dance of another school', async () => {
     vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([]);
-    const res = await fetch(url(), send('PUT', { title: 'Kitri' }));
+    const res = await fetch(url(), send('PATCH', { title: 'Kitri' }));
     expect(res.status).toBe(404);
   });
 
+  test('saves only the fields it is sent', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+    await fetch(url(), send('PATCH', { showGuides: false }));
+    expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith({
+      where: { id: 'dance-1', schoolId: 'school-1' },
+      data: { showGuides: false },
+    });
+  });
+
+  test('responds with the dance once its guides are hidden', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([
+      { ...kitri, showGuides: false },
+    ]);
+    const res = await fetch(url(), send('PATCH', { showGuides: false }));
+    expect(await res.json()).toEqual({ dance: { ...kitriJson, showGuides: false } });
+  });
+
   test('responds 400 for a blank title', async () => {
-    const res = await fetch(url(), send('PUT', { title: '' }));
+    const res = await fetch(url(), send('PATCH', { title: '' }));
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 when there is nothing to change', async () => {
+    const res = await fetch(url(), send('PATCH', {}));
     expect(res.status).toBe(400);
   });
 });

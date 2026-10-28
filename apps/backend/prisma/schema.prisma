@@ -113,11 +113,12 @@ model Dancer {
 }
 
 model Dance {
-  id        String   @id @default(cuid())
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  title     String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title      String
+  showGuides Boolean  @default(true)
+  createdAt  DateTime @default(now())
 
   @@index([schoolId])
   @@map("dance")

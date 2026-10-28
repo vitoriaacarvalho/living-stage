@@ -1,4 +1,10 @@
-import type { Dance, DanceInput, DanceResponse, ListDancesResponse } from '@living-stage/shared';
+import type {
+  Dance,
+  DanceInput,
+  DanceResponse,
+  DanceUpdate,
+  ListDancesResponse,
+} from '@living-stage/shared';
 
 export async function fetchDances(schoolId: string, signal: AbortSignal): Promise<Dance[]> {
   const res = await fetch(`/api/schools/${schoolId}/dances`, { signal });
@@ -18,13 +24,17 @@ export async function createDance(schoolId: string, input: DanceInput): Promise<
   return body.dance;
 }
 
-export async function updateDance(schoolId: string, dance: Dance): Promise<Dance> {
-  const res = await fetch(`/api/schools/${schoolId}/dances/${dance.id}`, {
-    method: 'PUT',
+export async function updateDance(
+  schoolId: string,
+  danceId: string,
+  update: DanceUpdate,
+): Promise<Dance> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}`, {
+    method: 'PATCH',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ title: dance.title }),
+    body: JSON.stringify(update),
   });
-  if (!res.ok) throw new Error(`PUT dance answered ${res.status}`);
+  if (!res.ok) throw new Error(`PATCH dance answered ${res.status}`);
   const body: DanceResponse = await res.json();
   return body.dance;
 }

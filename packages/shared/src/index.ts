@@ -4,8 +4,10 @@ export {
   DANCE_TITLE_MAX_LENGTH,
   parseDanceInput,
   parseDanceTitle,
+  parseDanceUpdate,
   type Dance,
   type DanceInput,
+  type DanceUpdate,
   type DanceResponse,
   type ListDancesResponse,
 } from './dance.ts';
