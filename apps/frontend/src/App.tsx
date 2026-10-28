@@ -5,6 +5,7 @@ import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
 import { SignOutButton } from './auth/SignOutButton.tsx';
 import { DancerRoster } from './dancers/DancerRoster.tsx';
+import { DanceList } from './dances/DanceList.tsx';
 import { AddSchool } from './schools/AddSchool.tsx';
 import { InviteTeachers } from './schools/InviteTeachers.tsx';
 import { readJoinCode } from './schools/join-link.ts';
@@ -125,6 +126,7 @@ function Home({ userName, school, onSwitch }: HomeProps) {
         Your schools
       </Button>
       <SignOutButton />
+      <DanceList schoolId={school.id} />
       <p>{describe(apiStatus)}</p>
     </main>
   );

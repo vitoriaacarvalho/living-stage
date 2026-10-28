@@ -12,7 +12,7 @@ vi.mock('../auth/auth.ts', () => ({
 vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
-    dance: { findMany: vi.fn(), create: vi.fn() },
+    dance: { findMany: vi.fn(), create: vi.fn(), updateManyAndReturn: vi.fn() },
   },
 }));
 
@@ -56,6 +56,7 @@ beforeEach(() => {
   vi.mocked(prisma.school.findFirst).mockReset();
   vi.mocked(prisma.dance.findMany).mockReset();
   vi.mocked(prisma.dance.create).mockReset();
+  vi.mocked(prisma.dance.updateManyAndReturn).mockReset();
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user,
     session: { id: 'session-1', userId: user.id } as never,
@@ -125,5 +126,35 @@ describe('POST /api/schools/:schoolId/dances', () => {
     vi.mocked(prisma.school.findFirst).mockResolvedValue(null);
     await fetch(url(), send('POST', { title: 'Kitri variation' }));
     expect(prisma.dance.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('PUT /api/schools/:schoolId/dances/:danceId', () => {
+  const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
+
+  test('responds with the renamed dance', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([{ ...kitri, title: 'Kitri' }]);
+    const res = await fetch(url(), send('PUT', { title: 'Kitri' }));
+    expect(await res.json()).toEqual({ dance: { ...kitriJson, title: 'Kitri' } });
+  });
+
+  test('renames only a dance of this school', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+    await fetch(url(), send('PUT', { title: ' Kitri variation ' }));
+    expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith({
+      where: { id: 'dance-1', schoolId: 'school-1' },
+      data: { title: 'Kitri variation' },
+    });
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([]);
+    const res = await fetch(url(), send('PUT', { title: 'Kitri' }));
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 400 for a blank title', async () => {
+    const res = await fetch(url(), send('PUT', { title: '' }));
+    expect(res.status).toBe(400);
   });
 });

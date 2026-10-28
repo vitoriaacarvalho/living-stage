@@ -30,6 +30,25 @@ schoolDancesRouter.post('/dances', async (req, res) => {
   res.status(201).json({ dance: toDance(dance) } satisfies DanceResponse);
 });
 
+schoolDancesRouter.put('/dances/:danceId', async (req, res) => {
+  const input = parseDanceInput(req.body);
+  if (!input) {
+    res.status(400).json({ error: 'invalid_dance' });
+    return;
+  }
+
+  const [dance] = await prisma.dance.updateManyAndReturn({
+    where: { id: req.params.danceId, schoolId: res.locals.schoolId },
+    data: input,
+  });
+  if (!dance) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.json({ dance: toDance(dance) } satisfies DanceResponse);
+});
+
 function toDance({ id, title, createdAt }: { id: string; title: string; createdAt: Date }): Dance {
   return { id, title, createdAt: createdAt.toISOString() };
 }
