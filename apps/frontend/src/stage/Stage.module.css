@@ -19,6 +19,21 @@
   fill: var(--stage-floor);
 }
 
+.quarter,
+.center {
+  stroke: var(--stage-line);
+  vector-effect: non-scaling-stroke;
+}
+
+.quarter {
+  stroke-width: 1px;
+  stroke-dasharray: 4 6;
+}
+
+.center {
+  stroke-width: 1.5px;
+}
+
 .edge {
   stroke: var(--stage-ink-muted);
   stroke-width: 2px;
