@@ -4,6 +4,7 @@ import { auth } from './auth/auth.ts';
 import { requireSchoolMember } from './auth/require-school-member.ts';
 import { requireSession } from './auth/require-session.ts';
 import { schoolDancersRouter } from './routes/dancers.ts';
+import { schoolDancesRouter } from './routes/dances.ts';
 import { healthRouter } from './routes/health.ts';
 import { invitesRouter, schoolInviteRouter } from './routes/invites.ts';
 import { meRouter } from './routes/me.ts';
@@ -25,6 +26,7 @@ export function createApp() {
     requireSchoolMember,
     schoolInviteRouter,
     schoolDancersRouter,
+    schoolDancesRouter,
   );
   return app;
 }

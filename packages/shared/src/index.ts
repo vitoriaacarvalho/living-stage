@@ -1,6 +1,15 @@
 export const APP_NAME = 'Living Stage';
 
 export {
+  DANCE_TITLE_MAX_LENGTH,
+  parseDanceInput,
+  parseDanceTitle,
+  type Dance,
+  type DanceInput,
+  type DanceResponse,
+  type ListDancesResponse,
+} from './dance.ts';
+export {
   DANCER_COLOR_COUNT,
   DANCER_NAME_MAX_LENGTH,
   isDancerColor,

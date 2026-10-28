@@ -292,6 +292,8 @@ The full design system (tokens, components, screens) lives in Claude Design (lin
 
 **Fonts:** Instrument Sans for the interface; Cormorant Garamond for large titles only (show names, screen titles, 24px and up).
 
+**Illustration.** Four hand-drawn sepia pencil sketches (arabesque, cambré, révérence, pointe shoes) bring warmth to the light pages. Sign in and sign up split the screen: the four sketches as a collage on the left at full strength, the form card on the right with the "Living Stage" wordmark; on phones the collage shrinks to a band of three above the card. Other light pages carry the sketches faintly (about 14% opacity) behind their content as a watermark: `page` for roomy screens such as invites, `quiet` for dense lists such as the dancer roster, `form` around a centered card. Cards stay opaque, so a sketch never sits under text. Never on the stage, in presentation mode or on print.
+
 **Alternatives considered:** "Velvet curtain" (dark theater, gold, crimson); "Studio mirror" (cool neutral, teal, coral). No dark mode.
 
 ### Screens
@@ -304,7 +306,7 @@ The full design system (tokens, components, screens) lives in Claude Design (lin
 6. Presentation mode: full-screen dark stage
 7. Print / PDF view: one figure per page
 
-Design mockups will be produced in Claude Design, starting with the dance editor.
+Mockups for every screen above live in the Claude Design system, which is the visual source of truth; when it changes, the built screens are updated to match.
 
 ## 7. Roadmap and open questions
 
