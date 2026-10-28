@@ -31,7 +31,6 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 ## 2. Decisions agreed so far
 
 | Topic | Decision |
-|---|---|
 | Users | Ballet teachers and school managers; dancers have no accounts |
 | Permissions | All members of a school have the same rights |
 | School required | A signed-in user with no school must create one or join one with an invitation code before using the app. With one school she goes straight into it; with several she picks one at sign-in and can switch inside the app |
@@ -57,7 +56,6 @@ Note: on iPad and iPhone, Chrome uses Apple's WebKit engine, so testing must hap
 TypeScript end to end, in one npm workspaces monorepo, with types and animation math shared between client and server.
 
 | Layer | Choice | Notes |
-|---|---|---|
 | Language | TypeScript | Frontend, backend and shared code |
 | Package manager | npm (workspaces) | Root `package.json` with `"workspaces": ["apps/*", "packages/*"]` |
 | Frontend | React + Vite | Single-page app, responsive, installable as a PWA |
@@ -275,7 +273,6 @@ The interface stays calm so the dancers on the dark stage are the most colorful 
 The full design system (tokens, components, screens) lives in Claude Design (link kept private, outside the repo). The `living-stage-design` skill reads it.
 
 | Use | Color |
-|---|---|
 | Background | `#FBF8F6` |
 | Surfaces | `#FFFFFF` |
 | Primary (rose) | `#B4476E` |
@@ -312,87 +309,157 @@ Mockups for every screen above live in the Claude Design system, which is the vi
 
 The MVP comes first (see §1). Its plans are listed below in build order: shows and dances first, then casting and placing dancers, then movement and rehearsal. Plan numbers are kept from the earlier roadmap, so they are not in numeric order. The end of MVP phase 3 is the first milestone to put in front of real teachers.
 
-The build is split into small plans that each fit a sitting or two. Work top to bottom; a plan starts only when the plans it depends on are done. Each plan is a vertical slice: shared types, API and the screens it needs, built together. The Screens column names the design system components it builds (load the `living-stage-design` skill).
+The build is split into small plans that each fit a sitting or two. Work top to bottom; a plan starts only when the plans it depends on are done. Each plan is a vertical slice: shared types, API and the screens it needs, built together.
 
 **Every plan ships its UI.** When a plan starts, check the design system for the screens it touches. A plan with a screen builds that screen to the design in the same plan, never as plain HTML to style later, and its "Done when" is checked in the browser against the design. Order the slices so the screen appears early: the first API route, then its screen, then the next route and its screen, so each sitting ends with something visible. Small sub-slices can stay backend-only.
 
-A plan that needs more than this table (decisions, data model, commit slices) gets its own file in `docs/features/` (e.g. `1.2-auth.md`). Those files hold detail only: any decision that changes this plan is copied here too, and this file wins where they differ.
+A plan that needs more than its entry here (decisions, data model, commit slices) gets its own file in `docs/features/` (e.g. `1.2-auth.md`). Those files hold detail only: any decision that changes this plan is copied here too, and this file wins where they differ.
 
-Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is done, mark it ✅ in section 4 and set its plan's row to 🟨 (some requirements done) or ✅ (all done and its "Done when" check passes), in the same commit as the work.
+How to read a plan:
+
+- ⬜ **2.1 Stage** · after 2.0 ← status, plan number and name, then the plans that must be done first
+  - Done when: … ← the check that closes the plan
+  - Requirements: … · Screens: … ← the §4 IDs it covers and the design system components it builds (load the `living-stage-design` skill)
+
+Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is done, mark it ✅ in section 4 and set its plan's status to 🟨 (some requirements done) or ✅ (all done and its "Done when" check passes), in the same commit as the work.
 
 ### MVP
 
 #### MVP 1 — Foundation
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 1.1 | Monorepo and tooling | S1–S6 | — | — | `npm run dev` starts web and API; CI is green | 🟨 |
-| 1.2 | Sign in | A1 | `Access` | 1.1 | Sign up, sign in and sign out with email and password | ✅ |
-| 1.2a | English copy | J4 | `Access` | 1.2 | No Portuguese copy left in the interface or its tests | ✅ |
-| 1.6a | Design foundation and styled sign-in | K5 | `Access` (sign in, sign up), `Button`, `SegmentedControl` | 1.2 | Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop | ✅ |
-| 1.3 | Schools and data isolation | A2, A3 (code and link), A4, A5, A6 | `Access` (create or join a school), school picker and switcher | 1.6a | Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404 | 🟨 |
-| 1.6 | Responsive app shell | K1, K2 | `Home` (shell, nav rail) | 1.6a | Navigation and layout work on iPhone, iPad and desktop | ⬜ |
-| 1.7 | Dancer roster | B1, B2, B3, B4 | `DancerRoster` | 1.3 | Add, edit, remove, search and sort dancers | ✅ |
+- 🟨 **1.1 Monorepo and tooling**
+  - Done when: `npm run dev` starts web and API; CI is green
+  - Requirements: S1–S6
+- ✅ **1.2 Sign in** · after 1.1
+  - Done when: Sign up, sign in and sign out with email and password
+  - Requirements: A1 · Screens: `Access`
+- ✅ **1.2a English copy** · after 1.2
+  - Done when: No Portuguese copy left in the interface or its tests
+  - Requirements: J4 · Screens: `Access`
+- ✅ **1.6a Design foundation and styled sign-in** · after 1.2
+  - Done when: Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop
+  - Requirements: K5 · Screens: `Access` (sign in, sign up), `Button`, `SegmentedControl`
+- 🟨 **1.3 Schools and data isolation** · after 1.6a
+  - Done when: Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404
+  - Requirements: A2, A3 (code and link), A4, A5, A6 · Screens: `Access` (create or join a school), school picker and switcher
+- ⬜ **1.6 Responsive app shell** · after 1.6a
+  - Done when: Navigation and layout work on iPhone, iPad and desktop
+  - Requirements: K1, K2 · Screens: `Home` (shell, nav rail)
+- ✅ **1.7 Dancer roster** · after 1.3
+  - Done when: Add, edit, remove, search and sort dancers
+  - Requirements: B1, B2, B3, B4 · Screens: `DancerRoster`
 
 #### MVP 2 — Shows and dances
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 2.0 | Dances | C13 | `Home` (dance list) | 1.3 | Create, rename and delete dances; Home lists them | ✅ |
-| 6.1 | Shows and acts | H1, H2 | `ShowManager`, `ShowCard`, `DanceRow` | 2.0 | Create a show with acts holding dances | ⬜ |
-| 6.2 | Reordering | H3 | `ShowManager` | 6.1 | Drag acts and dances into a new order | ⬜ |
+- ✅ **2.0 Dances** · after 1.3
+  - Done when: Create, rename and delete dances; Home lists them
+  - Requirements: C13 · Screens: `Home` (dance list)
+- ⬜ **6.1 Shows and acts** · after 2.0
+  - Done when: Create a show with acts holding dances
+  - Requirements: H1, H2 · Screens: `ShowManager`, `ShowCard`, `DanceRow`
+- ⬜ **6.2 Reordering** · after 6.1
+  - Done when: Drag acts and dances into a new order
+  - Requirements: H3 · Screens: `ShowManager`
 
 #### MVP 3 — Casting and formations
 
 First milestone to show real teachers.
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 2.1 | Stage | C1, C2, C3 | `Stage`, `DanceEditorIPad` | 2.0 | Empty stage with wings and toggleable guide lines | ⬜ |
-| 2.2 | Casting | C4, C5, C6, C14, B5 | `CastList` | 2.1, 1.7 | Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder | ⬜ |
-| 9.1 | 3D stage and ballerinas | L1–L6, C1 (3D), C5 (3D) | `Stage3D`, `DanceEditorIPad` | 2.2 | Cast dancers stand as 3D ballerinas on the perspective stage, colored by dancer or role, with readable labels; one tap switches to the 2D plan | ⬜ |
-| 2.3 | Figures | C7 | `Toolbar`, `Timeline` (figure markers) | 2.2 | Add, duplicate, rename, reorder, delete figures | ⬜ |
-| 2.4 | Dragging and selection | C8, C9 | `Stage`, `Stage3D` | 2.3, 9.1 | Drag one or many dancers in the 2D plan and the 3D stage, with optional snapping, by finger and mouse | ⬜ |
-| 2.7 | Straight-line playback | D1, D4, D5, E9 | `Timeline`, `Stage3D` | 2.3, 9.1 | 60 ballerinas animate smoothly between figures without music, on the 3D stage and the 2D plan | ⬜ |
+- ⬜ **2.1 Stage** · after 2.0
+  - Done when: Empty stage with wings and toggleable guide lines
+  - Requirements: C1, C2, C3 · Screens: `Stage`, `DanceEditorIPad`
+- ⬜ **2.2 Casting** · after 2.1, 1.7
+  - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
+  - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
+- ⬜ **9.1 3D stage and ballerinas** · after 2.2
+  - Done when: Cast dancers stand as 3D ballerinas on the perspective stage, colored by dancer or role, with readable labels; one tap switches to the 2D plan
+  - Requirements: L1–L6, C1 (3D), C5 (3D) · Screens: `Stage3D`, `DanceEditorIPad`
+- ⬜ **2.3 Figures** · after 2.2
+  - Done when: Add, duplicate, rename, reorder, delete figures
+  - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
+- ⬜ **2.4 Dragging and selection** · after 2.3, 9.1
+  - Done when: Drag one or many dancers in the 2D plan and the 3D stage, with optional snapping, by finger and mouse
+  - Requirements: C8, C9 · Screens: `Stage`, `Stage3D`
+- ⬜ **2.7 Straight-line playback** · after 2.3, 9.1
+  - Done when: 60 ballerinas animate smoothly between figures without music, on the 3D stage and the 2D plan
+  - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage3D`
 
 #### MVP 4 — Show details
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 6.5 | Show details and running time | H4, H6 (typed durations) | `ShowManager`, `DanceRow` | 6.1, 2.2 | Each dance shows its cast, dancer count and typed duration; the show's total time is right | ⬜ |
-| 6.3 | Reuse and duplicate dances | H7 | `DanceRow` | 6.1, 2.3 | One dance in two shows; duplicate a dance with its cast and figures | ⬜ |
+- ⬜ **6.5 Show details and running time** · after 6.1, 2.2
+  - Done when: Each dance shows its cast, dancer count and typed duration; the show's total time is right
+  - Requirements: H4, H6 (typed durations) · Screens: `ShowManager`, `DanceRow`
+- ⬜ **6.3 Reuse and duplicate dances** · after 6.1, 2.3
+  - Done when: One dance in two shows; duplicate a dance with its cast and figures
+  - Requirements: H7 · Screens: `DanceRow`
 
 #### MVP 5 — Movement and rehearsal
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 3.1 | Curved paths | D2 (curves) | `Stage` | 2.7 | Drag handles to bend a path; playback follows it | ⬜ |
-| 3.2 | Waypoints | D2 (waypoints) | `Stage` | 3.1 | Add and move waypoints on a path | ⬜ |
-| 3.3 | Circles and arcs | D3 | `Stage` | 3.1 | A dancer circles another dancer | ⬜ |
-| 7.1 | Presentation mode | G1, G2, G3 | `PresentationMode` | 2.7 | Full-screen stage readable on a TV; step or play continuously | ⬜ |
-| 8.2 | iPhone editor | K3 | `DanceEditorIPhone` | 2.4 | Quick edits work on iPhone; landscape hint for heavy editing | ⬜ |
+- ⬜ **3.1 Curved paths** · after 2.7
+  - Done when: Drag handles to bend a path; playback follows it
+  - Requirements: D2 (curves) · Screens: `Stage`
+- ⬜ **3.2 Waypoints** · after 3.1
+  - Done when: Add and move waypoints on a path
+  - Requirements: D2 (waypoints) · Screens: `Stage`
+- ⬜ **3.3 Circles and arcs** · after 3.1
+  - Done when: A dancer circles another dancer
+  - Requirements: D3 · Screens: `Stage`
+- ⬜ **7.1 Presentation mode** · after 2.7
+  - Done when: Full-screen stage readable on a TV; step or play continuously
+  - Requirements: G1, G2, G3 · Screens: `PresentationMode`
+- ⬜ **8.2 iPhone editor** · after 2.4
+  - Done when: Quick edits work on iPhone; landscape hint for heavy editing
+  - Requirements: K3 · Screens: `DanceEditorIPhone`
 
 ### After the MVP
 
 Not ordered yet; plan it when the MVP ships.
 
-| # | Plan | Requirements | Screens | Depends on | Done when | Status |
-|---|---|---|---|---|---|---|
-| 1.4 | Email invites | A3 (email) | — | 1.3 | An invited teacher joins from an email | ⬜ |
-| 2.5 | Layout tools and ghost view | C10, C11 | `Toolbar` | 2.4 | Mirror, align, spread, circle; previous figure shown faintly | ⬜ |
-| 2.6 | Undo and redo | C12 | `Toolbar` | 2.4 | Undo/redo per figure | ⬜ |
-| 4.1 | Audio upload | E1, E7 | — | 2.3 | Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song | ⬜ |
-| 4.2 | Waveform | E2, E8 | `Timeline` | 4.1 | Waveform and playhead open instantly on reload | ⬜ |
-| 4.3 | Transport controls | E5 | `Timeline` | 4.2 | Play, pause, scrub, loop, 0.5× / 0.75× / 1× | ⬜ |
-| 4.4 | Counts | E3 | `Timeline` | 4.2 | Tap counts or generate them from BPM and offset | ⬜ |
-| 4.5 | Figures on the timeline | E4, E6 | `Timeline`, `PresentationMode` | 4.3, 4.4, 2.7 | Stage stays in sync with the music at every speed and after scrubbing, in the editor and in presentation mode | ⬜ |
-| 5.1 | Edit lock | F1, F2, F4 | `EditingBanner` | 2.3 | Second teacher sees read-only with a banner; lock expires on tab close | ⬜ |
-| 5.2 | Live updates | F3 | — | 5.1 | Viewer sees edits without reloading | ⬜ |
-| 5.3 | Take over editing | F5 | `EditingBanner` | 5.1 | Viewer takes over once the lock is free | ⬜ |
-| 6.4 | Costume photos | H5, B6 | `ShowManager` | 6.1 | A HEIC costume photo from an iPhone uploads resized to 1600 px and shows in the show manager | ⬜ |
-| 7.2 | PDF export | I1, I2, I3, I4 | `PrintView` | 2.3 | Printable PDF, one figure per page, made in the browser | ⬜ |
-| 8.1 | Installable app | K4 | — | 1.6 | Add to home screen on iPad; opens full-screen | ⬜ |
-| 8.3 | Languages | J1, J2, J3 | — | 1.6 | Every screen works in pt-BR and English; default follows the browser | ⬜ |
+- ⬜ **1.4 Email invites** · after 1.3
+  - Done when: An invited teacher joins from an email
+  - Requirements: A3 (email)
+- ⬜ **2.5 Layout tools and ghost view** · after 2.4
+  - Done when: Mirror, align, spread, circle; previous figure shown faintly
+  - Requirements: C10, C11 · Screens: `Toolbar`
+- ⬜ **2.6 Undo and redo** · after 2.4
+  - Done when: Undo/redo per figure
+  - Requirements: C12 · Screens: `Toolbar`
+- ⬜ **4.1 Audio upload** · after 2.3
+  - Done when: Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song
+  - Requirements: E1, E7
+- ⬜ **4.2 Waveform** · after 4.1
+  - Done when: Waveform and playhead open instantly on reload
+  - Requirements: E2, E8 · Screens: `Timeline`
+- ⬜ **4.3 Transport controls** · after 4.2
+  - Done when: Play, pause, scrub, loop, 0.5× / 0.75× / 1×
+  - Requirements: E5 · Screens: `Timeline`
+- ⬜ **4.4 Counts** · after 4.2
+  - Done when: Tap counts or generate them from BPM and offset
+  - Requirements: E3 · Screens: `Timeline`
+- ⬜ **4.5 Figures on the timeline** · after 4.3, 4.4, 2.7
+  - Done when: Stage stays in sync with the music at every speed and after scrubbing, in the editor and in presentation mode
+  - Requirements: E4, E6 · Screens: `Timeline`, `PresentationMode`
+- ⬜ **5.1 Edit lock** · after 2.3
+  - Done when: Second teacher sees read-only with a banner; lock expires on tab close
+  - Requirements: F1, F2, F4 · Screens: `EditingBanner`
+- ⬜ **5.2 Live updates** · after 5.1
+  - Done when: Viewer sees edits without reloading
+  - Requirements: F3
+- ⬜ **5.3 Take over editing** · after 5.1
+  - Done when: Viewer takes over once the lock is free
+  - Requirements: F5 · Screens: `EditingBanner`
+- ⬜ **6.4 Costume photos** · after 6.1
+  - Done when: A HEIC costume photo from an iPhone uploads resized to 1600 px and shows in the show manager
+  - Requirements: H5, B6 · Screens: `ShowManager`
+- ⬜ **7.2 PDF export** · after 2.3
+  - Done when: Printable PDF, one figure per page, made in the browser
+  - Requirements: I1, I2, I3, I4 · Screens: `PrintView`
+- ⬜ **8.1 Installable app** · after 1.6
+  - Done when: Add to home screen on iPad; opens full-screen
+  - Requirements: K4
+- ⬜ **8.3 Languages** · after 1.6
+  - Done when: Every screen works in pt-BR and English; default follows the browser
+  - Requirements: J1, J2, J3
 
 ### Open questions to settle in each part's planning session
 

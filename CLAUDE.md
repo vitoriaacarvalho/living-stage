@@ -15,5 +15,5 @@ TypeScript npm workspaces monorepo: `apps/frontend` (React + Vite, SVG stage), `
 ## How we work
 
 - Use the `step-by-step-pairing` skill: one requirement at a time, the user drives, no code unless asked.
-- When a requirement is done, update its status in `docs/plan.md` (✅ on the requirement in §4, 🟨 or ✅ on its plan row in §7) in the same commit.
+- When a requirement is done, update its status in `docs/plan.md` (✅ on the requirement in §4, 🟨 or ✅ on its plan in §7) in the same commit.
 - When a decision changes the plan, update `docs/plan.md` in the same commit.
