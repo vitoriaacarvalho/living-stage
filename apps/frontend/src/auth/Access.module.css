@@ -1,0 +1,144 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 100dvh;
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  overflow-x: hidden;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.wordmark {
+  margin: 0;
+  font: var(--text-display);
+  letter-spacing: var(--text-display-tracking);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+/* Phones and portrait tablets: a band of three sketches above the card. */
+.collage {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 440px;
+  height: clamp(140px, 36vw, 216px);
+}
+
+.collage img {
+  flex: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.arabesque {
+  width: auto;
+  height: 100%;
+}
+
+.cambre {
+  width: auto;
+  height: 78%;
+  margin-inline: calc(-1 * var(--space-5));
+}
+
+.pointe {
+  width: auto;
+  height: 58%;
+  transform: rotate(3deg);
+}
+
+.reverence {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .page {
+    justify-content: center;
+    padding-inline: var(--space-5);
+  }
+
+  .card {
+    padding-inline: var(--space-6);
+  }
+}
+
+/* Wide screens: the four sketches loosely stacked beside the card, as in the 640 × 800 design. */
+@media (min-width: 1080px) {
+  .page {
+    flex-direction: row;
+    justify-content: center;
+    gap: var(--space-6);
+    padding-block: var(--space-5);
+  }
+
+  .collage {
+    position: relative;
+    display: block;
+    width: min(640px, 80dvh);
+    max-width: none;
+    height: auto;
+    aspect-ratio: 640 / 800;
+  }
+
+  .collage img {
+    position: absolute;
+    height: auto;
+    margin: 0;
+  }
+
+  .arabesque {
+    left: 10%;
+    top: 3.75%;
+    width: 39%;
+  }
+
+  .cambre {
+    left: 39%;
+    top: 0.75%;
+    width: 62.5%;
+  }
+
+  .reverence {
+    display: block;
+    left: 11%;
+    top: 39.75%;
+    width: 68.75%;
+  }
+
+  .pointe {
+    left: 68.75%;
+    top: 64%;
+    width: 29%;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    flex: none;
+  }
+}

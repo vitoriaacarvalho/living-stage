@@ -38,10 +38,7 @@ export function SignUpForm() {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Create your account</h1>
-        <p className={styles.lead}>Plan figures, music and shows for your school.</p>
-      </header>
+      <h2 className={styles.formTitle}>Create your account</h2>
       <TextField label="Name" name="name" autoComplete="name" required />
       <TextField label="Email" name="email" type="email" autoComplete="email" required />
       <PasswordField

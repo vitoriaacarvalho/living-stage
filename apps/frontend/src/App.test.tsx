@@ -47,7 +47,7 @@ afterEach(() => {
 test('shows sign-in without a session', () => {
   mockSession({ data: null, isPending: false });
   render(<App />);
-  expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
 });
 
 test('shows nothing while the session loads', () => {
