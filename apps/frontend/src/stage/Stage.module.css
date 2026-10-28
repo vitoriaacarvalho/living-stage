@@ -1,0 +1,73 @@
+.stage {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--stage-wing);
+}
+
+.plan {
+  position: relative;
+  aspect-ratio: var(--plan-aspect);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.floor {
+  fill: var(--stage-floor);
+}
+
+.edge {
+  stroke: var(--stage-ink-muted);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.zone {
+  color: var(--stage-ink-muted);
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.upstage {
+  position: absolute;
+  top: calc(var(--upstage-wing) / 2);
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.leftWing,
+.rightWing {
+  position: absolute;
+  top: 82%;
+}
+
+.leftWing {
+  left: calc(var(--side-wing) / 2);
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.rightWing {
+  right: calc(var(--side-wing) / 2);
+  transform: translate(50%, -50%) rotate(90deg);
+}
+
+.audience {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 30px;
+}
+
+.audience::before,
+.audience::after {
+  content: '';
+  width: 60px;
+  border-top: 1px solid var(--stage-line);
+}
