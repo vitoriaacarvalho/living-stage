@@ -43,3 +43,11 @@ export {
   type ListSchoolsResponse,
   type School,
 } from './school.ts';
+export {
+  SIDE_WING_DEPTH,
+  STAGE_CENTER,
+  STAGE_DEPTH_M,
+  STAGE_QUARTERS,
+  STAGE_WIDTH_M,
+  UPSTAGE_WING_DEPTH,
+} from './stage.ts';
