@@ -25,7 +25,7 @@ The user is an experienced developer who wants to be part of every step of the i
    - **Claude explains:** when a library or concept is new to the user. Explain it before any code is written.
 4. **Split into tiny slices.** Propose a short list of slices: one route, one component, one test at a time. If a diff would be too big to read comfortably, the slice is too big; split it further.
 5. **Do one slice.** Implement or review only that slice, in the agreed mode. Suggest or write a test for it where it makes sense.
-6. **Commit.** Suggest a commit message that starts with the requirement ID, e.g. `B1: add dancer create route`. Do not commit unless the user asks.
+6. **Commit.** Suggest a commit message with a Conventional Commit prefix (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`), e.g. `feat: add dancer create route`. No requirement IDs in the subject. Do not commit unless the user asks.
 7. **Stop and check in.** Summarize in a line what the slice did and what the next slice would be. Wait for the user.
 
 ## Reviews

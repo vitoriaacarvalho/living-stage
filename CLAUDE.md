@@ -17,3 +17,4 @@ TypeScript npm workspaces monorepo: `apps/frontend` (React + Vite, SVG stage), `
 - Use the `step-by-step-pairing` skill: one requirement at a time, the user drives, no code unless asked.
 - When a requirement is done, update its status in `docs/plan.md` (✅ on the requirement in §4, 🟨 or ✅ on its plan in §7) in the same commit.
 - When a decision changes the plan, update `docs/plan.md` in the same commit.
+- Commit messages use Conventional Commit prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `style:`), e.g. `feat: add dancer create route`. Never put roadmap IDs (A1, C13, plan 2.0) in the commit subject.
