@@ -105,7 +105,7 @@ function Home({ userName, school, onSwitch }: HomeProps) {
 
   if (view === 'inviting') {
     return (
-      <CardPage>
+      <CardPage watermark="page">
         <InviteTeachers schoolId={school.id} onDone={() => setView('home')} />
       </CardPage>
     );

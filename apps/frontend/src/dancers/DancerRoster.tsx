@@ -3,6 +3,7 @@ import { useState, type CSSProperties } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { TextField } from '../ui/TextField.tsx';
+import { Watermark } from '../ui/Watermark.tsx';
 import { dancerColorName, dancerColorVar, initials } from './dancer-colors.ts';
 import { DancerForm } from './DancerForm.tsx';
 import styles from './DancerRoster.module.css';
@@ -22,6 +23,7 @@ export function DancerRoster({ school, onDone }: DancerRosterProps) {
 
   return (
     <main className={editing ? `${styles.page} ${styles.editing}` : styles.page}>
+      <Watermark layout="quiet" />
       <div className={styles.main}>
         <header className={styles.head}>
           <div className={styles.heading}>

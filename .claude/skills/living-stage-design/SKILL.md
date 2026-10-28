@@ -24,7 +24,9 @@ The design changes over time, so read it live with the Artifact tool (`action: "
 | One component's guidelines | `project/components/<Name>/README.md` |
 | How a component or screen looks | `project/components/<Name>/preview.html` |
 
-Components: `Button`, `SegmentedControl`, `Toolbar`, `Stage`, `Timeline`, `CastList`, `EditingBanner`, `DanceRow`, `ShowCard`, `Access`, `Home`, `DancerRoster`, `DanceEditorIPad`, `DanceEditorIPhone`, `ShowManager`, `PresentationMode`, `PrintView`. If a name is missing, list the files (`action: "list"`, `scope: "files"`).
+Components: `Button`, `SegmentedControl`, `Toolbar`, `Stage`, `Stage3D`, `Timeline`, `CastList`, `EditingBanner`, `DanceRow`, `ShowCard`, `Login`, `Register`, `Access` (inviting teachers), `Home`, `DancerRoster`, `DanceEditorIPad`, `DanceEditorIPhone`, `ShowManager`, `PresentationMode`, `PrintView`. If a name is missing, list the files (`action: "list"`, `scope: "files"`).
+
+The pencil sketches are uploaded assets, not published files: `project/README.md` › Illustration says where they go, and `AppDS.sketches` and `AppDS.watermark` in `project/components/bundle.js` give their asset ids and watermark layouts. Fetch one with `action: "read"` and `path` set to its asset id. The app's copies live in `apps/frontend/src/assets/sketches/`, and `ui/Watermark.tsx` mirrors the layouts.
 
 Always read `project/README.md` first, then `project/tokens.json` before using any value, then the README of each component you touch. The previews are mockup HTML, not this app's React code: take layout and values from them, not their implementation.
 
@@ -42,6 +44,7 @@ These hold even before you read the artifact. If the artifact disagrees, the art
 8. **Numbers** use tabular numerals (`numeric` style): `3:40`, `00:58 / 03:40`, `0,75×`.
 9. **Motion** is calm: 150–200 ms ease-out, nothing bounces.
 10. **Color is never the only cue:** a name or role label is always available.
+11. **Sketches stay sepia and off the stage.** Sign-in and sign-up show the sketch collage at full strength; other light pages get a faint watermark (`<Watermark layout="page" | "quiet" | "form" />`) under opaque cards. Never on the stage, in presentation mode, on print or behind form fields.
 
 ## Product facts
 

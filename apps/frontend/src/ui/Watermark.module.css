@@ -1,0 +1,15 @@
+.watermark {
+  --wm-opacity: 0.14;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sketch {
+  position: absolute;
+  height: auto;
+  opacity: var(--wm-opacity);
+  user-select: none;
+}
