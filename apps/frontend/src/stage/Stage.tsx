@@ -14,6 +14,8 @@ const upstageWing = UPSTAGE_WING_DEPTH * STAGE_DEPTH_M;
 const planWidth = STAGE_WIDTH_M + 2 * sideWing;
 const planHeight = STAGE_DEPTH_M + upstageWing;
 
+export const STAGE_PLAN_ASPECT = planWidth / planHeight;
+
 // Stage units stretch differently on each axis (12 m across, 8 m deep), so the
 // plan is drawn in metres to keep the floor's proportions.
 const geometry = {

@@ -40,34 +40,43 @@ async function cards() {
 
 async function openForm() {
   const user = userEvent.setup();
-  render(<DanceList schoolId="school-1" />);
+  render(<DanceList schoolId="school-1" onOpen={() => {}} />);
   await user.click(await screen.findByRole('button', { name: 'New dance' }));
   return user;
 }
 
 describe('listing', () => {
   test('shows each dance with the day it was added', async () => {
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     const list = await screen.findByRole('list', { name: 'Dances' });
     expect(list).toHaveTextContent('Kitri variationAdded 20 Oct 2026');
   });
 
   test('loads the dances of this school', async () => {
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     await screen.findByRole('list', { name: 'Dances' });
     expect(fetchDances).toHaveBeenCalledWith('school-1', expect.any(AbortSignal));
   });
 
   test('says so when there are no dances yet', async () => {
     vi.mocked(fetchDances).mockResolvedValue([]);
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     expect(await screen.findByText(/No dances yet/)).toBeInTheDocument();
   });
 
   test('says so when the dances cannot be loaded', async () => {
     vi.mocked(fetchDances).mockRejectedValue(new Error('GET dances answered 500'));
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the dances.');
+  });
+});
+
+describe('opening', () => {
+  test('opens a dance from its card', async () => {
+    const onOpen = vi.fn();
+    render(<DanceList schoolId="school-1" onOpen={onOpen} />);
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Kitri variation' }));
+    expect(onOpen).toHaveBeenCalledWith(kitri);
   });
 });
 
@@ -121,7 +130,7 @@ describe('creating', () => {
 describe('renaming', () => {
   async function openRename() {
     const user = userEvent.setup();
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     await user.click(await screen.findByRole('button', { name: 'Rename Kitri variation' }));
     return user;
   }
@@ -171,7 +180,7 @@ describe('renaming', () => {
 describe('deleting', () => {
   async function askToDelete() {
     const user = userEvent.setup();
-    render(<DanceList schoolId="school-1" />);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     await user.click(await screen.findByRole('button', { name: 'Rename Kitri variation' }));
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     return user;

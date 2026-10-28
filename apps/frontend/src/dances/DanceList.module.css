@@ -88,6 +88,7 @@
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -107,6 +108,8 @@
 }
 
 .cardHead > button {
+  position: relative;
+  z-index: 1;
   flex: none;
 }
 
@@ -116,6 +119,24 @@
   margin: 0;
   font: var(--text-title-3);
   overflow-wrap: anywhere;
+}
+
+.open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* The whole card opens the dance; the rename button sits above this layer. */
+.open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
 }
 
 .meta {

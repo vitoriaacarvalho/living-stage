@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import styles from './Icon.module.css';
 
 const paths = {
+  back: <path d="M15 18l-6-6 6-6" />,
   copy: (
     <>
       <rect x="9" y="9" width="11" height="11" rx="2" />

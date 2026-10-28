@@ -16,7 +16,9 @@ const addedOn = new Intl.DateTimeFormat('en-GB', {
 
 type Editing = { dance: Dance | null } | null;
 
-export function DanceList({ schoolId }: { schoolId: string }) {
+type DanceListProps = { schoolId: string; onOpen: (dance: Dance) => void };
+
+export function DanceList({ schoolId, onOpen }: DanceListProps) {
   const { state, ...actions } = useDances(schoolId);
   const [editing, setEditing] = useState<Editing>(null);
   const close = () => setEditing(null);
@@ -52,7 +54,11 @@ export function DanceList({ schoolId }: { schoolId: string }) {
               {dance.id === editing?.dance?.id ? (
                 <DanceForm dance={dance} actions={actions} onClose={close} />
               ) : (
-                <DanceCard dance={dance} onRename={() => setEditing({ dance })} />
+                <DanceCard
+                  dance={dance}
+                  onOpen={() => onOpen(dance)}
+                  onRename={() => setEditing({ dance })}
+                />
               )}
             </li>
           ))}
@@ -62,11 +68,17 @@ export function DanceList({ schoolId }: { schoolId: string }) {
   );
 }
 
-function DanceCard({ dance, onRename }: { dance: Dance; onRename: () => void }) {
+type DanceCardProps = { dance: Dance; onOpen: () => void; onRename: () => void };
+
+function DanceCard({ dance, onOpen, onRename }: DanceCardProps) {
   return (
     <article className={styles.card}>
       <div className={styles.cardHead}>
-        <h3 className={styles.danceTitle}>{dance.title}</h3>
+        <h3 className={styles.danceTitle}>
+          <button type="button" className={styles.open} onClick={onOpen}>
+            {dance.title}
+          </button>
+        </h3>
         <Button
           variant="ghost"
           icon="pencil"

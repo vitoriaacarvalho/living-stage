@@ -1,10 +1,11 @@
-import { APP_NAME, type HealthResponse, type School } from '@living-stage/shared';
+import { APP_NAME, type Dance, type HealthResponse, type School } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { fetchHealth } from './api/health.ts';
 import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
 import { SignOutButton } from './auth/SignOutButton.tsx';
 import { DancerRoster } from './dancers/DancerRoster.tsx';
+import { DanceEditor } from './dances/DanceEditor.tsx';
 import { DanceList } from './dances/DanceList.tsx';
 import { AddSchool } from './schools/AddSchool.tsx';
 import { InviteTeachers } from './schools/InviteTeachers.tsx';
@@ -102,6 +103,9 @@ type HomeProps = { userName: string; school: School; onSwitch: () => void };
 function Home({ userName, school, onSwitch }: HomeProps) {
   const apiStatus = useApiStatus();
   const [view, setView] = useState<'home' | 'inviting' | 'dancers'>('home');
+  const [openDance, setOpenDance] = useState<Dance | null>(null);
+
+  if (openDance) return <DanceEditor dance={openDance} onBack={() => setOpenDance(null)} />;
 
   if (view === 'inviting') {
     return (
@@ -126,7 +130,7 @@ function Home({ userName, school, onSwitch }: HomeProps) {
         Your schools
       </Button>
       <SignOutButton />
-      <DanceList schoolId={school.id} />
+      <DanceList schoolId={school.id} onOpen={setOpenDance} />
       <p>{describe(apiStatus)}</p>
     </main>
   );
