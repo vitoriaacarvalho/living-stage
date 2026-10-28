@@ -49,6 +49,18 @@ schoolDancesRouter.put('/dances/:danceId', async (req, res) => {
   res.json({ dance: toDance(dance) } satisfies DanceResponse);
 });
 
+schoolDancesRouter.delete('/dances/:danceId', async (req, res) => {
+  const { count } = await prisma.dance.deleteMany({
+    where: { id: req.params.danceId, schoolId: res.locals.schoolId },
+  });
+  if (count === 0) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
 function toDance({ id, title, createdAt }: { id: string; title: string; createdAt: Date }): Dance {
   return { id, title, createdAt: createdAt.toISOString() };
 }

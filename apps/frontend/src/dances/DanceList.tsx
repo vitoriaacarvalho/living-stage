@@ -17,7 +17,7 @@ const addedOn = new Intl.DateTimeFormat('en-GB', {
 type Editing = { dance: Dance | null } | null;
 
 export function DanceList({ schoolId }: { schoolId: string }) {
-  const { state, add, rename } = useDances(schoolId);
+  const { state, ...actions } = useDances(schoolId);
   const [editing, setEditing] = useState<Editing>(null);
   const close = () => setEditing(null);
 
@@ -34,9 +34,7 @@ export function DanceList({ schoolId }: { schoolId: string }) {
           </Button>
         )}
       </header>
-      {editing?.dance === null && (
-        <DanceForm dance={null} onSubmit={(title) => add({ title })} onClose={close} />
-      )}
+      {editing?.dance === null && <DanceForm dance={null} actions={actions} onClose={close} />}
       {state.status === 'failed' && (
         <p role="alert" className={formStyles.error}>
           {loadError}
@@ -52,11 +50,7 @@ export function DanceList({ schoolId }: { schoolId: string }) {
           {state.dances.map((dance) => (
             <li key={dance.id}>
               {dance.id === editing?.dance?.id ? (
-                <DanceForm
-                  dance={dance}
-                  onSubmit={(title) => rename({ ...dance, title })}
-                  onClose={close}
-                />
+                <DanceForm dance={dance} actions={actions} onClose={close} />
               ) : (
                 <DanceCard dance={dance} onRename={() => setEditing({ dance })} />
               )}

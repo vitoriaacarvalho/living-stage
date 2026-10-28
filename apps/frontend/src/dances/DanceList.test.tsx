@@ -1,13 +1,14 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createDance, fetchDances, updateDance } from '../api/dances.ts';
+import { createDance, deleteDance, fetchDances, updateDance } from '../api/dances.ts';
 import { DanceList } from './DanceList.tsx';
 
 vi.mock('../api/dances.ts', () => ({
   fetchDances: vi.fn(),
   createDance: vi.fn(),
   updateDance: vi.fn(),
+  deleteDance: vi.fn(),
 }));
 
 const kitri = { id: 'dance-1', title: 'Kitri variation', createdAt: '2026-10-20T12:00:00.000Z' };
@@ -21,6 +22,7 @@ beforeEach(() => {
   vi.mocked(fetchDances).mockReset().mockResolvedValue([kitri]);
   vi.mocked(createDance).mockReset();
   vi.mocked(updateDance).mockReset();
+  vi.mocked(deleteDance).mockReset();
 });
 
 async function cards() {
@@ -157,5 +159,52 @@ describe('renaming', () => {
     const user = await openRename();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(await cards()).toEqual(['Kitri variation']);
+  });
+});
+
+describe('deleting', () => {
+  async function askToDelete() {
+    const user = userEvent.setup();
+    render(<DanceList schoolId="school-1" />);
+    await user.click(await screen.findByRole('button', { name: 'Rename Kitri variation' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    return user;
+  }
+
+  test('asks before deleting', async () => {
+    await askToDelete();
+    expect(screen.getByText("Delete Kitri variation? This can't be undone.")).toBeInTheDocument();
+  });
+
+  test('keeps the dance when the deletion is not confirmed', async () => {
+    const user = await askToDelete();
+    await user.click(screen.getByRole('button', { name: 'Keep' }));
+    expect(deleteDance).not.toHaveBeenCalled();
+  });
+
+  test('deletes this dance in this school once confirmed', async () => {
+    vi.mocked(deleteDance).mockResolvedValue();
+    const user = await askToDelete();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(deleteDance).toHaveBeenCalledWith('school-1', 'dance-1');
+  });
+
+  test('takes the dance off the list', async () => {
+    vi.mocked(deleteDance).mockResolvedValue();
+    const user = await askToDelete();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(await screen.findByText(/No dances yet/)).toBeInTheDocument();
+  });
+
+  test('says so when the dance cannot be deleted', async () => {
+    vi.mocked(deleteDance).mockRejectedValue(new Error('DELETE dance answered 500'));
+    const user = await askToDelete();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete the dance.');
+  });
+
+  test('offers no delete while creating a dance', async () => {
+    await openForm();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 });

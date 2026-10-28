@@ -155,7 +155,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **C10.** Layout tools for a selection: mirror left/right, align in a line, spread evenly, arrange in a circle. *(after the MVP)*
 - **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one: dashed circles in 2D, dashed footprints on the floor in 3D. *(after the MVP)*
 - **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
-- **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
+- ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - **C14.** A dance shows its cast list and how many dancers are in it.
 
 ### Part D — Paths and animation
@@ -338,7 +338,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 
 | # | Plan | Requirements | Screens | Depends on | Done when | Status |
 |---|---|---|---|---|---|---|
-| 2.0 | Dances | C13 | `Home` (dance list) | 1.3 | Create, rename and delete dances; Home lists them | ⬜ |
+| 2.0 | Dances | C13 | `Home` (dance list) | 1.3 | Create, rename and delete dances; Home lists them | ✅ |
 | 6.1 | Shows and acts | H1, H2 | `ShowManager`, `ShowCard`, `DanceRow` | 2.0 | Create a show with acts holding dances | ⬜ |
 | 6.2 | Reordering | H3 | `ShowManager` | 6.1 | Drag acts and dances into a new order | ⬜ |
 

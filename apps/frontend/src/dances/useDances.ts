@@ -1,11 +1,17 @@
 import type { Dance, DanceInput } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
-import { createDance, fetchDances, updateDance } from '../api/dances.ts';
+import { createDance, deleteDance, fetchDances, updateDance } from '../api/dances.ts';
 
 export type DancesState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; dances: Dance[] };
 
-export function useDances(schoolId: string) {
+export type DanceActions = {
+  add: (input: DanceInput) => Promise<void>;
+  rename: (dance: Dance) => Promise<void>;
+  remove: (danceId: string) => Promise<void>;
+};
+
+export function useDances(schoolId: string): { state: DancesState } & DanceActions {
   const [state, setState] = useState<DancesState>({ status: 'loading' });
 
   useEffect(() => {
@@ -35,5 +41,10 @@ export function useDances(schoolId: string) {
     change((dances) => dances.map((each) => (each.id === saved.id ? saved : each)));
   }
 
-  return { state, add, rename };
+  async function remove(danceId: string) {
+    await deleteDance(schoolId, danceId);
+    change((dances) => dances.filter(({ id }) => id !== danceId));
+  }
+
+  return { state, add, rename, remove };
 }

@@ -12,7 +12,12 @@ vi.mock('../auth/auth.ts', () => ({
 vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
-    dance: { findMany: vi.fn(), create: vi.fn(), updateManyAndReturn: vi.fn() },
+    dance: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -57,6 +62,7 @@ beforeEach(() => {
   vi.mocked(prisma.dance.findMany).mockReset();
   vi.mocked(prisma.dance.create).mockReset();
   vi.mocked(prisma.dance.updateManyAndReturn).mockReset();
+  vi.mocked(prisma.dance.deleteMany).mockReset();
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user,
     session: { id: 'session-1', userId: user.id } as never,
@@ -156,5 +162,29 @@ describe('PUT /api/schools/:schoolId/dances/:danceId', () => {
   test('responds 400 for a blank title', async () => {
     const res = await fetch(url(), send('PUT', { title: '' }));
     expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/schools/:schoolId/dances/:danceId', () => {
+  const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
+
+  test('responds 204 once the dance is deleted', async () => {
+    vi.mocked(prisma.dance.deleteMany).mockResolvedValue({ count: 1 });
+    const res = await fetch(url(), { method: 'DELETE' });
+    expect(res.status).toBe(204);
+  });
+
+  test('deletes only a dance of this school', async () => {
+    vi.mocked(prisma.dance.deleteMany).mockResolvedValue({ count: 1 });
+    await fetch(url(), { method: 'DELETE' });
+    expect(prisma.dance.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'dance-1', schoolId: 'school-1' },
+    });
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.deleteMany).mockResolvedValue({ count: 0 });
+    const res = await fetch(url(), { method: 'DELETE' });
+    expect(res.status).toBe(404);
   });
 });

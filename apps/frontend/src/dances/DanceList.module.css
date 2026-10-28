@@ -40,8 +40,23 @@
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.delete {
+  color: var(--primary);
+}
+
+.confirm {
+  flex: 1 1 100%;
+  margin: 0;
+  font: var(--text-label);
 }
 
 .empty {

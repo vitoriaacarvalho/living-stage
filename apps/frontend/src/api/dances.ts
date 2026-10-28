@@ -28,3 +28,8 @@ export async function updateDance(schoolId: string, dance: Dance): Promise<Dance
   const body: DanceResponse = await res.json();
   return body.dance;
 }
+
+export async function deleteDance(schoolId: string, danceId: string): Promise<void> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`DELETE dance answered ${res.status}`);
+}
