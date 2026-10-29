@@ -121,20 +121,46 @@ model Dance {
   showGuides Boolean      @default(true)
   createdAt  DateTime     @default(now())
   cast       CastMember[]
+  figures    Figure[]
 
   @@index([schoolId])
   @@map("dance")
 }
 
 model CastMember {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   danceId   String
-  dance     Dance    @relation(fields: [danceId], references: [id], onDelete: Cascade)
+  dance     Dance      @relation(fields: [danceId], references: [id], onDelete: Cascade)
   dancerId  String?
-  dancer    Dancer?  @relation(fields: [dancerId], references: [id], onDelete: SetNull)
+  dancer    Dancer?    @relation(fields: [dancerId], references: [id], onDelete: SetNull)
   role      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  positions Position[]
 
   @@unique([danceId, dancerId])
   @@map("cast_member")
+}
+
+model Figure {
+  id        String     @id @default(cuid())
+  danceId   String
+  dance     Dance      @relation(fields: [danceId], references: [id], onDelete: Cascade)
+  order     Int
+  name      String?
+  positions Position[]
+
+  @@unique([danceId, order])
+  @@map("figure")
+}
+
+model Position {
+  figureId     String
+  figure       Figure     @relation(fields: [figureId], references: [id], onDelete: Cascade)
+  castMemberId String
+  castMember   CastMember @relation(fields: [castMemberId], references: [id], onDelete: Cascade)
+  x            Float
+  y            Float
+
+  @@id([figureId, castMemberId])
+  @@map("position")
 }

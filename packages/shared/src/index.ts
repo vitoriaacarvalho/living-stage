@@ -6,6 +6,7 @@ export {
   parseCastMemberUpdate,
   parseCastRole,
   type CastMember,
+  type CastMemberCreatedResponse,
   type CastMemberInput,
   type CastMemberResponse,
   type CastMemberUpdate,
@@ -35,6 +36,14 @@ export {
   type DancerResponse,
   type ListDancersResponse,
 } from './dancer.ts';
+export {
+  WING_SPOTS,
+  nextWingSpot,
+  type Figure,
+  type ListFiguresResponse,
+  type Position,
+  type StagePoint,
+} from './figure.ts';
 export type { HealthResponse } from './health.ts';
 export {
   INVITE_CODE_ALPHABET,

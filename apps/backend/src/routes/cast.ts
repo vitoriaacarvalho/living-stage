@@ -1,7 +1,10 @@
 import {
+  nextWingSpot,
   parseCastMemberInput,
   parseCastMemberUpdate,
   type CastMember,
+  type CastMemberCreatedResponse,
+  type CastMemberInput,
   type CastMemberResponse,
   type ListCastResponse,
 } from '@living-stage/shared';
@@ -46,11 +49,8 @@ schoolCastRouter.post('/dances/:danceId/cast', async (req, res) => {
   }
 
   try {
-    const castMember = await prisma.castMember.create({
-      data: { danceId: req.params.danceId, ...input },
-      include: { dancer: true },
-    });
-    res.status(201).json({ castMember: toCastMember(castMember) } satisfies CastMemberResponse);
+    const created = await castIntoFirstFigure(req.params.danceId, input);
+    res.status(201).json(created satisfies CastMemberCreatedResponse);
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;
     res.status(409).json({ error: 'already_cast' });
@@ -88,6 +88,24 @@ schoolCastRouter.delete('/dances/:danceId/cast/:castMemberId', async (req, res) 
 
   res.status(204).end();
 });
+
+function castIntoFirstFigure(danceId: string, input: CastMemberInput) {
+  return prisma.$transaction(async (tx) => {
+    const figure = await tx.figure.findUniqueOrThrow({
+      where: { danceId_order: { danceId, order: 0 } },
+      include: { positions: true },
+    });
+    const spot = nextWingSpot(figure.positions);
+    const castMember = await tx.castMember.create({
+      data: { danceId, ...input, positions: { create: { figureId: figure.id, ...spot } } },
+      include: { dancer: true },
+    });
+    return {
+      castMember: toCastMember(castMember),
+      position: { castMemberId: castMember.id, ...spot },
+    };
+  });
+}
 
 function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });

@@ -1,4 +1,5 @@
 import type { Dancer } from './dancer.ts';
+import type { Position } from './figure.ts';
 
 export const CAST_ROLE_MAX_LENGTH = 40;
 
@@ -12,6 +13,8 @@ export type CastMemberUpdate = { role: string | null };
 export type ListCastResponse = { cast: CastMember[] };
 
 export type CastMemberResponse = { castMember: CastMember };
+
+export type CastMemberCreatedResponse = CastMemberResponse & { position: Position };
 
 export function parseCastRole(value: unknown): string | null | undefined {
   if (value === null) return null;

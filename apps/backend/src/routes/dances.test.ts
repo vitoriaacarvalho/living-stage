@@ -115,7 +115,15 @@ describe('POST /api/schools/:schoolId/dances', () => {
     vi.mocked(prisma.dance.create).mockResolvedValue(kitri);
     await fetch(url(), send('POST', { title: ' Kitri variation ' }));
     expect(prisma.dance.create).toHaveBeenCalledWith({
-      data: { schoolId: 'school-1', title: 'Kitri variation' },
+      data: expect.objectContaining({ schoolId: 'school-1', title: 'Kitri variation' }),
+    });
+  });
+
+  test('creates the dance with its first figure', async () => {
+    vi.mocked(prisma.dance.create).mockResolvedValue(kitri);
+    await fetch(url(), send('POST', { title: 'Kitri variation' }));
+    expect(prisma.dance.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ figures: { create: { order: 0 } } }),
     });
   });
 

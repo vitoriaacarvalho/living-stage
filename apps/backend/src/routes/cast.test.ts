@@ -1,5 +1,6 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { CastMemberCreatedResponse } from '@living-stage/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import { auth } from '../auth/auth.ts';
@@ -15,6 +16,8 @@ vi.mock('../db.ts', () => ({
     school: { findFirst: vi.fn() },
     dance: { findFirst: vi.fn() },
     dancer: { findFirst: vi.fn() },
+    figure: { findUniqueOrThrow: vi.fn() },
+    $transaction: vi.fn(),
     castMember: {
       findMany: vi.fn(),
       create: vi.fn(),
@@ -50,6 +53,9 @@ const kitri = {
   createdAt: new Date(),
   dancer: clara,
 };
+
+const firstFigure = { id: 'figure-1', danceId: 'dance-1', order: 0, name: null };
+const topOfLeftWing = { x: -0.0625, y: 0.05 };
 
 const kitriJson = {
   id: 'cast-1',
@@ -88,6 +94,11 @@ beforeEach(() => {
   vi.mocked(prisma.dancer.findFirst)
     .mockReset()
     .mockResolvedValue(clara as never);
+  vi.mocked(prisma.figure.findUniqueOrThrow)
+    .mockReset()
+    .mockResolvedValue({ ...firstFigure, positions: [] } as never);
+  vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
+    run(prisma)) as never);
 });
 
 function send(method: string, body: unknown) {
@@ -138,7 +149,10 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
     const res = await fetch(url(), send('POST', { dancerId: 'dancer-1', role: 'Kitri' }));
     expect(res.status).toBe(201);
-    expect(await res.json()).toEqual({ castMember: kitriJson });
+    expect(await res.json()).toEqual({
+      castMember: kitriJson,
+      position: { castMemberId: 'cast-1', ...topOfLeftWing },
+    });
   });
 
   test('casts the dancer into this dance', async () => {
@@ -146,9 +160,32 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     await fetch(url(), send('POST', { dancerId: 'dancer-1', role: 'Kitri' }));
     expect(prisma.castMember.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { danceId: 'dance-1', dancerId: 'dancer-1', role: 'Kitri' },
+        data: expect.objectContaining({ danceId: 'dance-1', dancerId: 'dancer-1', role: 'Kitri' }),
       }),
     );
+  });
+
+  test('places the new dancer at the top of the left wing in the first figure', async () => {
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(prisma.castMember.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          positions: { create: { figureId: 'figure-1', ...topOfLeftWing } },
+        }),
+      }),
+    );
+  });
+
+  test('places the new dancer below the ones already waiting in the wing', async () => {
+    vi.mocked(prisma.figure.findUniqueOrThrow).mockResolvedValue({
+      ...firstFigure,
+      positions: [{ figureId: 'figure-1', castMemberId: 'cast-0', ...topOfLeftWing }],
+    } as never);
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    const body = (await res.json()) as CastMemberCreatedResponse;
+    expect(body.position).toEqual({ castMemberId: 'cast-1', x: -0.0625, y: 0.15 });
   });
 
   test('looks the dancer up in this school', async () => {

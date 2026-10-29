@@ -26,7 +26,9 @@ schoolDancesRouter.post('/dances', async (req, res) => {
     return;
   }
 
-  const dance = await prisma.dance.create({ data: { schoolId: res.locals.schoolId, ...input } });
+  const dance = await prisma.dance.create({
+    data: { schoolId: res.locals.schoolId, ...input, figures: { create: { order: 0 } } },
+  });
 
   res.status(201).json({ dance: toDance(dance) } satisfies DanceResponse);
 });
