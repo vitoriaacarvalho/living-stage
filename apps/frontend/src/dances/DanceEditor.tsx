@@ -1,6 +1,7 @@
 import type { Dance } from '@living-stage/shared';
 import { type CSSProperties, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
+import { CastList } from '../cast/CastList.tsx';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Button } from '../ui/Button.tsx';
 import styles from './DanceEditor.module.css';
@@ -26,23 +27,26 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
         <Button variant="ghost" icon="back" aria-label="Back to dances" onClick={onBack} />
         <h1 className={styles.title}>{dance.title}</h1>
       </header>
-      <main className={styles.main}>
-        <div className={styles.stageArea} style={stageFit}>
-          <div className={styles.stageFit}>
-            <Stage showGuides={dance.showGuides} />
-            <div className={styles.stageControls}>
-              <button
-                type="button"
-                className={styles.stageToggle}
-                aria-pressed={dance.showGuides}
-                onClick={toggleGuides}
-              >
-                Guides
-              </button>
+      <div className={styles.body}>
+        <main className={styles.main}>
+          <div className={styles.stageArea} style={stageFit}>
+            <div className={styles.stageFit}>
+              <Stage showGuides={dance.showGuides} />
+              <div className={styles.stageControls}>
+                <button
+                  type="button"
+                  className={styles.stageToggle}
+                  aria-pressed={dance.showGuides}
+                  onClick={toggleGuides}
+                >
+                  Guides
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+        <CastList schoolId={schoolId} danceId={dance.id} />
+      </div>
     </div>
   );
 }

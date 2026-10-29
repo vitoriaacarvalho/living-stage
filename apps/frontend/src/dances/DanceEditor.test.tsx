@@ -5,6 +5,7 @@ import { updateDance } from '../api/dances.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
+vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(() => Promise.resolve([])) }));
 
 const kitri = {
   id: 'dance-1',

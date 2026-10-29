@@ -31,3 +31,9 @@ export function initials(name: string): string {
   const last = words.length > 1 ? words.at(-1)! : '';
   return (first.charAt(0) + last.charAt(0)).toLocaleUpperCase();
 }
+
+const whiteInitials = new Set<DancerColor>([5, 6, 8]);
+
+export function initialsInk(color: DancerColor | null): string {
+  return color !== null && whiteInitials.has(color) ? 'var(--on-primary)' : 'var(--ink)';
+}
