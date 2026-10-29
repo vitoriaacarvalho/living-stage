@@ -3,25 +3,31 @@ import { useState, type CSSProperties } from 'react';
 import { dancerColorVar, initials, initialsInk } from '../dancers/dancer-colors.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
+import { CastMemberForm } from './CastMemberForm.tsx';
 import { CastPicker } from './CastPicker.tsx';
 import styles from './CastList.module.css';
 import { useCast } from './useCast.ts';
 
+type Panel = { view: 'list' } | { view: 'picking' } | { view: 'editing'; castMember: CastMember };
+
 type CastListProps = { schoolId: string; danceId: string };
 
 export function CastList({ schoolId, danceId }: CastListProps) {
-  const { state, add } = useCast(schoolId, danceId);
-  const [picking, setPicking] = useState(false);
+  const { state, ...actions } = useCast(schoolId, danceId);
+  const [panel, setPanel] = useState<Panel>({ view: 'list' });
+  const showList = () => setPanel({ view: 'list' });
 
-  if (picking && state.status === 'ready') {
+  if (panel.view === 'picking' && state.status === 'ready') {
     return (
       <aside className={styles.panel} aria-label="Cast">
-        <CastPicker
-          schoolId={schoolId}
-          cast={state.cast}
-          onAdd={add}
-          onDone={() => setPicking(false)}
-        />
+        <CastPicker schoolId={schoolId} cast={state.cast} onAdd={actions.add} onDone={showList} />
+      </aside>
+    );
+  }
+  if (panel.view === 'editing') {
+    return (
+      <aside className={styles.panel} aria-label="Cast">
+        <CastMemberForm castMember={panel.castMember} actions={actions} onClose={showList} />
       </aside>
     );
   }
@@ -39,7 +45,7 @@ export function CastList({ schoolId, danceId }: CastListProps) {
           icon="plus"
           className={styles.add}
           disabled={state.status !== 'ready'}
-          onClick={() => setPicking(true)}
+          onClick={() => setPanel({ view: 'picking' })}
         >
           Add
         </Button>
@@ -49,12 +55,19 @@ export function CastList({ schoolId, danceId }: CastListProps) {
           Could not load the cast. Go back and try again.
         </p>
       )}
-      {state.status === 'ready' && <CastRows cast={state.cast} />}
+      {state.status === 'ready' && (
+        <CastRows
+          cast={state.cast}
+          onEdit={(castMember) => setPanel({ view: 'editing', castMember })}
+        />
+      )}
     </aside>
   );
 }
 
-function CastRows({ cast }: { cast: CastMember[] }) {
+type CastRowsProps = { cast: CastMember[]; onEdit: (castMember: CastMember) => void };
+
+function CastRows({ cast, onEdit }: CastRowsProps) {
   if (cast.length === 0) {
     return <p className={styles.empty}>No dancers in this dance yet. Add them from the roster.</p>;
   }
@@ -67,6 +80,12 @@ function CastRows({ cast }: { cast: CastMember[] }) {
             <span className={styles.name}>{member.dancer?.name ?? 'Open spot'}</span>
             {member.role && <span className={styles.role}>{member.role}</span>}
           </div>
+          <Button
+            variant="ghost"
+            icon="pencil"
+            aria-label={`Edit ${member.dancer?.name ?? 'open spot'}`}
+            onClick={() => onEdit(member)}
+          />
         </li>
       ))}
     </ul>

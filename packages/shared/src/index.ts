@@ -3,10 +3,12 @@ export const APP_NAME = 'Living Stage';
 export {
   CAST_ROLE_MAX_LENGTH,
   parseCastMemberInput,
+  parseCastMemberUpdate,
   parseCastRole,
   type CastMember,
   type CastMemberInput,
   type CastMemberResponse,
+  type CastMemberUpdate,
   type ListCastResponse,
 } from './cast.ts';
 

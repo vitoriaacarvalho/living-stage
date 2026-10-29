@@ -1,11 +1,16 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
-import { addCastMember, fetchCast } from '../api/cast.ts';
+import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { CastList } from './CastList.tsx';
 
-vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
+vi.mock('../api/cast.ts', () => ({
+  fetchCast: vi.fn(),
+  addCastMember: vi.fn(),
+  updateCastMember: vi.fn(),
+  removeCastMember: vi.fn(),
+}));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
 
 const clara = { id: 'dancer-1', name: 'Clara Souza', color: 3 };
@@ -16,6 +21,13 @@ beforeEach(() => {
   vi.mocked(fetchCast).mockReset().mockResolvedValue([claraAsKitri]);
   vi.mocked(addCastMember).mockReset().mockResolvedValue({ id: 'cast-2', dancer: bia, role: null });
   vi.mocked(fetchDancers).mockReset().mockResolvedValue([bia, clara]);
+  vi.mocked(updateCastMember)
+    .mockReset()
+    .mockImplementation(async (_schoolId, _danceId, _id, update) => ({
+      ...claraAsKitri,
+      ...update,
+    }));
+  vi.mocked(removeCastMember).mockReset().mockResolvedValue();
 });
 
 function renderCast() {
@@ -117,4 +129,77 @@ test('says when a dancer cannot be added', async () => {
   const user = await openPicker();
   await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not add Bia Lima');
+});
+
+async function editClara() {
+  renderCast();
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: 'Edit Clara Souza' }));
+  return user;
+}
+
+test('saves a new role', async () => {
+  const user = await editClara();
+  await user.clear(screen.getByLabelText('Role'));
+  await user.type(screen.getByLabelText('Role'), 'Dulcinea');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(updateCastMember).toHaveBeenCalledWith('school-1', 'dance-1', 'cast-1', {
+    role: 'Dulcinea',
+  });
+});
+
+test('lists the new role once saved', async () => {
+  const user = await editClara();
+  await user.clear(screen.getByLabelText('Role'));
+  await user.type(screen.getByLabelText('Role'), 'Dulcinea');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await castNames()).toEqual(['CSClara SouzaDulcinea']);
+});
+
+test('saves an empty role as no role', async () => {
+  const user = await editClara();
+  await user.clear(screen.getByLabelText('Role'));
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(updateCastMember).toHaveBeenCalledWith('school-1', 'dance-1', 'cast-1', { role: null });
+});
+
+test('says when the role cannot be saved', async () => {
+  vi.mocked(updateCastMember).mockRejectedValue(new Error('PATCH cast member answered 500'));
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not save the role');
+});
+
+test('asks before removing a dancer from the cast', async () => {
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  expect(screen.getByText('Remove Clara Souza from this dance?')).toBeInTheDocument();
+});
+
+test('keeps the dancer when the removal is not confirmed', async () => {
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  await user.click(screen.getByRole('button', { name: 'Keep' }));
+  expect(removeCastMember).not.toHaveBeenCalled();
+});
+
+test('removes the dancer from the cast once confirmed', async () => {
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  expect(await screen.findByText(/No dancers in this dance yet/)).toBeInTheDocument();
+});
+
+test('says when the dancer cannot be removed', async () => {
+  vi.mocked(removeCastMember).mockRejectedValue(new Error('DELETE cast member answered 500'));
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not remove the dancer');
+});
+
+test('goes back to the cast without saving when closed', async () => {
+  const user = await editClara();
+  await user.click(screen.getByRole('button', { name: 'Close' }));
+  expect(await castNames()).toEqual(['CSClara SouzaKitri']);
 });

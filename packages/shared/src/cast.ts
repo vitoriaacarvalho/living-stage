@@ -7,6 +7,8 @@ export type CastMember = { id: string; dancer: Dancer | null; role: string | nul
 
 export type CastMemberInput = { dancerId: string; role: string | null };
 
+export type CastMemberUpdate = { role: string | null };
+
 export type ListCastResponse = { cast: CastMember[] };
 
 export type CastMemberResponse = { castMember: CastMember };
@@ -26,4 +28,10 @@ export function parseCastMemberInput(value: unknown): CastMemberInput | null {
   const role = parseCastRole(rawRole);
   if (role === undefined) return null;
   return { dancerId, role };
+}
+
+export function parseCastMemberUpdate(value: unknown): CastMemberUpdate | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const role = parseCastRole((value as Record<string, unknown>).role);
+  return role === undefined ? null : { role };
 }

@@ -1,5 +1,6 @@
 import {
   parseCastMemberInput,
+  parseCastMemberUpdate,
   type CastMember,
   type CastMemberResponse,
   type ListCastResponse,
@@ -56,8 +57,46 @@ schoolCastRouter.post('/dances/:danceId/cast', async (req, res) => {
   }
 });
 
+schoolCastRouter.patch('/dances/:danceId/cast/:castMemberId', async (req, res) => {
+  const update = parseCastMemberUpdate(req.body);
+  if (!update) {
+    res.status(400).json({ error: 'invalid_cast_member' });
+    return;
+  }
+
+  const [castMember] = await prisma.castMember.updateManyAndReturn({
+    where: castMemberOfSchool(req.params, res.locals.schoolId),
+    data: update,
+    include: { dancer: true },
+  });
+  if (!castMember) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.json({ castMember: toCastMember(castMember) } satisfies CastMemberResponse);
+});
+
+schoolCastRouter.delete('/dances/:danceId/cast/:castMemberId', async (req, res) => {
+  const { count } = await prisma.castMember.deleteMany({
+    where: castMemberOfSchool(req.params, res.locals.schoolId),
+  });
+  if (count === 0) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.status(204).end();
+});
+
 function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
+}
+
+type CastMemberParams = { danceId: string; castMemberId: string };
+
+function castMemberOfSchool({ danceId, castMemberId }: CastMemberParams, schoolId: string) {
+  return { id: castMemberId, danceId, dance: { schoolId } };
 }
 
 function isUniqueViolation(error: unknown) {

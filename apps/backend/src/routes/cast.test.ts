@@ -15,7 +15,12 @@ vi.mock('../db.ts', () => ({
     school: { findFirst: vi.fn() },
     dance: { findFirst: vi.fn() },
     dancer: { findFirst: vi.fn() },
-    castMember: { findMany: vi.fn(), create: vi.fn() },
+    castMember: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      deleteMany: vi.fn(),
+    },
   },
 }));
 
@@ -68,6 +73,8 @@ afterAll(() => {
 beforeEach(() => {
   vi.mocked(prisma.castMember.findMany).mockReset();
   vi.mocked(prisma.castMember.create).mockReset();
+  vi.mocked(prisma.castMember.updateManyAndReturn).mockReset();
+  vi.mocked(prisma.castMember.deleteMany).mockReset();
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user,
     session: { id: 'session-1', userId: user.id } as never,
@@ -178,5 +185,70 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     );
     const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
     expect(res.status).toBe(409);
+  });
+});
+
+describe('PATCH /api/schools/:schoolId/dances/:danceId/cast/:castMemberId', () => {
+  const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1/cast/cast-1`;
+
+  test('responds with the updated cast member', async () => {
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([
+      { ...kitri, role: 'Dulcinea' },
+    ] as never);
+    const res = await fetch(url(), send('PATCH', { role: 'Dulcinea' }));
+    expect(await res.json()).toEqual({ castMember: { ...kitriJson, role: 'Dulcinea' } });
+  });
+
+  test('updates only a cast member of this dance in this school', async () => {
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([kitri] as never);
+    await fetch(url(), send('PATCH', { role: 'Kitri' }));
+    expect(prisma.castMember.updateManyAndReturn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'cast-1', danceId: 'dance-1', dance: { schoolId: 'school-1' } },
+      }),
+    );
+  });
+
+  test('clears the role when it is blank', async () => {
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([kitri] as never);
+    await fetch(url(), send('PATCH', { role: '  ' }));
+    expect(prisma.castMember.updateManyAndReturn).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { role: null } }),
+    );
+  });
+
+  test('responds 404 for a cast member of another school', async () => {
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([]);
+    const res = await fetch(url(), send('PATCH', { role: 'Kitri' }));
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 400 for a role over the maximum length', async () => {
+    const res = await fetch(url(), send('PATCH', { role: 'a'.repeat(41) }));
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('DELETE /api/schools/:schoolId/dances/:danceId/cast/:castMemberId', () => {
+  const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1/cast/cast-1`;
+
+  test('responds 204 once the cast member is removed', async () => {
+    vi.mocked(prisma.castMember.deleteMany).mockResolvedValue({ count: 1 });
+    const res = await fetch(url(), { method: 'DELETE' });
+    expect(res.status).toBe(204);
+  });
+
+  test('removes only a cast member of this dance in this school', async () => {
+    vi.mocked(prisma.castMember.deleteMany).mockResolvedValue({ count: 1 });
+    await fetch(url(), { method: 'DELETE' });
+    expect(prisma.castMember.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'cast-1', danceId: 'dance-1', dance: { schoolId: 'school-1' } },
+    });
+  });
+
+  test('responds 404 for a cast member of another school', async () => {
+    vi.mocked(prisma.castMember.deleteMany).mockResolvedValue({ count: 0 });
+    const res = await fetch(url(), { method: 'DELETE' });
+    expect(res.status).toBe(404);
   });
 });

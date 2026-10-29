@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { CAST_ROLE_MAX_LENGTH, parseCastMemberInput, parseCastRole } from './cast.ts';
+import {
+  CAST_ROLE_MAX_LENGTH,
+  parseCastMemberInput,
+  parseCastMemberUpdate,
+  parseCastRole,
+} from './cast.ts';
 
 describe('parseCastRole', () => {
   test('accepts a role', () => {
@@ -61,5 +66,23 @@ describe('parseCastMemberInput', () => {
 
   test('rejects a body that is not an object', () => {
     expect(parseCastMemberInput('dancer-1')).toBeNull();
+  });
+});
+
+describe('parseCastMemberUpdate', () => {
+  test('accepts a new role', () => {
+    expect(parseCastMemberUpdate({ role: 'Dulcinea' })).toEqual({ role: 'Dulcinea' });
+  });
+
+  test('accepts clearing the role', () => {
+    expect(parseCastMemberUpdate({ role: '' })).toEqual({ role: null });
+  });
+
+  test('rejects a missing role', () => {
+    expect(parseCastMemberUpdate({})).toBeNull();
+  });
+
+  test('rejects a body that is not an object', () => {
+    expect(parseCastMemberUpdate(null)).toBeNull();
   });
 });
