@@ -2,6 +2,8 @@ import type { Dance } from '@living-stage/shared';
 import { type CSSProperties, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
+import { stageDancers } from '../cast/stage-dancers.ts';
+import { useCast } from '../cast/useCast.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Button } from '../ui/Button.tsx';
 import styles from './DanceEditor.module.css';
@@ -12,6 +14,8 @@ type DanceEditorProps = { schoolId: string; dance: Dance; onBack: () => void };
 
 export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProps) {
   const [dance, setDance] = useState(opened);
+  const { state: cast, ...castActions } = useCast(schoolId, opened.id);
+  const dancers = cast.status === 'ready' ? stageDancers(cast.cast, cast.positions) : [];
 
   function toggleGuides() {
     const showGuides = !dance.showGuides;
@@ -31,7 +35,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
         <main className={styles.main}>
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
-              <Stage showGuides={dance.showGuides} />
+              <Stage showGuides={dance.showGuides} dancers={dancers} />
               <div className={styles.stageControls}>
                 <button
                   type="button"
@@ -45,7 +49,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             </div>
           </div>
         </main>
-        <CastList schoolId={schoolId} danceId={dance.id} />
+        <CastList schoolId={schoolId} state={cast} actions={castActions} />
       </div>
     </div>
   );

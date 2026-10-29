@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
+import { fetchFigures } from '../api/figures.ts';
 import { CastList } from './CastList.tsx';
+import { useCast } from './useCast.ts';
 
 vi.mock('../api/cast.ts', () => ({
   fetchCast: vi.fn(),
@@ -12,6 +14,7 @@ vi.mock('../api/cast.ts', () => ({
   removeCastMember: vi.fn(),
 }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
+vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
 
 const clara = { id: 'dancer-1', name: 'Clara Souza', color: 3 };
 const bia = { id: 'dancer-2', name: 'Bia Lima', color: null };
@@ -19,7 +22,13 @@ const claraAsKitri = { id: 'cast-1', dancer: clara, role: 'Kitri' };
 
 beforeEach(() => {
   vi.mocked(fetchCast).mockReset().mockResolvedValue([claraAsKitri]);
-  vi.mocked(addCastMember).mockReset().mockResolvedValue({ id: 'cast-2', dancer: bia, role: null });
+  vi.mocked(fetchFigures).mockReset().mockResolvedValue([]);
+  vi.mocked(addCastMember)
+    .mockReset()
+    .mockResolvedValue({
+      castMember: { id: 'cast-2', dancer: bia, role: null },
+      position: { castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+    });
   vi.mocked(fetchDancers).mockReset().mockResolvedValue([bia, clara]);
   vi.mocked(updateCastMember)
     .mockReset()
@@ -30,8 +39,13 @@ beforeEach(() => {
   vi.mocked(removeCastMember).mockReset().mockResolvedValue();
 });
 
+function KitriCast() {
+  const { state, ...actions } = useCast('school-1', 'dance-1');
+  return <CastList schoolId="school-1" state={state} actions={actions} />;
+}
+
 function renderCast() {
-  render(<CastList schoolId="school-1" danceId="dance-1" />);
+  render(<KitriCast />);
 }
 
 async function castNames() {

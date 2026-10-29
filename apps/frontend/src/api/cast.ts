@@ -1,5 +1,6 @@
 import type {
   CastMember,
+  CastMemberCreatedResponse,
   CastMemberInput,
   CastMemberResponse,
   CastMemberUpdate,
@@ -21,15 +22,14 @@ export async function addCastMember(
   schoolId: string,
   danceId: string,
   input: CastMemberInput,
-): Promise<CastMember> {
+): Promise<CastMemberCreatedResponse> {
   const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}/cast`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(input),
   });
   if (!res.ok) throw new Error(`POST cast member answered ${res.status}`);
-  const body: CastMemberResponse = await res.json();
-  return body.castMember;
+  return res.json();
 }
 
 export async function updateCastMember(

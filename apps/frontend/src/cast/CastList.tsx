@@ -6,14 +6,13 @@ import formStyles from '../ui/Form.module.css';
 import { CastMemberForm } from './CastMemberForm.tsx';
 import { CastPicker } from './CastPicker.tsx';
 import styles from './CastList.module.css';
-import { useCast } from './useCast.ts';
+import type { CastActions, CastState } from './useCast.ts';
 
 type Panel = { view: 'list' } | { view: 'picking' } | { view: 'editing'; castMember: CastMember };
 
-type CastListProps = { schoolId: string; danceId: string };
+type CastListProps = { schoolId: string; state: CastState; actions: CastActions };
 
-export function CastList({ schoolId, danceId }: CastListProps) {
-  const { state, ...actions } = useCast(schoolId, danceId);
+export function CastList({ schoolId, state, actions }: CastListProps) {
   const [panel, setPanel] = useState<Panel>({ view: 'list' });
   const showList = () => setPanel({ view: 'list' });
 

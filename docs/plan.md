@@ -144,7 +144,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **C1.** A dance shows its stage as a 3D perspective view seen from the audience (the default, see Part L) or as a top-down 2D plan with the audience at the bottom; one tap switches between them.
 - ✅ **C2.** The stage has wing zones on the left, right and upstage, where dancers can wait off stage, enter and exit.
 - ✅ **C3.** Optional guide lines (center and quarters) can be shown or hidden.
-- **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
+- ✅ **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
 - **C5.** Dancers appear as 3D ballerinas in the 3D view and as colored circles in the 2D plan; the label can show name, role or both.
 - **C6.** Dancers can be colored by their own color or by role, chosen per dance.
 - **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
@@ -154,7 +154,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one: dashed circles in 2D, dashed footprints on the floor in 3D. *(after the MVP)*
 - **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
-- **C14.** A dance shows its cast list and how many dancers are in it.
+- ✅ **C14.** A dance shows its cast list and how many dancers are in it.
 
 ### Part D — Paths and animation
 
@@ -368,7 +368,7 @@ First milestone to show real teachers.
 - 🟨 **2.1 Stage** · after 2.0
   - Done when: Empty stage with wings and toggleable guide lines
   - Requirements: C1, C2, C3 · Screens: `Stage`, `DanceEditorIPad`
-- ⬜ **2.2 Casting** · after 2.1, 1.7
+- 🟨 **2.2 Casting** · after 2.1, 1.7
   - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
   - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
 - ⬜ **9.1 3D stage and ballerinas** · after 2.2

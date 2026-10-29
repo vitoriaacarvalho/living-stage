@@ -72,6 +72,55 @@
   transform: translate(50%, -50%) rotate(90deg);
 }
 
+.dancer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 0;
+  pointer-events: none;
+}
+
+.dot {
+  flex: none;
+  width: var(--dancer-dot-ipad);
+  height: var(--dancer-dot-ipad);
+  margin-top: calc(var(--dancer-dot-ipad) / -2);
+  border-radius: 50%;
+  background: var(--dot);
+  box-shadow: 0 0 0 2px var(--stage-ink);
+}
+
+.label {
+  color: var(--stage-ink);
+  font: var(--text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.open .dot {
+  background: transparent;
+  box-shadow: none;
+  border: 2px dashed var(--stage-ink-muted);
+}
+
+.open .label {
+  color: var(--stage-ink-muted);
+}
+
+.offStage {
+  opacity: 0.8;
+}
+
+@media (max-width: 599px) {
+  .dot {
+    width: var(--dancer-dot-phone);
+    height: var(--dancer-dot-phone);
+    margin-top: calc(var(--dancer-dot-phone) / -2);
+  }
+}
+
 .audience {
   display: flex;
   align-items: center;

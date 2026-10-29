@@ -5,8 +5,10 @@ import {
   STAGE_QUARTERS,
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
+  type DancerColor,
 } from '@living-stage/shared';
 import type { CSSProperties } from 'react';
+import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import styles from './Stage.module.css';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
@@ -24,7 +26,19 @@ const geometry = {
   '--upstage-wing': `${(upstageWing / planHeight) * 100}%`,
 } as CSSProperties;
 
-export function Stage({ showGuides }: { showGuides: boolean }) {
+// A dancer's spot in stage units; open marks a spot whose dancer left the roster.
+export type StageDancer = {
+  id: string;
+  label: string;
+  color: DancerColor | null;
+  x: number;
+  y: number;
+  open: boolean;
+};
+
+type StageProps = { showGuides: boolean; dancers?: StageDancer[] };
+
+export function Stage({ showGuides, dancers = [] }: StageProps) {
   return (
     <div
       className={styles.stage}
@@ -50,6 +64,9 @@ export function Stage({ showGuides }: { showGuides: boolean }) {
         <span className={`${styles.zone} ${styles.upstage}`}>Upstage</span>
         <span className={`${styles.zone} ${styles.leftWing}`}>Wing</span>
         <span className={`${styles.zone} ${styles.rightWing}`}>Wing</span>
+        {dancers.map((dancer) => (
+          <DancerDot key={dancer.id} dancer={dancer} />
+        ))}
       </div>
       <div className={styles.audience}>
         <span className={styles.zone}>Audience</span>
@@ -77,5 +94,21 @@ function GuidePair({ at, className }: { at: number; className?: string }) {
       <line className={className} x1={x} y1={0} x2={x} y2={STAGE_DEPTH_M} />
       <line className={className} x1={0} y1={y} x2={STAGE_WIDTH_M} y2={y} />
     </>
+  );
+}
+
+function DancerDot({ dancer }: { dancer: StageDancer }) {
+  const offStage = dancer.x < 0 || dancer.x > 1 || dancer.y < 0;
+  const spot = {
+    left: `${((dancer.x * STAGE_WIDTH_M + sideWing) / planWidth) * 100}%`,
+    top: `${((dancer.y * STAGE_DEPTH_M + upstageWing) / planHeight) * 100}%`,
+    '--dot': dancer.color === null ? 'var(--stage-line)' : dancerColorVar(dancer.color),
+  } as CSSProperties;
+  const classes = [styles.dancer, offStage && styles.offStage, dancer.open && styles.open];
+  return (
+    <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
+      <span className={styles.dot} />
+      <span className={styles.label}>{dancer.label}</span>
+    </div>
   );
 }

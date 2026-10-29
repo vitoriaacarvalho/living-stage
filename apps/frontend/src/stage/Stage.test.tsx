@@ -57,3 +57,37 @@ test('hides the guide lines when the dance turns them off', () => {
   render(<Stage showGuides={false} />);
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
+
+const clara = { id: 'cast-1', label: 'Clara', color: 3, x: 0.5, y: 0.5, open: false };
+
+test('labels each dancer with her name', () => {
+  render(<Stage showGuides dancers={[clara]} />);
+  expect(screen.getByText('Clara')).toBeInTheDocument();
+});
+
+test('puts a dancer at the center of the floor', () => {
+  render(<Stage showGuides dancers={[clara]} />);
+  expect(screen.getByTestId('dancer')).toHaveStyle({ left: '50%', top: `${(5 / 9) * 100}%` });
+});
+
+test('puts a dancer waiting in the left wing beside the floor', () => {
+  render(<Stage showGuides dancers={[{ ...clara, x: -0.0625, y: 0.05 }]} />);
+  expect(screen.getByTestId('dancer')).toHaveStyle({ left: '5%' });
+});
+
+test('dims a dancer waiting off stage', () => {
+  render(<Stage showGuides dancers={[{ ...clara, x: -0.0625 }]} />);
+  expect(screen.getByTestId('dancer')).toHaveClass(/offStage/);
+});
+
+test('does not dim a dancer on stage', () => {
+  render(<Stage showGuides dancers={[clara]} />);
+  expect(screen.getByTestId('dancer')).not.toHaveClass(/offStage/);
+});
+
+test('draws an open spot apart from the dancers', () => {
+  render(
+    <Stage showGuides dancers={[{ ...clara, label: 'Open spot', color: null, open: true }]} />,
+  );
+  expect(screen.getByTestId('dancer')).toHaveClass(/open/);
+});

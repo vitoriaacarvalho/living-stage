@@ -1,11 +1,16 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { addCastMember, fetchCast } from '../api/cast.ts';
+import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
+import { fetchFigures } from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
-vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(() => Promise.resolve([])) }));
+vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
+vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
+vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
 
 const kitri = {
   id: 'dance-1',
@@ -15,6 +20,21 @@ const kitri = {
 };
 
 beforeEach(() => {
+  vi.mocked(fetchCast)
+    .mockReset()
+    .mockResolvedValue([
+      { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: null },
+    ]);
+  vi.mocked(fetchFigures)
+    .mockReset()
+    .mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+    ]);
   vi.mocked(updateDance)
     .mockReset()
     .mockImplementation(async (_schoolId, _danceId, update) => ({ ...kitri, ...update }));
@@ -78,6 +98,27 @@ test('puts the guide lines back when saving fails', async () => {
   openKitri();
   await userEvent.setup().click(guidesToggle());
   expect(await screen.findByTestId('guides')).toBeInTheDocument();
+});
+
+test('puts the cast on the stage', async () => {
+  openKitri();
+  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  expect(await within(stage).findByText('Clara')).toBeInTheDocument();
+});
+
+test('puts a newly cast dancer in the wing on the stage', async () => {
+  const bia = { id: 'dancer-2', name: 'Bia', color: null };
+  vi.mocked(fetchDancers).mockResolvedValue([bia]);
+  vi.mocked(addCastMember).mockResolvedValue({
+    castMember: { id: 'cast-2', dancer: bia, role: null },
+    position: { castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+  });
+  openKitri();
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: 'Add' }));
+  await user.click(await screen.findByRole('button', { name: /Bia/ }));
+  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  expect(await within(stage).findByText('Bia')).toBeInTheDocument();
 });
 
 test('goes back to the dances', async () => {
