@@ -27,9 +27,11 @@ const geometry = {
 } as CSSProperties;
 
 // A dancer's spot in stage units; open marks a spot whose dancer left the roster.
+// role is a second line under the label.
 export type StageDancer = {
   id: string;
   label: string;
+  role: string | null;
   color: DancerColor | null;
   x: number;
   y: number;
@@ -109,6 +111,7 @@ function DancerDot({ dancer }: { dancer: StageDancer }) {
     <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
       <span className={styles.dot} />
       <span className={styles.label}>{dancer.label}</span>
+      {dancer.role && <span className={styles.role}>{dancer.role}</span>}
     </div>
   );
 }

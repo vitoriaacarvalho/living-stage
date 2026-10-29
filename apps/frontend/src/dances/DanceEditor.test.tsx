@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
+import type { Dance } from '@living-stage/shared';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
@@ -12,11 +13,11 @@ vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() })
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
 vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
 
-const kitri = {
+const kitri: Dance = {
   id: 'dance-1',
   title: 'Kitri variation',
   showGuides: true,
-  labelMode: 'name' as const,
+  labelMode: 'name',
   createdAt: '2026-10-20T12:00:00.000Z',
 };
 
@@ -99,6 +100,39 @@ test('puts the guide lines back when saving fails', async () => {
   openKitri();
   await userEvent.setup().click(guidesToggle());
   expect(await screen.findByTestId('guides')).toBeInTheDocument();
+});
+
+test("marks the dance's label mode as chosen", () => {
+  openKitri({ ...kitri, labelMode: 'both' });
+  const labels = screen.getByRole('group', { name: 'Labels' });
+  expect(within(labels).getByRole('button', { name: 'Both' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
+test('saves the label mode on the dance', async () => {
+  openKitri();
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Role' }));
+  expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { labelMode: 'role' });
+});
+
+test('puts the label mode back when saving fails', async () => {
+  vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
+  openKitri();
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Role' }));
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Name' })).toHaveAttribute('aria-pressed', 'true'),
+  );
+});
+
+test('labels the stage circles by role in role mode', async () => {
+  vi.mocked(fetchCast).mockResolvedValue([
+    { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: 'Kitri' },
+  ]);
+  openKitri({ ...kitri, labelMode: 'role' });
+  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  expect(await within(stage).findByText('Kitri')).toBeInTheDocument();
 });
 
 test('puts the cast on the stage', async () => {

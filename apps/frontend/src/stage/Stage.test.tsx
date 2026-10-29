@@ -58,11 +58,16 @@ test('hides the guide lines when the dance turns them off', () => {
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
 
-const clara = { id: 'cast-1', label: 'Clara', color: 3, x: 0.5, y: 0.5, open: false };
+const clara = { id: 'cast-1', label: 'Clara', role: null, color: 3, x: 0.5, y: 0.5, open: false };
 
 test('labels each dancer with her name', () => {
   render(<Stage showGuides dancers={[clara]} />);
   expect(screen.getByText('Clara')).toBeInTheDocument();
+});
+
+test('puts the role under the name', () => {
+  render(<Stage showGuides dancers={[{ ...clara, role: 'Kitri' }]} />);
+  expect(screen.getByText('Kitri')).toBeInTheDocument();
 });
 
 test('puts a dancer at the center of the floor', () => {

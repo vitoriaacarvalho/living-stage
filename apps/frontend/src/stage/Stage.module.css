@@ -99,6 +99,12 @@
   white-space: nowrap;
 }
 
+.role {
+  color: var(--stage-ink-muted);
+  font: var(--text-caption);
+  white-space: nowrap;
+}
+
 .open .dot {
   background: transparent;
   box-shadow: none;
