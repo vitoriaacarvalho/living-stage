@@ -21,6 +21,7 @@ export {
   type Dance,
   type DanceInput,
   type DanceUpdate,
+  type LabelMode,
   type DanceResponse,
   type ListDancesResponse,
 } from './dance.ts';

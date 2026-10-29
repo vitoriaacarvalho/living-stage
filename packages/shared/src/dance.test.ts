@@ -71,6 +71,14 @@ describe('parseDanceUpdate', () => {
     expect(parseDanceUpdate({ showGuides: 'false' })).toBeNull();
   });
 
+  test('accepts a label mode', () => {
+    expect(parseDanceUpdate({ labelMode: 'both' })).toEqual({ labelMode: 'both' });
+  });
+
+  test('rejects an unknown label mode', () => {
+    expect(parseDanceUpdate({ labelMode: 'none' })).toBeNull();
+  });
+
   test('rejects a body with no field to change', () => {
     expect(parseDanceUpdate({})).toBeNull();
   });

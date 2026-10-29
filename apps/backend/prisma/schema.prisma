@@ -119,12 +119,21 @@ model Dance {
   school     School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   title      String
   showGuides Boolean      @default(true)
+  labelMode  LabelMode    @default(name)
   createdAt  DateTime     @default(now())
   cast       CastMember[]
   figures    Figure[]
 
   @@index([schoolId])
   @@map("dance")
+}
+
+enum LabelMode {
+  name
+  role
+  both
+
+  @@map("label_mode")
 }
 
 model CastMember {

@@ -1,10 +1,24 @@
 export const DANCE_TITLE_MAX_LENGTH = 100;
 
-export type Dance = { id: string; title: string; showGuides: boolean; createdAt: string };
+const LABEL_MODES = ['name', 'role', 'both'] as const;
+
+export type LabelMode = (typeof LABEL_MODES)[number];
+
+export type Dance = {
+  id: string;
+  title: string;
+  showGuides: boolean;
+  labelMode: LabelMode;
+  createdAt: string;
+};
 
 export type DanceInput = { title: string };
 
-export type DanceUpdate = { title?: string; showGuides?: boolean };
+export type DanceUpdate = { title?: string; showGuides?: boolean; labelMode?: LabelMode };
+
+function isLabelMode(value: unknown): value is LabelMode {
+  return LABEL_MODES.includes(value as LabelMode);
+}
 
 export type ListDancesResponse = { dances: Dance[] };
 
@@ -35,6 +49,10 @@ export function parseDanceUpdate(value: unknown): DanceUpdate | null {
   if (body.showGuides !== undefined) {
     if (typeof body.showGuides !== 'boolean') return null;
     update.showGuides = body.showGuides;
+  }
+  if (body.labelMode !== undefined) {
+    if (!isLabelMode(body.labelMode)) return null;
+    update.labelMode = body.labelMode;
   }
   return Object.keys(update).length > 0 ? update : null;
 }

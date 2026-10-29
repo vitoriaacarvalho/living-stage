@@ -16,6 +16,7 @@ const kitri = {
   id: 'dance-1',
   title: 'Kitri variation',
   showGuides: true,
+  labelMode: 'name' as const,
   createdAt: '2026-10-20T12:00:00.000Z',
 };
 
