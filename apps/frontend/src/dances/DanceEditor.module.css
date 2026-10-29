@@ -42,7 +42,40 @@
 
 /* The largest stage that fits both ways; 30px is the Stage's audience strip. */
 .stageFit {
+  position: relative;
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
+}
+
+.stageControls {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-3);
+  display: flex;
+  gap: var(--space-1);
+}
+
+.stageToggle {
+  min-height: var(--touch-min);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--stage-ink) 8%, transparent);
+  color: var(--stage-ink-muted);
+  font: var(--text-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.stageToggle[aria-pressed='true'] {
+  background: var(--stage-accent);
+  color: var(--ink);
+}
+
+.stageToggle:focus-visible {
+  outline-color: var(--stage-accent);
 }
 
 @media (min-width: 768px) {
