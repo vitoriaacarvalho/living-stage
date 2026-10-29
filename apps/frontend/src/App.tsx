@@ -106,9 +106,7 @@ function Home({ userName, school, onSwitch }: HomeProps) {
   const [openDance, setOpenDance] = useState<Dance | null>(null);
 
   if (openDance) {
-    return (
-      <DanceEditor schoolId={school.id} dance={openDance} onBack={() => setOpenDance(null)} />
-    );
+    return <DanceEditor schoolId={school.id} dance={openDance} onBack={() => setOpenDance(null)} />;
   }
 
   if (view === 'inviting') {

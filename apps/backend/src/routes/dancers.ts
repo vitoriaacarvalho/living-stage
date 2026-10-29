@@ -61,6 +61,14 @@ schoolDancersRouter.delete('/dancers/:dancerId', async (req, res) => {
   res.status(204).end();
 });
 
-function toDancer({ id, name, color }: { id: string; name: string; color: number | null }): Dancer {
+export function toDancer({
+  id,
+  name,
+  color,
+}: {
+  id: string;
+  name: string;
+  color: number | null;
+}): Dancer {
   return { id, name, color };
 }

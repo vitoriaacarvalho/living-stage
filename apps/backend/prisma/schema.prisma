@@ -101,25 +101,40 @@ model Invite {
 }
 
 model Dancer {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   name      String
   color     Int?
-  createdAt DateTime @default(now())
+  createdAt DateTime     @default(now())
+  castings  CastMember[]
 
   @@index([schoolId])
   @@map("dancer")
 }
 
 model Dance {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   schoolId   String
-  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school     School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   title      String
-  showGuides Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  showGuides Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  cast       CastMember[]
 
   @@index([schoolId])
   @@map("dance")
+}
+
+model CastMember {
+  id        String   @id @default(cuid())
+  danceId   String
+  dance     Dance    @relation(fields: [danceId], references: [id], onDelete: Cascade)
+  dancerId  String?
+  dancer    Dancer?  @relation(fields: [dancerId], references: [id], onDelete: SetNull)
+  role      String?
+  createdAt DateTime @default(now())
+
+  @@unique([danceId, dancerId])
+  @@map("cast_member")
 }

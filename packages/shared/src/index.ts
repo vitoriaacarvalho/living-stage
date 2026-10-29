@@ -1,6 +1,16 @@
 export const APP_NAME = 'Living Stage';
 
 export {
+  CAST_ROLE_MAX_LENGTH,
+  parseCastMemberInput,
+  parseCastRole,
+  type CastMember,
+  type CastMemberInput,
+  type CastMemberResponse,
+  type ListCastResponse,
+} from './cast.ts';
+
+export {
   DANCE_TITLE_MAX_LENGTH,
   parseDanceInput,
   parseDanceTitle,

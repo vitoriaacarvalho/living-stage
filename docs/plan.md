@@ -39,7 +39,7 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 | MVP scope | Shows, dances, casting, formations and movement first; everything else waits (see §1, MVP) |
 | Editing model | One person edits a dance at a time; others watch changes live. Not in the MVP: until the edit lock ships, the last save wins |
 | Casts | One cast per dance |
-| Roles | Free text per dance; the teacher decides whether to show and color by role |
+| Roles | Free text per dance; the teacher decides whether to show and color by role. Coloring by role is automatic: each distinct role takes the next `dancer-N` color in the order roles first appear in the cast |
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
 | Languages | English only in the MVP; Portuguese (pt-BR) added after it with i18n |
 | Stage | Standard rectangular stage with wings; no custom proportions |
@@ -243,8 +243,8 @@ Invite        id, schoolId, code, expiresAt, createdById   (one active code per 
 Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
 
 Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
-CastMember    id, danceId, dancerId?, role?, color?   (dancerId is set to null when the dancer is removed: the placeholder of B5)
-Figure        id, danceId, order, name?, timeMs? | count?
+CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance)
+Figure        id, danceId, order, name?, timeMs? | count?   (every dance has a first figure from casting on, plan 2.2, so cast dancers have saved positions before plan 2.3)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, segments[]  (route arriving into this figure)
 

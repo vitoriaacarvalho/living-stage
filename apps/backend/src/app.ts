@@ -3,6 +3,7 @@ import express from 'express';
 import { auth } from './auth/auth.ts';
 import { requireSchoolMember } from './auth/require-school-member.ts';
 import { requireSession } from './auth/require-session.ts';
+import { schoolCastRouter } from './routes/cast.ts';
 import { schoolDancersRouter } from './routes/dancers.ts';
 import { schoolDancesRouter } from './routes/dances.ts';
 import { healthRouter } from './routes/health.ts';
@@ -27,6 +28,7 @@ export function createApp() {
     schoolInviteRouter,
     schoolDancersRouter,
     schoolDancesRouter,
+    schoolCastRouter,
   );
   return app;
 }
