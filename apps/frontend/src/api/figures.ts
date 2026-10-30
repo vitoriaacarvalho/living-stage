@@ -1,4 +1,10 @@
-import type { Figure, FigureCopy, FigureResponse, ListFiguresResponse } from '@living-stage/shared';
+import type {
+  Figure,
+  FigureCopy,
+  FigureResponse,
+  FigureUpdate,
+  ListFiguresResponse,
+} from '@living-stage/shared';
 
 export async function fetchFigures(
   schoolId: string,
@@ -22,6 +28,22 @@ export async function copyFigure(
     body: JSON.stringify(copy),
   });
   if (!res.ok) throw new Error(`POST figure answered ${res.status}`);
+  const body: FigureResponse = await res.json();
+  return body.figure;
+}
+
+export async function updateFigure(
+  schoolId: string,
+  danceId: string,
+  figureId: string,
+  update: FigureUpdate,
+): Promise<Figure> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}/figures/${figureId}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(update),
+  });
+  if (!res.ok) throw new Error(`PATCH figure answered ${res.status}`);
   const body: FigureResponse = await res.json();
   return body.figure;
 }

@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { nextWingSpot, parseFigureCopy, WING_SPOTS } from './figure.ts';
+import {
+  FIGURE_NAME_MAX_LENGTH,
+  nextWingSpot,
+  parseFigureCopy,
+  parseFigureName,
+  parseFigureUpdate,
+  WING_SPOTS,
+} from './figure.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
 
 const wingX = -SIDE_WING_DEPTH / 2;
@@ -62,5 +69,46 @@ describe('parseFigureCopy', () => {
 
   test('rejects a body that is not an object', () => {
     expect(parseFigureCopy('figure-1')).toBeNull();
+  });
+});
+
+describe('parseFigureName', () => {
+  test('trims surrounding spaces', () => {
+    expect(parseFigureName('  Entrance  ')).toBe('Entrance');
+  });
+
+  test('turns a blank name into no name', () => {
+    expect(parseFigureName('   ')).toBeNull();
+  });
+
+  test('accepts no name', () => {
+    expect(parseFigureName(null)).toBeNull();
+  });
+
+  test('accepts a name at the maximum length', () => {
+    const name = 'a'.repeat(FIGURE_NAME_MAX_LENGTH);
+    expect(parseFigureName(name)).toBe(name);
+  });
+
+  test('rejects a name over the maximum length', () => {
+    expect(parseFigureName('a'.repeat(FIGURE_NAME_MAX_LENGTH + 1))).toBeUndefined();
+  });
+
+  test('rejects a name that is not text', () => {
+    expect(parseFigureName(3)).toBeUndefined();
+  });
+});
+
+describe('parseFigureUpdate', () => {
+  test('accepts a new name', () => {
+    expect(parseFigureUpdate({ name: 'Entrance' })).toEqual({ name: 'Entrance' });
+  });
+
+  test('accepts clearing the name', () => {
+    expect(parseFigureUpdate({ name: '' })).toEqual({ name: null });
+  });
+
+  test('rejects a body with no name', () => {
+    expect(parseFigureUpdate({})).toBeNull();
   });
 });

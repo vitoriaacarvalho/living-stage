@@ -40,12 +40,16 @@ export {
   type ListDancersResponse,
 } from './dancer.ts';
 export {
+  FIGURE_NAME_MAX_LENGTH,
   WING_SPOTS,
   nextWingSpot,
   parseFigureCopy,
+  parseFigureName,
+  parseFigureUpdate,
   type Figure,
   type FigureCopy,
   type FigureResponse,
+  type FigureUpdate,
   type FigurePosition,
   type ListFiguresResponse,
   type Position,

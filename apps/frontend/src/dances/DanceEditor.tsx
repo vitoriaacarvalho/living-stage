@@ -4,6 +4,8 @@ import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
+import { figureLabel } from '../figures/figure-label.ts';
+import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
@@ -32,10 +34,17 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [dance, setDance] = useState(opened);
   const { state: cast, ...castActions } = useCast(schoolId, opened.id);
   const [selectedFigureId, setSelectedFigureId] = useState<string | null>(null);
+  const [figurePanelOpen, setFigurePanelOpen] = useState(false);
   const figures = cast.status === 'ready' ? cast.figures : [];
   const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
   const dancers =
     cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
+
+  // Tapping the selected figure again opens its panel.
+  function selectFigure(figureId: string) {
+    if (figureId === figure?.id) setFigurePanelOpen(true);
+    else setSelectedFigureId(figureId);
+  }
 
   async function copyFigure(placement: FigureCopy['placement']) {
     if (!figure) return;
@@ -95,15 +104,25 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             </div>
           </div>
           {figure && (
-            <FigureStrip figures={figures} selectedId={figure.id} onSelect={setSelectedFigureId} />
+            <FigureStrip figures={figures} selectedId={figure.id} onSelect={selectFigure} />
           )}
         </main>
-        <CastList
-          schoolId={schoolId}
-          state={cast}
-          actions={castActions}
-          colorMode={dance.colorMode}
-        />
+        {figurePanelOpen && figure ? (
+          <FigurePanel
+            key={figure.id}
+            figure={figure}
+            label={figureLabel(figure, figures.indexOf(figure))}
+            onRename={(name) => castActions.renameFigure(figure.id, name)}
+            onClose={() => setFigurePanelOpen(false)}
+          />
+        ) : (
+          <CastList
+            schoolId={schoolId}
+            state={cast}
+            actions={castActions}
+            colorMode={dance.colorMode}
+          />
+        )}
       </div>
     </div>
   );

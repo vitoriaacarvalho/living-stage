@@ -1,5 +1,6 @@
 import {
   parseFigureCopy,
+  parseFigureUpdate,
   type Figure,
   type FigureCopy,
   type FigureResponse,
@@ -48,6 +49,33 @@ schoolFiguresRouter.post('/dances/:danceId/figures', async (req, res) => {
     return;
   }
   res.status(201).json({ figure: toFigure(figure) } satisfies FigureResponse);
+});
+
+schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res) => {
+  const update = parseFigureUpdate(req.body);
+  if (!update) {
+    res.status(400).json({ error: 'invalid_figure' });
+    return;
+  }
+
+  const { count } = await prisma.figure.updateMany({
+    where: {
+      id: req.params.figureId,
+      danceId: req.params.danceId,
+      dance: { schoolId: res.locals.schoolId },
+    },
+    data: update,
+  });
+  if (count === 0) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  const figure = await prisma.figure.findUniqueOrThrow({
+    where: { id: req.params.figureId },
+    include: { positions: positionFields },
+  });
+  res.json({ figure: toFigure(figure) } satisfies FigureResponse);
 });
 
 // The copy keeps every position but not the name, so it shows as "Figure N" until renamed.

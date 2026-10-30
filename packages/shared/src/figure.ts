@@ -24,6 +24,10 @@ export function parseFigureCopy(value: unknown): FigureCopy | null {
   return { copyOf, placement };
 }
 
+export const FIGURE_NAME_MAX_LENGTH = 40;
+
+export type FigureUpdate = { name: string | null };
+
 export const WING_SPOTS = 10;
 
 const wingX = -SIDE_WING_DEPTH / 2;
@@ -38,4 +42,19 @@ export function nextWingSpot(taken: StagePoint[]): StagePoint {
   const isTaken = (spot: StagePoint) =>
     taken.some(({ x, y }) => Math.abs(x - spot.x) < 1e-9 && Math.abs(y - spot.y) < 1e-9);
   return spots.find((spot) => !isTaken(spot)) ?? spots[taken.length % WING_SPOTS]!;
+}
+
+// Blank means no name, so the figure shows as "Figure N" again.
+export function parseFigureName(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== 'string') return undefined;
+  const name = value.trim();
+  if (name.length > FIGURE_NAME_MAX_LENGTH) return undefined;
+  return name.length === 0 ? null : name;
+}
+
+export function parseFigureUpdate(value: unknown): FigureUpdate | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const name = parseFigureName((value as Record<string, unknown>).name);
+  return name === undefined ? null : { name };
 }

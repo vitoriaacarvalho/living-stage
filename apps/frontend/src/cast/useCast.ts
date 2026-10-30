@@ -7,7 +7,7 @@ import type {
 } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
-import { copyFigure as postFigureCopy, fetchFigures } from '../api/figures.ts';
+import { copyFigure as postFigureCopy, fetchFigures, updateFigure } from '../api/figures.ts';
 
 export type CastState =
   | { status: 'loading' }
@@ -22,6 +22,7 @@ export type CastActions = {
   give: (castMemberId: string, dancerId: string) => Promise<void>;
   remove: (castMemberId: string) => Promise<void>;
   copyFigure: (copy: FigureCopy) => Promise<Figure>;
+  renameFigure: (figureId: string, name: string | null) => Promise<void>;
 };
 
 export function useCast(schoolId: string, danceId: string): { state: CastState } & CastActions {
@@ -91,7 +92,15 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     return figure;
   }
 
-  return { state, add, save, give, remove, copyFigure };
+  async function renameFigure(figureId: string, name: string | null) {
+    const saved = await updateFigure(schoolId, danceId, figureId, { name });
+    change(({ cast, figures }) => ({
+      cast,
+      figures: figures.map((each) => (each.id === saved.id ? saved : each)),
+    }));
+  }
+
+  return { state, add, save, give, remove, copyFigure, renameFigure };
 }
 
 // Mirrors the server, which shifts every later figure up by one.

@@ -1,4 +1,5 @@
 import type { Figure } from '@living-stage/shared';
+import { Icon } from '../ui/Icon.tsx';
 import { figureLabel } from './figure-label.ts';
 import styles from './FigureStrip.module.css';
 
@@ -20,6 +21,7 @@ export function FigureStrip({ figures, selectedId, onSelect }: FigureStripProps)
             onClick={() => onSelect(figure.id)}
           >
             {figureLabel(figure, index)}
+            {figure.id === selectedId && <Icon name="pencil" />}
           </button>
         </li>
       ))}

@@ -13,7 +13,13 @@ vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
     dance: { findFirst: vi.fn() },
-    figure: { findFirst: vi.fn(), aggregate: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
+    figure: {
+      findFirst: vi.fn(),
+      aggregate: vi.fn(),
+      updateMany: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      create: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -217,5 +223,60 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
   test('creates nothing for an invalid body', async () => {
     await copy({ copyOf: 'figure-1' });
     expect(prisma.figure.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () => {
+  function rename(body: unknown) {
+    return fetch(`${url}/figure-1`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.figure.updateMany).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.figure.findUniqueOrThrow)
+      .mockReset()
+      .mockResolvedValue({ ...firstFigure, name: 'Entrance' } as never);
+  });
+
+  test('responds with the renamed figure', async () => {
+    const res = await rename({ name: 'Entrance' });
+    expect(await res.json()).toEqual({
+      figure: {
+        id: 'figure-1',
+        order: 0,
+        name: 'Entrance',
+        positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
+      },
+    });
+  });
+
+  test('renames only a figure of this dance in this school', async () => {
+    await rename({ name: 'Entrance' });
+    expect(prisma.figure.updateMany).toHaveBeenCalledWith({
+      where: { id: 'figure-1', danceId: 'dance-1', dance: { schoolId: 'school-1' } },
+      data: { name: 'Entrance' },
+    });
+  });
+
+  test('clears the name when it is blank', async () => {
+    await rename({ name: '  ' });
+    expect(prisma.figure.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { name: null } }),
+    );
+  });
+
+  test('responds 404 for a figure of another dance or school', async () => {
+    vi.mocked(prisma.figure.updateMany).mockResolvedValue({ count: 0 });
+    const res = await rename({ name: 'Entrance' });
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 400 for a name over the maximum length', async () => {
+    const res = await rename({ name: 'a'.repeat(41) });
+    expect(res.status).toBe(400);
   });
 });

@@ -5,13 +5,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { copyFigure, fetchFigures } from '../api/figures.ts';
+import { copyFigure, fetchFigures, updateFigure } from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
 vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
-vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn(), copyFigure: vi.fn() }));
+vi.mock('../api/figures.ts', () => ({
+  fetchFigures: vi.fn(),
+  copyFigure: vi.fn(),
+  updateFigure: vi.fn(),
+}));
 
 const kitri: Dance = {
   id: 'dance-1',
@@ -303,5 +307,53 @@ describe('figure tools', () => {
     await waitFor(async () =>
       expect(await chipNames()).toEqual(['Figure 1', 'Figure 2', 'Finale']),
     );
+  });
+});
+
+describe('figure panel', () => {
+  beforeEach(() => {
+    vi.mocked(updateFigure)
+      .mockReset()
+      .mockResolvedValue({ id: 'figure-1', order: 0, name: 'Entrance', positions: [] });
+  });
+
+  async function openFigurePanel() {
+    openKitri();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Figure 1' }));
+    return user;
+  }
+
+  test('opens when the selected figure is tapped', async () => {
+    await openFigurePanel();
+    expect(screen.getByRole('complementary', { name: 'Figure' })).toBeInTheDocument();
+  });
+
+  test('takes the place of the cast list', async () => {
+    await openFigurePanel();
+    expect(screen.queryByRole('complementary', { name: 'Cast' })).not.toBeInTheDocument();
+  });
+
+  test('saves the new name', async () => {
+    const user = await openFigurePanel();
+    await user.type(screen.getByLabelText('Name'), 'Entrance');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(updateFigure).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-1', {
+      name: 'Entrance',
+    });
+  });
+
+  test('shows the new name on the figure once saved', async () => {
+    const user = await openFigurePanel();
+    await user.type(screen.getByLabelText('Name'), 'Entrance');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const strip = screen.getByRole('list', { name: 'Figures' });
+    expect(await within(strip).findByRole('button', { name: 'Entrance' })).toBeInTheDocument();
+  });
+
+  test('goes back to the cast list once closed', async () => {
+    const user = await openFigurePanel();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
   });
 });
