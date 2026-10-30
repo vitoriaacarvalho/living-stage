@@ -47,6 +47,10 @@ function openKitri(dance = kitri) {
   render(<DanceEditor schoolId="school-1" dance={dance} onBack={() => {}} />);
 }
 
+function labelsButton(name: string) {
+  return within(screen.getByRole('group', { name: 'Labels' })).getByRole('button', { name });
+}
+
 function guidesToggle() {
   return screen.getByRole('button', { name: 'Guides' });
 }
@@ -105,26 +109,27 @@ test('puts the guide lines back when saving fails', async () => {
 
 test("marks the dance's label mode as chosen", () => {
   openKitri({ ...kitri, labelMode: 'both' });
-  const labels = screen.getByRole('group', { name: 'Labels' });
-  expect(within(labels).getByRole('button', { name: 'Both' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  expect(labelsButton('Both')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('saves the label mode on the dance', async () => {
   openKitri();
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Role' }));
+  await userEvent.setup().click(labelsButton('Role'));
   expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { labelMode: 'role' });
 });
 
 test('puts the label mode back when saving fails', async () => {
   vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
   openKitri();
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Role' }));
-  await waitFor(() =>
-    expect(screen.getByRole('button', { name: 'Name' })).toHaveAttribute('aria-pressed', 'true'),
-  );
+  await userEvent.setup().click(labelsButton('Role'));
+  await waitFor(() => expect(labelsButton('Name')).toHaveAttribute('aria-pressed', 'true'));
+});
+
+test('saves the color mode on the dance', async () => {
+  openKitri();
+  const colorBy = screen.getByRole('group', { name: 'Color by' });
+  await userEvent.setup().click(within(colorBy).getByRole('button', { name: 'Role' }));
+  expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { colorMode: 'role' });
 });
 
 test('labels the stage circles by role in role mode', async () => {

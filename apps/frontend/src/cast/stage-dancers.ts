@@ -1,18 +1,34 @@
-import type { CastMember, LabelMode, Position } from '@living-stage/shared';
+import {
+  roleColors,
+  type CastMember,
+  type Dance,
+  type LabelMode,
+  type Position,
+} from '@living-stage/shared';
 import type { StageDancer } from '../stage/Stage.tsx';
+import { castMemberColor } from './cast-color.ts';
+
+export type StageView = Pick<Dance, 'labelMode' | 'colorMode'>;
 
 export function stageDancers(
   cast: CastMember[],
   positions: Position[],
-  labelMode: LabelMode,
+  { labelMode, colorMode }: StageView,
 ): StageDancer[] {
+  const colors = roleColors(cast);
   return cast.flatMap((castMember) => {
     const position = positions.find(({ castMemberId }) => castMemberId === castMember.id);
     if (!position) return [];
-    const { id, dancer } = castMember;
     const { x, y } = position;
     return [
-      { id, ...labels(castMember, labelMode), color: dancer?.color ?? null, x, y, open: !dancer },
+      {
+        id: castMember.id,
+        ...labels(castMember, labelMode),
+        color: castMemberColor(castMember, colorMode, colors),
+        x,
+        y,
+        open: !castMember.dancer,
+      },
     ];
   });
 }

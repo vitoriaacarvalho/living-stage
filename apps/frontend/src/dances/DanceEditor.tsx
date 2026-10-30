@@ -1,4 +1,4 @@
-import type { Dance, LabelMode } from '@living-stage/shared';
+import type { Dance } from '@living-stage/shared';
 import { type CSSProperties, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
@@ -17,27 +17,26 @@ const labelOptions = [
   { value: 'both', label: 'Both' },
 ] as const;
 
+const colorOptions = [
+  { value: 'dancer', label: 'Dancer' },
+  { value: 'role', label: 'Role' },
+] as const;
+
+type ViewSetting = 'showGuides' | 'labelMode' | 'colorMode';
+
 type DanceEditorProps = { schoolId: string; dance: Dance; onBack: () => void };
 
 export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProps) {
   const [dance, setDance] = useState(opened);
   const { state: cast, ...castActions } = useCast(schoolId, opened.id);
-  const dancers =
-    cast.status === 'ready' ? stageDancers(cast.cast, cast.positions, dance.labelMode) : [];
+  const dancers = cast.status === 'ready' ? stageDancers(cast.cast, cast.positions, dance) : [];
 
-  function toggleGuides() {
-    const showGuides = !dance.showGuides;
-    setDance({ ...dance, showGuides });
-    updateDance(schoolId, dance.id, { showGuides }).catch(() =>
-      setDance((current) => ({ ...current, showGuides: !showGuides })),
-    );
-  }
-
-  function changeLabelMode(labelMode: LabelMode) {
-    const previous = dance.labelMode;
-    setDance({ ...dance, labelMode });
-    updateDance(schoolId, dance.id, { labelMode }).catch(() =>
-      setDance((current) => ({ ...current, labelMode: previous })),
+  // Shown right away; put back if saving fails.
+  function saveView<K extends ViewSetting>(setting: K, value: Dance[K]) {
+    const previous = dance[setting];
+    setDance({ ...dance, [setting]: value });
+    updateDance(schoolId, dance.id, { [setting]: value }).catch(() =>
+      setDance((current) => ({ ...current, [setting]: previous })),
     );
   }
 
@@ -57,13 +56,22 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               label="Labels"
               options={labelOptions}
               value={dance.labelMode}
-              onChange={changeLabelMode}
+              onChange={(labelMode) => saveView('labelMode', labelMode)}
+            />
+            <span className={styles.controlLabel} aria-hidden="true">
+              Color by
+            </span>
+            <SegmentedControl
+              label="Color by"
+              options={colorOptions}
+              value={dance.colorMode}
+              onChange={(colorMode) => saveView('colorMode', colorMode)}
             />
             <button
               type="button"
               className={styles.toggle}
               aria-pressed={dance.showGuides}
-              onClick={toggleGuides}
+              onClick={() => saveView('showGuides', !dance.showGuides)}
             >
               Guides
             </button>
@@ -74,7 +82,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             </div>
           </div>
         </main>
-        <CastList schoolId={schoolId} state={cast} actions={castActions} />
+        <CastList
+          schoolId={schoolId}
+          state={cast}
+          actions={castActions}
+          colorMode={dance.colorMode}
+        />
       </div>
     </div>
   );

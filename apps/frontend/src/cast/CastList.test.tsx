@@ -1,3 +1,4 @@
+import type { ColorMode } from '@living-stage/shared';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -39,13 +40,18 @@ beforeEach(() => {
   vi.mocked(removeCastMember).mockReset().mockResolvedValue();
 });
 
-function KitriCast() {
+function KitriCast({ colorMode }: { colorMode: ColorMode }) {
   const { state, ...actions } = useCast('school-1', 'dance-1');
-  return <CastList schoolId="school-1" state={state} actions={actions} />;
+  return <CastList schoolId="school-1" state={state} actions={actions} colorMode={colorMode} />;
 }
 
-function renderCast() {
-  render(<KitriCast />);
+function renderCast(colorMode: ColorMode = 'dancer') {
+  render(<KitriCast colorMode={colorMode} />);
+}
+
+async function claraSwatch() {
+  const row = (await screen.findByText('Clara Souza')).closest('li')!;
+  return row.querySelector('[aria-hidden="true"]');
 }
 
 async function castNames() {
@@ -216,4 +222,14 @@ test('goes back to the cast without saving when closed', async () => {
   const user = await editClara();
   await user.click(screen.getByRole('button', { name: 'Close' }));
   expect(await castNames()).toEqual(['CSClara SouzaKitri']);
+});
+
+test('colors a swatch by the dancer when coloring by dancer', async () => {
+  renderCast('dancer');
+  expect(await claraSwatch()).toHaveStyle({ '--swatch': 'var(--dancer-3)' });
+});
+
+test('colors a swatch by the role when coloring by role', async () => {
+  renderCast('role');
+  expect(await claraSwatch()).toHaveStyle({ '--swatch': 'var(--dancer-1)' });
 });

@@ -26,6 +26,7 @@ export {
   type DanceResponse,
   type ListDancesResponse,
 } from './dance.ts';
+export { NO_ROLE_COLOR, roleColor, roleColors, type RoleColor } from './role-color.ts';
 export {
   DANCER_COLOR_COUNT,
   DANCER_NAME_MAX_LENGTH,
