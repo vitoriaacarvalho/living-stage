@@ -11,6 +11,7 @@ import formStyles from '../ui/Form.module.css';
 import { castMemberColor } from './cast-color.ts';
 import { CastMemberForm } from './CastMemberForm.tsx';
 import { CastPicker } from './CastPicker.tsx';
+import { RoleLegend } from './RoleLegend.tsx';
 import styles from './CastList.module.css';
 import type { CastActions, CastState } from './useCast.ts';
 
@@ -60,6 +61,7 @@ export function CastList({ schoolId, state, actions, colorMode }: CastListProps)
           Add
         </Button>
       </header>
+      {state.status === 'ready' && colorMode === 'role' && <RoleLegend cast={state.cast} />}
       {state.status === 'failed' && (
         <p role="alert" className={formStyles.error}>
           Could not load the cast. Go back and try again.

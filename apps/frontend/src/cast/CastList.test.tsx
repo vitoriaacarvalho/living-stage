@@ -233,3 +233,14 @@ test('colors a swatch by the role when coloring by role', async () => {
   renderCast('role');
   expect(await claraSwatch()).toHaveStyle({ '--swatch': 'var(--dancer-1)' });
 });
+
+test('shows the role legend when coloring by role', async () => {
+  renderCast('role');
+  expect(await screen.findByRole('list', { name: 'Role colors' })).toBeInTheDocument();
+});
+
+test('hides the role legend when coloring by dancer', async () => {
+  renderCast('dancer');
+  await screen.findByText('Clara Souza');
+  expect(screen.queryByRole('list', { name: 'Role colors' })).not.toBeInTheDocument();
+});
