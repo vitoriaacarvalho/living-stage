@@ -49,26 +49,28 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       </header>
       <div className={styles.body}>
         <main className={styles.main}>
+          <div className={styles.viewControls}>
+            <span className={styles.controlLabel} aria-hidden="true">
+              Labels
+            </span>
+            <SegmentedControl
+              label="Labels"
+              options={labelOptions}
+              value={dance.labelMode}
+              onChange={changeLabelMode}
+            />
+            <button
+              type="button"
+              className={styles.toggle}
+              aria-pressed={dance.showGuides}
+              onClick={toggleGuides}
+            >
+              Guides
+            </button>
+          </div>
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
               <Stage showGuides={dance.showGuides} dancers={dancers} />
-              <div className={styles.stageControls}>
-                <SegmentedControl
-                  label="Labels"
-                  options={labelOptions}
-                  value={dance.labelMode}
-                  onChange={changeLabelMode}
-                  surface="stage"
-                />
-                <button
-                  type="button"
-                  className={styles.stageToggle}
-                  aria-pressed={dance.showGuides}
-                  onClick={toggleGuides}
-                >
-                  Guides
-                </button>
-              </div>
             </div>
           </div>
         </main>

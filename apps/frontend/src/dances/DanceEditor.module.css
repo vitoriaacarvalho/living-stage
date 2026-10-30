@@ -50,26 +50,31 @@
 
 /* The largest stage that fits both ways; 30px is the Stage's audience strip. */
 .stageFit {
-  position: relative;
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
 }
 
-.stageControls {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-3);
+.viewControls {
   display: flex;
+  flex: none;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1);
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
-.stageToggle {
+.controlLabel {
+  margin-left: var(--space-2);
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+.toggle {
   min-height: var(--touch-min);
-  padding: 0 14px;
-  border: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-control);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--stage-ink) 8%, transparent);
-  color: var(--stage-ink-muted);
+  background: var(--surface);
+  color: var(--ink);
   font: var(--text-label);
   white-space: nowrap;
   cursor: pointer;
@@ -78,13 +83,10 @@
     color 150ms ease-out;
 }
 
-.stageToggle[aria-pressed='true'] {
-  background: var(--stage-accent);
-  color: var(--ink);
-}
-
-.stageToggle:focus-visible {
-  outline-color: var(--stage-accent);
+.toggle[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
 }
 
 @media (min-width: 900px) {
