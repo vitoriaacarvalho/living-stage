@@ -1,7 +1,7 @@
 import type { Dance } from '@living-stage/shared';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
@@ -167,4 +167,70 @@ test('goes back to the dances', async () => {
   render(<DanceEditor schoolId="school-1" dance={kitri} onBack={onBack} />);
   await userEvent.setup().click(screen.getByRole('button', { name: 'Back to dances' }));
   expect(onBack).toHaveBeenCalled();
+});
+
+describe('figures', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+      { id: 'figure-2', order: 1, name: 'Entrance', positions: [] },
+    ]);
+  });
+
+  async function figureChips() {
+    const strip = await screen.findByRole('list', { name: 'Figures' });
+    return within(strip).getAllByRole('button');
+  }
+
+  function stage() {
+    return screen.getByRole('img', { name: /^Stage seen from above/ });
+  }
+
+  test('lists the figures of the dance', async () => {
+    openKitri();
+    expect((await figureChips()).map((chip) => chip.textContent)).toEqual(['Figure 1', 'Entrance']);
+  });
+
+  test('starts on the first figure', async () => {
+    openKitri();
+    const [first] = await figureChips();
+    expect(first).toHaveAttribute('aria-current', 'true');
+  });
+
+  test("shows the selected figure's positions on the stage", async () => {
+    openKitri();
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Entrance' }));
+    expect(within(stage()).queryByText('Clara')).not.toBeInTheDocument();
+  });
+
+  test('puts a newly cast dancer in the wing of every figure', async () => {
+    const bia = { id: 'dancer-2', name: 'Bia', color: null };
+    vi.mocked(fetchDancers).mockResolvedValue([bia]);
+    vi.mocked(addCastMember).mockResolvedValue({
+      castMember: { id: 'cast-2', dancer: bia, role: null },
+      positions: [
+        { figureId: 'figure-1', castMemberId: 'cast-2', x: -0.0625, y: 0.15 },
+        { figureId: 'figure-2', castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+      ],
+    });
+    openKitri();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Add' }));
+    await user.click(await screen.findByRole('button', { name: /Bia/ }));
+    await user.click(screen.getByRole('button', { name: 'Entrance' }));
+    expect(within(stage()).getByText('Bia')).toBeInTheDocument();
+  });
+
+  test('shows the first figure again when it is selected', async () => {
+    openKitri();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Entrance' }));
+    await user.click(screen.getByRole('button', { name: 'Figure 1' }));
+    expect(within(stage()).getByText('Clara')).toBeInTheDocument();
+  });
 });

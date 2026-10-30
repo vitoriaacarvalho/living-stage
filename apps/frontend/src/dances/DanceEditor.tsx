@@ -4,6 +4,7 @@ import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
+import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
@@ -29,7 +30,11 @@ type DanceEditorProps = { schoolId: string; dance: Dance; onBack: () => void };
 export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProps) {
   const [dance, setDance] = useState(opened);
   const { state: cast, ...castActions } = useCast(schoolId, opened.id);
-  const dancers = cast.status === 'ready' ? stageDancers(cast.cast, cast.positions, dance) : [];
+  const [selectedFigureId, setSelectedFigureId] = useState<string | null>(null);
+  const figures = cast.status === 'ready' ? cast.figures : [];
+  const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
+  const dancers =
+    cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
 
   // Shown right away; put back if saving fails.
   function saveView<K extends ViewSetting>(setting: K, value: Dance[K]) {
@@ -81,6 +86,9 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               <Stage showGuides={dance.showGuides} dancers={dancers} />
             </div>
           </div>
+          {figure && (
+            <FigureStrip figures={figures} selectedId={figure.id} onSelect={setSelectedFigureId} />
+          )}
         </main>
         <CastList
           schoolId={schoolId}
