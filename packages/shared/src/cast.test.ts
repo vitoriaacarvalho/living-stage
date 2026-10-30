@@ -78,7 +78,31 @@ describe('parseCastMemberUpdate', () => {
     expect(parseCastMemberUpdate({ role: '' })).toEqual({ role: null });
   });
 
-  test('rejects a missing role', () => {
+  test('accepts a new dancer for the spot', () => {
+    expect(parseCastMemberUpdate({ dancerId: 'dancer-2' })).toEqual({ dancerId: 'dancer-2' });
+  });
+
+  test('accepts a new dancer and a role together', () => {
+    expect(parseCastMemberUpdate({ dancerId: 'dancer-2', role: 'Kitri' })).toEqual({
+      dancerId: 'dancer-2',
+      role: 'Kitri',
+    });
+  });
+
+  test('rejects an empty dancer id', () => {
+    expect(parseCastMemberUpdate({ dancerId: '' })).toBeNull();
+  });
+
+  test('rejects a dancer id that is not text', () => {
+    expect(parseCastMemberUpdate({ dancerId: 2 })).toBeNull();
+  });
+
+  test('rejects a role over the maximum length even with a dancer', () => {
+    const role = 'a'.repeat(CAST_ROLE_MAX_LENGTH + 1);
+    expect(parseCastMemberUpdate({ dancerId: 'dancer-2', role })).toBeNull();
+  });
+
+  test('rejects a body with no field to change', () => {
     expect(parseCastMemberUpdate({})).toBeNull();
   });
 

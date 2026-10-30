@@ -191,9 +191,9 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
   test('looks the dancer up in this school', async () => {
     vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
     await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
-    expect(prisma.dancer.findFirst).toHaveBeenCalledWith({
-      where: { id: 'dancer-1', schoolId: 'school-1' },
-    });
+    expect(prisma.dancer.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'dancer-1', schoolId: 'school-1' } }),
+    );
   });
 
   test('responds 400 for a role over the maximum length', async () => {
@@ -263,6 +263,42 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/cast/:castMemberId', () =
   test('responds 400 for a role over the maximum length', async () => {
     const res = await fetch(url(), send('PATCH', { role: 'a'.repeat(41) }));
     expect(res.status).toBe(400);
+  });
+
+  test('gives the spot to another dancer of the school', async () => {
+    vi.mocked(prisma.dancer.findFirst).mockResolvedValue(clara);
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([kitri] as never);
+    await fetch(url(), send('PATCH', { dancerId: 'dancer-1' }));
+    expect(prisma.castMember.updateManyAndReturn).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { dancerId: 'dancer-1' } }),
+    );
+  });
+
+  test('looks for the new dancer in this school', async () => {
+    vi.mocked(prisma.dancer.findFirst).mockResolvedValue(clara);
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockResolvedValue([kitri] as never);
+    await fetch(url(), send('PATCH', { dancerId: 'dancer-1' }));
+    expect(prisma.dancer.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'dancer-1', schoolId: 'school-1' } }),
+    );
+  });
+
+  test('responds 400 for a dancer of another school', async () => {
+    vi.mocked(prisma.dancer.findFirst).mockResolvedValue(null);
+    const res = await fetch(url(), send('PATCH', { dancerId: 'dancer-9' }));
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 409 when the new dancer is already in the cast', async () => {
+    vi.mocked(prisma.dancer.findFirst).mockResolvedValue(clara);
+    vi.mocked(prisma.castMember.updateManyAndReturn).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+    const res = await fetch(url(), send('PATCH', { dancerId: 'dancer-1' }));
+    expect(res.status).toBe(409);
   });
 });
 

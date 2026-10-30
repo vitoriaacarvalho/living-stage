@@ -40,10 +40,7 @@ schoolCastRouter.post('/dances/:danceId/cast', async (req, res) => {
     res.status(404).json({ error: 'not_found' });
     return;
   }
-  const dancer = await prisma.dancer.findFirst({
-    where: { id: input.dancerId, schoolId: res.locals.schoolId },
-  });
-  if (!dancer) {
+  if (!(await dancerOfSchool(input.dancerId, res.locals.schoolId))) {
     res.status(400).json({ error: 'invalid_cast_member' });
     return;
   }
@@ -64,11 +61,23 @@ schoolCastRouter.patch('/dances/:danceId/cast/:castMemberId', async (req, res) =
     return;
   }
 
-  const [castMember] = await prisma.castMember.updateManyAndReturn({
-    where: castMemberOfSchool(req.params, res.locals.schoolId),
-    data: update,
-    include: { dancer: true },
-  });
+  if (update.dancerId && !(await dancerOfSchool(update.dancerId, res.locals.schoolId))) {
+    res.status(400).json({ error: 'invalid_cast_member' });
+    return;
+  }
+
+  let castMember;
+  try {
+    [castMember] = await prisma.castMember.updateManyAndReturn({
+      where: castMemberOfSchool(req.params, res.locals.schoolId),
+      data: update,
+      include: { dancer: true },
+    });
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    res.status(409).json({ error: 'already_cast' });
+    return;
+  }
   if (!castMember) {
     res.status(404).json({ error: 'not_found' });
     return;
@@ -109,6 +118,10 @@ function castIntoFirstFigure(danceId: string, input: CastMemberInput) {
 
 function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
+}
+
+function dancerOfSchool(dancerId: string, schoolId: string) {
+  return prisma.dancer.findFirst({ where: { id: dancerId, schoolId }, select: { id: true } });
 }
 
 type CastMemberParams = { danceId: string; castMemberId: string };
