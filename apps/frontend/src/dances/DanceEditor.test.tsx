@@ -152,7 +152,7 @@ test('puts a newly cast dancer in the wing on the stage', async () => {
   vi.mocked(fetchDancers).mockResolvedValue([bia]);
   vi.mocked(addCastMember).mockResolvedValue({
     castMember: { id: 'cast-2', dancer: bia, role: null },
-    position: { castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+    positions: [{ figureId: 'figure-1', castMemberId: 'cast-2', x: -0.0625, y: 0.05 }],
   });
   openKitri();
   const user = userEvent.setup();

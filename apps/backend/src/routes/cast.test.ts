@@ -16,7 +16,7 @@ vi.mock('../db.ts', () => ({
     school: { findFirst: vi.fn() },
     dance: { findFirst: vi.fn() },
     dancer: { findFirst: vi.fn() },
-    figure: { findUniqueOrThrow: vi.fn() },
+    figure: { findMany: vi.fn() },
     $transaction: vi.fn(),
     castMember: {
       findMany: vi.fn(),
@@ -55,6 +55,7 @@ const kitri = {
 };
 
 const firstFigure = { id: 'figure-1', danceId: 'dance-1', order: 0, name: null };
+const secondFigure = { id: 'figure-2', danceId: 'dance-1', order: 1, name: null };
 const topOfLeftWing = { x: -0.0625, y: 0.05 };
 
 const kitriJson = {
@@ -94,9 +95,9 @@ beforeEach(() => {
   vi.mocked(prisma.dancer.findFirst)
     .mockReset()
     .mockResolvedValue(clara as never);
-  vi.mocked(prisma.figure.findUniqueOrThrow)
+  vi.mocked(prisma.figure.findMany)
     .mockReset()
-    .mockResolvedValue({ ...firstFigure, positions: [] } as never);
+    .mockResolvedValue([{ ...firstFigure, positions: [] }] as never);
   vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
     run(prisma)) as never);
 });
@@ -151,7 +152,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({
       castMember: kitriJson,
-      position: { castMemberId: 'cast-1', ...topOfLeftWing },
+      positions: [{ figureId: 'figure-1', castMemberId: 'cast-1', ...topOfLeftWing }],
     });
   });
 
@@ -171,21 +172,68 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     expect(prisma.castMember.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          positions: { create: { figureId: 'figure-1', ...topOfLeftWing } },
+          positions: { create: [{ figureId: 'figure-1', ...topOfLeftWing }] },
         }),
       }),
     );
   });
 
   test('places the new dancer below the ones already waiting in the wing', async () => {
-    vi.mocked(prisma.figure.findUniqueOrThrow).mockResolvedValue({
-      ...firstFigure,
-      positions: [{ figureId: 'figure-1', castMemberId: 'cast-0', ...topOfLeftWing }],
-    } as never);
+    vi.mocked(prisma.figure.findMany).mockResolvedValue([
+      {
+        ...firstFigure,
+        positions: [{ figureId: 'figure-1', castMemberId: 'cast-0', ...topOfLeftWing }],
+      },
+    ] as never);
     vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
     const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
     const body = (await res.json()) as CastMemberCreatedResponse;
-    expect(body.position).toEqual({ castMemberId: 'cast-1', x: -0.0625, y: 0.15 });
+    expect(body.positions).toEqual([
+      { figureId: 'figure-1', castMemberId: 'cast-1', x: -0.0625, y: 0.15 },
+    ]);
+  });
+
+  test('places the new dancer in the wing of every figure, each from its own wing', async () => {
+    vi.mocked(prisma.figure.findMany).mockResolvedValue([
+      {
+        ...firstFigure,
+        positions: [{ figureId: 'figure-1', castMemberId: 'cast-0', ...topOfLeftWing }],
+      },
+      { ...secondFigure, positions: [] },
+    ] as never);
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(prisma.castMember.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          positions: {
+            create: [
+              { figureId: 'figure-1', x: -0.0625, y: 0.15 },
+              { figureId: 'figure-2', ...topOfLeftWing },
+            ],
+          },
+        }),
+      }),
+    );
+  });
+
+  test('answers with the new spot in every figure, in figure order', async () => {
+    vi.mocked(prisma.figure.findMany).mockResolvedValue([
+      { ...firstFigure, positions: [] },
+      { ...secondFigure, positions: [] },
+    ] as never);
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    const body = (await res.json()) as CastMemberCreatedResponse;
+    expect(body.positions.map(({ figureId }) => figureId)).toEqual(['figure-1', 'figure-2']);
+  });
+
+  test('looks the figures up in figure order', async () => {
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(prisma.figure.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { danceId: 'dance-1' }, orderBy: { order: 'asc' } }),
+    );
   });
 
   test('looks the dancer up in this school', async () => {

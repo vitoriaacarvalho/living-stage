@@ -46,7 +46,7 @@ schoolCastRouter.post('/dances/:danceId/cast', async (req, res) => {
   }
 
   try {
-    const created = await castIntoFirstFigure(req.params.danceId, input);
+    const created = await castIntoEveryFigure(req.params.danceId, input);
     res.status(201).json(created satisfies CastMemberCreatedResponse);
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;
@@ -98,20 +98,24 @@ schoolCastRouter.delete('/dances/:danceId/cast/:castMemberId', async (req, res) 
   res.status(204).end();
 });
 
-function castIntoFirstFigure(danceId: string, input: CastMemberInput) {
+function castIntoEveryFigure(danceId: string, input: CastMemberInput) {
   return prisma.$transaction(async (tx) => {
-    const figure = await tx.figure.findUniqueOrThrow({
-      where: { danceId_order: { danceId, order: 0 } },
+    const figures = await tx.figure.findMany({
+      where: { danceId },
+      orderBy: { order: 'asc' },
       include: { positions: true },
     });
-    const spot = nextWingSpot(figure.positions);
+    const spots = figures.map((figure) => ({
+      figureId: figure.id,
+      ...nextWingSpot(figure.positions),
+    }));
     const castMember = await tx.castMember.create({
-      data: { danceId, ...input, positions: { create: { figureId: figure.id, ...spot } } },
+      data: { danceId, ...input, positions: { create: spots } },
       include: { dancer: true },
     });
     return {
       castMember: toCastMember(castMember),
-      position: { castMemberId: castMember.id, ...spot },
+      positions: spots.map((spot) => ({ castMemberId: castMember.id, ...spot })),
     };
   });
 }

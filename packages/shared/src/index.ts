@@ -43,6 +43,7 @@ export {
   WING_SPOTS,
   nextWingSpot,
   type Figure,
+  type FigurePosition,
   type ListFiguresResponse,
   type Position,
   type StagePoint,

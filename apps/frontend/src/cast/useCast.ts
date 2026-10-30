@@ -46,10 +46,10 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
   }
 
   async function add(input: CastMemberInput) {
-    const { castMember, position } = await addCastMember(schoolId, danceId, input);
+    const added = await addCastMember(schoolId, danceId, input);
     change(({ cast, positions }) => ({
-      cast: [...cast, castMember],
-      positions: [...positions, position],
+      cast: [...cast, added.castMember],
+      positions: [...positions, ...added.positions.slice(0, 1)],
     }));
   }
 

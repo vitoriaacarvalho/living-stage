@@ -28,7 +28,7 @@ beforeEach(() => {
     .mockReset()
     .mockResolvedValue({
       castMember: { id: 'cast-2', dancer: bia, role: null },
-      position: { castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+      positions: [{ figureId: 'figure-1', castMemberId: 'cast-2', x: -0.0625, y: 0.05 }],
     });
   vi.mocked(fetchDancers).mockReset().mockResolvedValue([bia, clara]);
   vi.mocked(updateCastMember)

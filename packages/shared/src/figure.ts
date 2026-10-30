@@ -4,6 +4,8 @@ export type StagePoint = { x: number; y: number };
 
 export type Position = StagePoint & { castMemberId: string };
 
+export type FigurePosition = Position & { figureId: string };
+
 export type Figure = { id: string; order: number; name: string | null; positions: Position[] };
 
 export type ListFiguresResponse = { figures: Figure[] };

@@ -1,5 +1,5 @@
 import type { Dancer } from './dancer.ts';
-import type { Position } from './figure.ts';
+import type { FigurePosition } from './figure.ts';
 
 export const CAST_ROLE_MAX_LENGTH = 40;
 
@@ -15,7 +15,8 @@ export type ListCastResponse = { cast: CastMember[] };
 
 export type CastMemberResponse = { castMember: CastMember };
 
-export type CastMemberCreatedResponse = CastMemberResponse & { position: Position };
+// One wing spot in each of the dance's figures, in figure order.
+export type CastMemberCreatedResponse = CastMemberResponse & { positions: FigurePosition[] };
 
 export function parseCastRole(value: unknown): string | null | undefined {
   if (value === null) return null;
