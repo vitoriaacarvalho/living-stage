@@ -5,13 +5,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { fetchFigures } from '../api/figures.ts';
+import { copyFigure, fetchFigures } from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
 vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
-vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
+vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn(), copyFigure: vi.fn() }));
 
 const kitri: Dance = {
   id: 'dance-1',
@@ -232,5 +232,76 @@ describe('figures', () => {
     await user.click(await screen.findByRole('button', { name: 'Entrance' }));
     await user.click(screen.getByRole('button', { name: 'Figure 1' }));
     expect(within(stage()).getByText('Clara')).toBeInTheDocument();
+  });
+});
+
+describe('figure tools', () => {
+  const copied = {
+    id: 'figure-2',
+    order: 1,
+    name: null,
+    positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+  };
+
+  beforeEach(() => {
+    vi.mocked(copyFigure).mockReset().mockResolvedValue(copied);
+  });
+
+  async function tap(name: string) {
+    const user = userEvent.setup();
+    await screen.findByRole('list', { name: 'Figures' });
+    await user.click(screen.getByRole('button', { name }));
+  }
+
+  async function chipNames() {
+    const strip = screen.getByRole('list', { name: 'Figures' });
+    return within(strip)
+      .getAllByRole('button')
+      .map((chip) => chip.textContent);
+  }
+
+  test('copies the selected figure to the end as a new figure', async () => {
+    openKitri();
+    await tap('New figure');
+    expect(copyFigure).toHaveBeenCalledWith('school-1', 'dance-1', {
+      copyOf: 'figure-1',
+      placement: 'end',
+    });
+  });
+
+  test('duplicates the selected figure right after it', async () => {
+    openKitri();
+    await tap('Duplicate');
+    expect(copyFigure).toHaveBeenCalledWith('school-1', 'dance-1', {
+      copyOf: 'figure-1',
+      placement: 'after',
+    });
+  });
+
+  test('lists the new figure', async () => {
+    openKitri();
+    await tap('New figure');
+    await waitFor(async () => expect(await chipNames()).toEqual(['Figure 1', 'Figure 2']));
+  });
+
+  test('selects the new figure', async () => {
+    openKitri();
+    await tap('New figure');
+    expect(await screen.findByRole('button', { name: 'Figure 2' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+
+  test('puts a duplicate between the figure and the ones after it', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      { id: 'figure-1', order: 0, name: null, positions: [] },
+      { id: 'figure-3', order: 1, name: 'Finale', positions: [] },
+    ]);
+    openKitri();
+    await tap('Duplicate');
+    await waitFor(async () =>
+      expect(await chipNames()).toEqual(['Figure 1', 'Figure 2', 'Finale']),
+    );
   });
 });

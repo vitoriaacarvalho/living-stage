@@ -1,7 +1,13 @@
-import type { CastMember, CastMemberInput, CastMemberUpdate, Figure } from '@living-stage/shared';
+import type {
+  CastMember,
+  CastMemberInput,
+  CastMemberUpdate,
+  Figure,
+  FigureCopy,
+} from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
-import { fetchFigures } from '../api/figures.ts';
+import { copyFigure as postFigureCopy, fetchFigures } from '../api/figures.ts';
 
 export type CastState =
   | { status: 'loading' }
@@ -15,6 +21,7 @@ export type CastActions = {
   save: (castMember: CastMember) => Promise<void>;
   give: (castMemberId: string, dancerId: string) => Promise<void>;
   remove: (castMemberId: string) => Promise<void>;
+  copyFigure: (copy: FigureCopy) => Promise<Figure>;
 };
 
 export function useCast(schoolId: string, danceId: string): { state: CastState } & CastActions {
@@ -78,5 +85,21 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
-  return { state, add, save, give, remove };
+  async function copyFigure(copy: FigureCopy) {
+    const figure = await postFigureCopy(schoolId, danceId, copy);
+    change(({ cast, figures }) => ({ cast, figures: insertFigure(figures, figure) }));
+    return figure;
+  }
+
+  return { state, add, save, give, remove, copyFigure };
+}
+
+// Mirrors the server, which shifts every later figure up by one.
+function insertFigure(figures: Figure[], figure: Figure) {
+  const later = figures.filter(({ order }) => order >= figure.order);
+  return [
+    ...figures.filter(({ order }) => order < figure.order),
+    figure,
+    ...later.map((each) => ({ ...each, order: each.order + 1 })),
+  ];
 }

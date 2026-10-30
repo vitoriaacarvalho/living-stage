@@ -1,10 +1,11 @@
-import type { Dance } from '@living-stage/shared';
+import type { Dance, FigureCopy } from '@living-stage/shared';
 import { type CSSProperties, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
+import { FigureToolbar } from '../figures/FigureToolbar.tsx';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
@@ -35,6 +36,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
   const dancers =
     cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
+
+  async function copyFigure(placement: FigureCopy['placement']) {
+    if (!figure) return;
+    const copy = await castActions.copyFigure({ copyOf: figure.id, placement });
+    setSelectedFigureId(copy.id);
+  }
 
   // Shown right away; put back if saving fails.
   function saveView<K extends ViewSetting>(setting: K, value: Dance[K]) {
@@ -81,6 +88,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               Guides
             </button>
           </div>
+          <FigureToolbar disabled={!figure} onCopy={copyFigure} />
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
               <Stage showGuides={dance.showGuides} dancers={dancers} />
