@@ -16,6 +16,7 @@ const kitri = {
   title: 'Kitri variation',
   showGuides: true,
   labelMode: 'name' as const,
+  colorMode: 'dancer' as const,
   createdAt: '2026-10-20T12:00:00.000Z',
 };
 const waltz = {
@@ -23,6 +24,7 @@ const waltz = {
   title: 'Waltz of the flowers',
   showGuides: true,
   labelMode: 'name' as const,
+  colorMode: 'dancer' as const,
   createdAt: '2026-10-27T12:00:00.000Z',
 };
 

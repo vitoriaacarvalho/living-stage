@@ -4,20 +4,30 @@ const LABEL_MODES = ['name', 'role', 'both'] as const;
 
 export type LabelMode = (typeof LABEL_MODES)[number];
 
+const COLOR_MODES = ['dancer', 'role'] as const;
+
+export type ColorMode = (typeof COLOR_MODES)[number];
+
 export type Dance = {
   id: string;
   title: string;
   showGuides: boolean;
   labelMode: LabelMode;
+  colorMode: ColorMode;
   createdAt: string;
 };
 
 export type DanceInput = { title: string };
 
-export type DanceUpdate = { title?: string; showGuides?: boolean; labelMode?: LabelMode };
+export type DanceUpdate = {
+  title?: string;
+  showGuides?: boolean;
+  labelMode?: LabelMode;
+  colorMode?: ColorMode;
+};
 
-function isLabelMode(value: unknown): value is LabelMode {
-  return LABEL_MODES.includes(value as LabelMode);
+function isOneOf<T extends string>(values: readonly T[], value: unknown): value is T {
+  return values.includes(value as T);
 }
 
 export type ListDancesResponse = { dances: Dance[] };
@@ -51,8 +61,12 @@ export function parseDanceUpdate(value: unknown): DanceUpdate | null {
     update.showGuides = body.showGuides;
   }
   if (body.labelMode !== undefined) {
-    if (!isLabelMode(body.labelMode)) return null;
+    if (!isOneOf(LABEL_MODES, body.labelMode)) return null;
     update.labelMode = body.labelMode;
+  }
+  if (body.colorMode !== undefined) {
+    if (!isOneOf(COLOR_MODES, body.colorMode)) return null;
+    update.colorMode = body.colorMode;
   }
   return Object.keys(update).length > 0 ? update : null;
 }

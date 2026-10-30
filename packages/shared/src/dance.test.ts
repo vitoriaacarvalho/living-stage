@@ -79,6 +79,14 @@ describe('parseDanceUpdate', () => {
     expect(parseDanceUpdate({ labelMode: 'none' })).toBeNull();
   });
 
+  test('accepts a color mode', () => {
+    expect(parseDanceUpdate({ colorMode: 'role' })).toEqual({ colorMode: 'role' });
+  });
+
+  test('rejects an unknown color mode', () => {
+    expect(parseDanceUpdate({ colorMode: 'costume' })).toBeNull();
+  });
+
   test('rejects a body with no field to change', () => {
     expect(parseDanceUpdate({})).toBeNull();
   });

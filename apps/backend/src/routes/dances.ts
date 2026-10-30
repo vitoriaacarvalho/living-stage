@@ -66,6 +66,7 @@ schoolDancesRouter.delete('/dances/:danceId', async (req, res) => {
 
 type DanceRow = Omit<Dance, 'createdAt'> & { createdAt: Date };
 
-function toDance({ id, title, showGuides, labelMode, createdAt }: DanceRow): Dance {
-  return { id, title, showGuides, labelMode, createdAt: createdAt.toISOString() };
+function toDance(dance: DanceRow): Dance {
+  const { id, title, showGuides, labelMode, colorMode, createdAt } = dance;
+  return { id, title, showGuides, labelMode, colorMode, createdAt: createdAt.toISOString() };
 }

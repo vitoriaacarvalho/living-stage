@@ -39,7 +39,7 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 | MVP scope | Shows, dances, casting, formations and movement first; everything else waits (see §1, MVP) |
 | Editing model | One person edits a dance at a time; others watch changes live. Not in the MVP: until the edit lock ships, the last save wins |
 | Casts | One cast per dance |
-| Roles | Free text per dance; the teacher decides whether to show and color by role. Coloring by role is automatic: each distinct role takes the next `dancer-N` color in the order roles first appear in the cast |
+| Roles | Free text per dance; the teacher decides whether to show and color by role. Coloring by role is automatic: each distinct role takes the next color from `dancer-1` to `dancer-11` in the order roles first appear in the cast (starting over after 11), roles that differ only in case are one role, and dancers with no role are `dancer-12` (stone) |
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
 | Languages | English only in the MVP; Portuguese (pt-BR) added after it with i18n |
 | Stage | Standard rectangular stage with wings; no custom proportions |

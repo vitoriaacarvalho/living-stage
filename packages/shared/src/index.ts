@@ -18,6 +18,7 @@ export {
   parseDanceInput,
   parseDanceTitle,
   parseDanceUpdate,
+  type ColorMode,
   type Dance,
   type DanceInput,
   type DanceUpdate,

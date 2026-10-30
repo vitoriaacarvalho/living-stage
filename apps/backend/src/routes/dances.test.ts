@@ -37,6 +37,7 @@ const kitri = {
   title: 'Kitri variation',
   showGuides: true,
   labelMode: 'name' as const,
+  colorMode: 'dancer' as const,
   createdAt: new Date('2026-10-27T12:00:00.000Z'),
 };
 
@@ -45,6 +46,7 @@ const kitriJson = {
   title: 'Kitri variation',
   showGuides: true,
   labelMode: 'name' as const,
+  colorMode: 'dancer' as const,
   createdAt: '2026-10-27T12:00:00.000Z',
 };
 
@@ -194,6 +196,19 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
     ]);
     const res = await fetch(url(), send('PATCH', { labelMode: 'both' }));
     expect(await res.json()).toEqual({ dance: { ...kitriJson, labelMode: 'both' } });
+  });
+
+  test('responds with the dance once its color mode is saved', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([
+      { ...kitri, colorMode: 'role' },
+    ]);
+    const res = await fetch(url(), send('PATCH', { colorMode: 'role' }));
+    expect(await res.json()).toEqual({ dance: { ...kitriJson, colorMode: 'role' } });
+  });
+
+  test('responds 400 for an unknown color mode', async () => {
+    const res = await fetch(url(), send('PATCH', { colorMode: 'costume' }));
+    expect(res.status).toBe(400);
   });
 
   test('responds 400 for an unknown label mode', async () => {

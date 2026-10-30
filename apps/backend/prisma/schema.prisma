@@ -120,6 +120,7 @@ model Dance {
   title      String
   showGuides Boolean      @default(true)
   labelMode  LabelMode    @default(name)
+  colorMode  ColorMode    @default(dancer)
   createdAt  DateTime     @default(now())
   cast       CastMember[]
   figures    Figure[]
@@ -134,6 +135,13 @@ enum LabelMode {
   both
 
   @@map("label_mode")
+}
+
+enum ColorMode {
+  dancer
+  role
+
+  @@map("color_mode")
 }
 
 model CastMember {
