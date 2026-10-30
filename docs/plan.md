@@ -136,7 +136,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **B2.** A dancer has a name and an optional default color. Dancers have no photo.
 - ✅ **B3.** The same roster is reused across all dances and shows; no retyping.
 - ✅ **B4.** The roster can be searched and sorted by name.
-- **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
+- ✅ **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
 - **B6.** Costume photos are resized in the browser to 1600 px on the long edge before upload; originals up to 10 MB are accepted, including iPhone HEIC. *(after the MVP)*
 
 ### Part C — Formation editor
@@ -145,8 +145,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C2.** The stage has wing zones on the left, right and upstage, where dancers can wait off stage, enter and exit.
 - ✅ **C3.** Optional guide lines (center and quarters) can be shown or hidden.
 - ✅ **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
-- **C5.** Dancers appear as 3D ballerinas in the 3D view and as colored circles in the 2D plan; the label can show name, role or both.
-- **C6.** Dancers can be colored by their own color or by role, chosen per dance.
+- ✅ **C5.** Dancers appear as 3D ballerinas in the 3D view and as colored circles in the 2D plan; the label can show name, role or both.
+- ✅ **C6.** Dancers can be colored by their own color or by role, chosen per dance.
 - **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
 - **C8.** Dancers are placed by dragging, in both views; several can be selected and moved together. In 3D the finger moves the ballerina's feet across the floor.
 - **C9.** Optional snapping to guide lines.
@@ -368,7 +368,7 @@ First milestone to show real teachers.
 - 🟨 **2.1 Stage** · after 2.0
   - Done when: Empty stage with wings and toggleable guide lines
   - Requirements: C1, C2, C3 · Screens: `Stage`, `DanceEditorIPad`
-- 🟨 **2.2 Casting** · after 2.1, 1.7
+- ✅ **2.2 Casting** · after 2.1, 1.7
   - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
   - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
 - ⬜ **9.1 3D stage and ballerinas** · after 2.2
