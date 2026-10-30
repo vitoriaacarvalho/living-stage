@@ -4,7 +4,7 @@ import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
-import { figureLabel } from '../figures/figure-label.ts';
+import { movedOrder } from '../figures/figure-order.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
@@ -40,10 +40,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const dancers =
     cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
 
-  // Tapping the selected figure again opens its panel.
+  // Tapping the selected figure again opens its panel. The id is kept even then, since
+  // the first figure is only selected by default and may be moved away from first place.
   function selectFigure(figureId: string) {
     if (figureId === figure?.id) setFigurePanelOpen(true);
-    else setSelectedFigureId(figureId);
+    setSelectedFigureId(figureId);
   }
 
   async function copyFigure(placement: FigureCopy['placement']) {
@@ -111,8 +112,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           <FigurePanel
             key={figure.id}
             figure={figure}
-            label={figureLabel(figure, figures.indexOf(figure))}
-            onRename={(name) => castActions.renameFigure(figure.id, name)}
+            figures={figures}
+            actions={{
+              rename: (name) => castActions.renameFigure(figure.id, name),
+              move: (step) => castActions.reorderFigures(movedOrder(figures, figure.id, step)),
+            }}
             onClose={() => setFigurePanelOpen(false)}
           />
         ) : (

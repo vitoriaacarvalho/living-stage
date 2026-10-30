@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { copyFigure, fetchFigures, updateFigure } from '../api/figures.ts';
+import { copyFigure, fetchFigures, reorderFigures, updateFigure } from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
@@ -15,6 +15,7 @@ vi.mock('../api/figures.ts', () => ({
   fetchFigures: vi.fn(),
   copyFigure: vi.fn(),
   updateFigure: vi.fn(),
+  reorderFigures: vi.fn(),
 }));
 
 const kitri: Dance = {
@@ -355,5 +356,56 @@ describe('figure panel', () => {
     const user = await openFigurePanel();
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.getByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
+  });
+});
+
+describe('moving figures', () => {
+  const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
+  const finale = { id: 'figure-2', order: 1, name: 'Finale', positions: [] };
+
+  beforeEach(() => {
+    vi.mocked(fetchFigures).mockResolvedValue([entrance, finale]);
+    vi.mocked(reorderFigures)
+      .mockReset()
+      .mockResolvedValue([
+        { ...finale, order: 0 },
+        { ...entrance, order: 1 },
+      ]);
+  });
+
+  async function moveEntranceLater() {
+    openKitri();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Entrance' }));
+    await user.click(screen.getByRole('button', { name: 'Move later' }));
+  }
+
+  test('sends the new order of the figures', async () => {
+    await moveEntranceLater();
+    expect(reorderFigures).toHaveBeenCalledWith('school-1', 'dance-1', {
+      figureIds: ['figure-2', 'figure-1'],
+    });
+  });
+
+  test('shows the figures in their new order', async () => {
+    await moveEntranceLater();
+    const strip = screen.getByRole('list', { name: 'Figures' });
+    await waitFor(() =>
+      expect(
+        within(strip)
+          .getAllByRole('button')
+          .map((chip) => chip.textContent),
+      ).toEqual(['Finale', 'Entrance']),
+    );
+  });
+
+  test('keeps the moved figure selected', async () => {
+    await moveEntranceLater();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Entrance' })).toHaveAttribute(
+        'aria-current',
+        'true',
+      ),
+    );
   });
 });

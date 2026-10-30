@@ -5,37 +5,56 @@ import styles from '../cast/CastMemberForm.module.css';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { TextField } from '../ui/TextField.tsx';
+import { figureLabel } from './figure-label.ts';
+import { canMove, type Step } from './figure-order.ts';
+import ownStyles from './FigurePanel.module.css';
+
+export type FigureActions = {
+  rename: (name: string | null) => Promise<void>;
+  move: (step: Step) => Promise<void>;
+};
 
 type FigurePanelProps = {
   figure: Figure;
-  label: string;
-  onRename: (name: string | null) => Promise<void>;
+  figures: Figure[];
+  actions: FigureActions;
   onClose: () => void;
 };
 
-export function FigurePanel({ figure, label, onRename, onClose }: FigurePanelProps) {
-  const [failed, setFailed] = useState(false);
+export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelProps) {
+  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const name = parseFigureName(new FormData(event.currentTarget).get('name')) ?? null;
-    setFailed(false);
+  async function run(action: () => Promise<void>, failure: string) {
+    setError(null);
     setPending(true);
     try {
-      await onRename(name);
-      onClose();
+      await action();
     } catch {
-      setFailed(true);
+      setError(failure);
+    } finally {
       setPending(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = parseFigureName(new FormData(event.currentTarget).get('name')) ?? null;
+    run(async () => {
+      await actions.rename(name);
+      onClose();
+    }, 'Could not save the name. Try again.');
+  }
+
+  function move(step: Step) {
+    run(() => actions.move(step), 'Could not move the figure. Try again.');
   }
 
   return (
     <aside className={panelStyles.panel} aria-label="Figure">
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.head}>
-          <h2 className={styles.title}>{label}</h2>
+          <h2 className={styles.title}>{figureLabel(figure, figures.indexOf(figure))}</h2>
           <Button variant="ghost" icon="x" aria-label="Close" onClick={onClose} />
         </div>
         <TextField
@@ -46,9 +65,25 @@ export function FigurePanel({ figure, label, onRename, onClose }: FigurePanelPro
           maxLength={FIGURE_NAME_MAX_LENGTH}
           autoComplete="off"
         />
-        {failed && (
+        <div className={ownStyles.moves}>
+          <Button
+            variant="secondary"
+            disabled={pending || !canMove(figures, figure.id, -1)}
+            onClick={() => move(-1)}
+          >
+            Move earlier
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={pending || !canMove(figures, figure.id, 1)}
+            onClick={() => move(1)}
+          >
+            Move later
+          </Button>
+        </div>
+        {error && (
           <p role="alert" className={formStyles.error}>
-            Could not save the name. Try again.
+            {error}
           </p>
         )}
         <div className={styles.actions}>

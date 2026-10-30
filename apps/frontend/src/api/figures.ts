@@ -1,6 +1,7 @@
 import type {
   Figure,
   FigureCopy,
+  FigureOrder,
   FigureResponse,
   FigureUpdate,
   ListFiguresResponse,
@@ -46,4 +47,19 @@ export async function updateFigure(
   if (!res.ok) throw new Error(`PATCH figure answered ${res.status}`);
   const body: FigureResponse = await res.json();
   return body.figure;
+}
+
+export async function reorderFigures(
+  schoolId: string,
+  danceId: string,
+  order: FigureOrder,
+): Promise<Figure[]> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}/figures/order`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(order),
+  });
+  if (!res.ok) throw new Error(`PUT figure order answered ${res.status}`);
+  const body: ListFiguresResponse = await res.json();
+  return body.figures;
 }

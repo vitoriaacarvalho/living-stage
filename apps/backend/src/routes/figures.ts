@@ -1,8 +1,10 @@
 import {
   parseFigureCopy,
+  parseFigureOrder,
   parseFigureUpdate,
   type Figure,
   type FigureCopy,
+  type FigureOrder,
   type FigureResponse,
   type ListFiguresResponse,
 } from '@living-stage/shared';
@@ -51,6 +53,25 @@ schoolFiguresRouter.post('/dances/:danceId/figures', async (req, res) => {
   res.status(201).json({ figure: toFigure(figure) } satisfies FigureResponse);
 });
 
+schoolFiguresRouter.put('/dances/:danceId/figures/order', async (req, res) => {
+  const order = parseFigureOrder(req.body);
+  if (!order) {
+    res.status(400).json({ error: 'invalid_figure_order' });
+    return;
+  }
+  if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  const figures = await reorderFigures(req.params.danceId, order);
+  if (!figures) {
+    res.status(400).json({ error: 'invalid_figure_order' });
+    return;
+  }
+  res.json({ figures: figures.map(toFigure) } satisfies ListFiguresResponse);
+});
+
 schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res) => {
   const update = parseFigureUpdate(req.body);
   if (!update) {
@@ -94,6 +115,26 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
 
     return tx.figure.create({
       data: { danceId, order, positions: { create: source.positions } },
+      include: { positions: positionFields },
+    });
+  });
+}
+
+// Every figure first moves past the current orders, so no new order can collide with
+// one not yet rewritten.
+function reorderFigures(danceId: string, { figureIds }: FigureOrder) {
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.figure.findMany({ where: { danceId }, select: { id: true } });
+    const known = new Set(current.map(({ id }) => id));
+    if (figureIds.length !== known.size || !figureIds.every((id) => known.has(id))) return null;
+
+    await tx.figure.updateMany({ where: { danceId }, data: { order: { increment: known.size } } });
+    for (const [order, id] of figureIds.entries()) {
+      await tx.figure.update({ where: { id }, data: { order } });
+    }
+    return tx.figure.findMany({
+      where: { danceId },
+      orderBy: { order: 'asc' },
       include: { positions: positionFields },
     });
   });

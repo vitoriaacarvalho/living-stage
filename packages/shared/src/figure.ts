@@ -28,6 +28,9 @@ export const FIGURE_NAME_MAX_LENGTH = 40;
 
 export type FigureUpdate = { name: string | null };
 
+// Every figure of the dance, each once, in the new order.
+export type FigureOrder = { figureIds: string[] };
+
 export const WING_SPOTS = 10;
 
 const wingX = -SIDE_WING_DEPTH / 2;
@@ -57,4 +60,13 @@ export function parseFigureUpdate(value: unknown): FigureUpdate | null {
   if (typeof value !== 'object' || value === null) return null;
   const name = parseFigureName((value as Record<string, unknown>).name);
   return name === undefined ? null : { name };
+}
+
+export function parseFigureOrder(value: unknown): FigureOrder | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { figureIds } = value as Record<string, unknown>;
+  if (!Array.isArray(figureIds) || figureIds.length === 0) return null;
+  if (!figureIds.every((id) => typeof id === 'string' && id.length > 0)) return null;
+  if (new Set(figureIds).size !== figureIds.length) return null;
+  return { figureIds };
 }

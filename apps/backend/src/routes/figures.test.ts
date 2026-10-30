@@ -15,6 +15,8 @@ vi.mock('../db.ts', () => ({
     dance: { findFirst: vi.fn() },
     figure: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
       aggregate: vi.fn(),
       updateMany: vi.fn(),
       findUniqueOrThrow: vi.fn(),
@@ -278,5 +280,79 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =>
   test('responds 400 for a name over the maximum length', async () => {
     const res = await rename({ name: 'a'.repeat(41) });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('PUT /api/schools/:schoolId/dances/:danceId/figures/order', () => {
+  const secondFigure = { ...firstFigure, id: 'figure-2', order: 1, positions: [] };
+
+  function reorder(body: unknown) {
+    return fetch(`${url}/order`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.figure.findMany)
+      .mockReset()
+      .mockResolvedValueOnce([{ id: 'figure-1' }, { id: 'figure-2' }] as never)
+      .mockResolvedValueOnce([
+        { ...secondFigure, order: 0 },
+        { ...firstFigure, order: 1 },
+      ] as never);
+    vi.mocked(prisma.figure.update).mockReset();
+  });
+
+  test('responds with the figures in their new order', async () => {
+    const res = await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    const body = (await res.json()) as { figures: { id: string; order: number }[] };
+    expect(body.figures.map(({ id, order }) => ({ id, order }))).toEqual([
+      { id: 'figure-2', order: 0 },
+      { id: 'figure-1', order: 1 },
+    ]);
+  });
+
+  test('moves every figure past the current orders first', async () => {
+    await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    expect(prisma.figure.updateMany).toHaveBeenCalledWith({
+      where: { danceId: 'dance-1' },
+      data: { order: { increment: 2 } },
+    });
+  });
+
+  test('gives each figure its place in the list', async () => {
+    await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    expect(vi.mocked(prisma.figure.update).mock.calls.map(([args]) => args)).toEqual([
+      { where: { id: 'figure-2' }, data: { order: 0 } },
+      { where: { id: 'figure-1' }, data: { order: 1 } },
+    ]);
+  });
+
+  test('responds 400 when a figure of the dance is missing', async () => {
+    const res = await reorder({ figureIds: ['figure-2'] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 for a figure of another dance', async () => {
+    const res = await reorder({ figureIds: ['figure-2', 'figure-9'] });
+    expect(res.status).toBe(400);
+  });
+
+  test('changes no order when the list does not match the dance', async () => {
+    await reorder({ figureIds: ['figure-2', 'figure-9'] });
+    expect(prisma.figure.updateMany).not.toHaveBeenCalled();
+  });
+
+  test('responds 400 for an invalid body', async () => {
+    const res = await reorder({ figureIds: [] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    const res = await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    expect(res.status).toBe(404);
   });
 });

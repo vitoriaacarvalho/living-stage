@@ -4,6 +4,7 @@ import {
   nextWingSpot,
   parseFigureCopy,
   parseFigureName,
+  parseFigureOrder,
   parseFigureUpdate,
   WING_SPOTS,
 } from './figure.ts';
@@ -110,5 +111,29 @@ describe('parseFigureUpdate', () => {
 
   test('rejects a body with no name', () => {
     expect(parseFigureUpdate({})).toBeNull();
+  });
+});
+
+describe('parseFigureOrder', () => {
+  test('accepts a list of figure ids', () => {
+    expect(parseFigureOrder({ figureIds: ['figure-2', 'figure-1'] })).toEqual({
+      figureIds: ['figure-2', 'figure-1'],
+    });
+  });
+
+  test('rejects an empty list', () => {
+    expect(parseFigureOrder({ figureIds: [] })).toBeNull();
+  });
+
+  test('rejects a figure listed twice', () => {
+    expect(parseFigureOrder({ figureIds: ['figure-1', 'figure-1'] })).toBeNull();
+  });
+
+  test('rejects an id that is not text', () => {
+    expect(parseFigureOrder({ figureIds: ['figure-1', 2] })).toBeNull();
+  });
+
+  test('rejects a body with no list', () => {
+    expect(parseFigureOrder({})).toBeNull();
   });
 });
