@@ -2,6 +2,7 @@ import {
   roleColors,
   type CastMember,
   type ColorMode,
+  type Dancer,
   type DancerColor,
 } from '@living-stage/shared';
 import { useState, type CSSProperties } from 'react';
@@ -10,12 +11,16 @@ import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { castMemberColor } from './cast-color.ts';
 import { CastMemberForm } from './CastMemberForm.tsx';
-import { CastPicker } from './CastPicker.tsx';
+import { CastPicker, SpotPicker } from './CastPicker.tsx';
 import { RoleLegend } from './RoleLegend.tsx';
 import styles from './CastList.module.css';
 import type { CastActions, CastState } from './useCast.ts';
 
-type Panel = { view: 'list' } | { view: 'picking' } | { view: 'editing'; castMember: CastMember };
+type Panel =
+  | { view: 'list' }
+  | { view: 'picking' }
+  | { view: 'editing'; castMember: CastMember }
+  | { view: 'giving'; castMember: CastMember };
 
 type CastListProps = {
   schoolId: string;
@@ -35,10 +40,28 @@ export function CastList({ schoolId, state, actions, colorMode }: CastListProps)
       </aside>
     );
   }
-  if (panel.view === 'editing') {
+  if (panel.view === 'giving' && state.status === 'ready') {
+    const { castMember } = panel;
+    async function give(dancer: Dancer) {
+      await actions.give(castMember.id, dancer.id);
+      showList();
+    }
     return (
       <aside className={styles.panel} aria-label="Cast">
-        <CastMemberForm castMember={panel.castMember} actions={actions} onClose={showList} />
+        <SpotPicker schoolId={schoolId} cast={state.cast} onGive={give} onCancel={showList} />
+      </aside>
+    );
+  }
+  if (panel.view === 'editing') {
+    const { castMember } = panel;
+    return (
+      <aside className={styles.panel} aria-label="Cast">
+        <CastMemberForm
+          castMember={castMember}
+          actions={actions}
+          onClose={showList}
+          onGive={() => setPanel({ view: 'giving', castMember })}
+        />
       </aside>
     );
   }

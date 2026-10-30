@@ -13,14 +13,60 @@ type CastPickerProps = {
 };
 
 export function CastPicker({ schoolId, cast, onAdd, onDone }: CastPickerProps) {
+  return (
+    <RosterPicker
+      schoolId={schoolId}
+      cast={cast}
+      copy={{ title: 'Add to cast', close: 'Done', pick: 'Add', failed: 'Could not add' }}
+      onPick={(dancer) => onAdd({ dancerId: dancer.id, role: null })}
+      onClose={onDone}
+    />
+  );
+}
+
+type SpotPickerProps = {
+  schoolId: string;
+  cast: CastMember[];
+  onGive: (dancer: Dancer) => Promise<void>;
+  onCancel: () => void;
+};
+
+export function SpotPicker({ schoolId, cast, onGive, onCancel }: SpotPickerProps) {
+  return (
+    <RosterPicker
+      schoolId={schoolId}
+      cast={cast}
+      copy={{
+        title: 'Give the spot to',
+        close: 'Cancel',
+        pick: 'Give',
+        failed: 'Could not give the spot to',
+      }}
+      onPick={onGive}
+      onClose={onCancel}
+    />
+  );
+}
+
+type PickerCopy = { title: string; close: string; pick: string; failed: string };
+
+type RosterPickerProps = {
+  schoolId: string;
+  cast: CastMember[];
+  copy: PickerCopy;
+  onPick: (dancer: Dancer) => Promise<void>;
+  onClose: () => void;
+};
+
+function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerProps) {
   const { state } = useDancers(schoolId);
   const [failed, setFailed] = useState<Dancer | null>(null);
   const castIds = new Set(cast.map((member) => member.dancer?.id));
 
-  async function add(dancer: Dancer) {
+  async function pick(dancer: Dancer) {
     setFailed(null);
     try {
-      await onAdd({ dancerId: dancer.id, role: null });
+      await onPick(dancer);
     } catch {
       setFailed(dancer);
     }
@@ -29,14 +75,14 @@ export function CastPicker({ schoolId, cast, onAdd, onDone }: CastPickerProps) {
   return (
     <>
       <header className={styles.head}>
-        <h2 className={styles.title}>Add to cast</h2>
-        <Button variant="secondary" className={styles.add} onClick={onDone}>
-          Done
+        <h2 className={styles.title}>{copy.title}</h2>
+        <Button variant="secondary" className={styles.add} onClick={onClose}>
+          {copy.close}
         </Button>
       </header>
       {failed && (
         <p role="alert" className={formStyles.error}>
-          Could not add {failed.name}. Try again.
+          {copy.failed} {failed.name}. Try again.
         </p>
       )}
       {state.status === 'failed' && (
@@ -45,23 +91,29 @@ export function CastPicker({ schoolId, cast, onAdd, onDone }: CastPickerProps) {
         </p>
       )}
       {state.status === 'ready' && (
-        <Uncast dancers={state.dancers.filter(({ id }) => !castIds.has(id))} onAdd={add} />
+        <Uncast
+          dancers={state.dancers.filter(({ id }) => !castIds.has(id))}
+          pickLabel={copy.pick}
+          onPick={pick}
+        />
       )}
     </>
   );
 }
 
-function Uncast({ dancers, onAdd }: { dancers: Dancer[]; onAdd: (dancer: Dancer) => void }) {
+type UncastProps = { dancers: Dancer[]; pickLabel: string; onPick: (dancer: Dancer) => void };
+
+function Uncast({ dancers, pickLabel, onPick }: UncastProps) {
   if (dancers.length === 0) {
     return <p className={styles.empty}>Every dancer in the roster is in this dance.</p>;
   }
   return (
-    <ul className={styles.list} aria-label="Dancers to add">
+    <ul className={styles.list} aria-label="Dancers not in this dance">
       {dancers.map((dancer) => (
         <li key={dancer.id}>
-          <button type="button" className={styles.pick} onClick={() => onAdd(dancer)}>
+          <button type="button" className={styles.pick} onClick={() => onPick(dancer)}>
             <span className={styles.name}>{dancer.name}</span>
-            <span className={styles.pickHint}>Add</span>
+            <span className={styles.pickHint}>{pickLabel}</span>
           </button>
         </li>
       ))}

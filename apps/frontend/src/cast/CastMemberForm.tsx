@@ -13,9 +13,10 @@ type CastMemberFormProps = {
   castMember: CastMember;
   actions: Pick<CastActions, 'save' | 'remove'>;
   onClose: () => void;
+  onGive: () => void;
 };
 
-export function CastMemberForm({ castMember, actions, onClose }: CastMemberFormProps) {
+export function CastMemberForm({ castMember, actions, onClose, onGive }: CastMemberFormProps) {
   const name = castMember.dancer?.name ?? 'Open spot';
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +54,11 @@ export function CastMemberForm({ castMember, actions, onClose }: CastMemberFormP
         maxLength={CAST_ROLE_MAX_LENGTH}
         autoComplete="off"
       />
+      {!castMember.dancer && (
+        <Button variant="secondary" onClick={onGive}>
+          Give to a dancer
+        </Button>
+      )}
       {error && (
         <p role="alert" className={formStyles.error}>
           {error}

@@ -110,7 +110,7 @@ test('says when the cast cannot be loaded', async () => {
 test('offers only the roster dancers who are not cast yet', async () => {
   renderCast();
   await openPicker();
-  const list = await screen.findByRole('list', { name: 'Dancers to add' });
+  const list = await screen.findByRole('list', { name: 'Dancers not in this dance' });
   expect(
     within(list)
       .getAllByRole('button')
@@ -243,4 +243,59 @@ test('hides the role legend when coloring by dancer', async () => {
   renderCast('dancer');
   await screen.findByText('Clara Souza');
   expect(screen.queryByRole('list', { name: 'Role colors' })).not.toBeInTheDocument();
+});
+
+const openKitri = { ...claraAsKitri, dancer: null };
+
+async function giveOpenSpot() {
+  vi.mocked(fetchCast).mockResolvedValue([openKitri]);
+  vi.mocked(updateCastMember).mockResolvedValue({ ...openKitri, dancer: bia });
+  renderCast();
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole('button', { name: 'Edit open spot' }));
+  await user.click(screen.getByRole('button', { name: 'Give to a dancer' }));
+  return user;
+}
+
+test('offers to give only an open spot to a dancer', async () => {
+  await editClara();
+  expect(screen.queryByRole('button', { name: 'Give to a dancer' })).not.toBeInTheDocument();
+});
+
+test('offers the roster dancers who are not cast yet for an open spot', async () => {
+  vi.mocked(fetchDancers).mockResolvedValue([bia]);
+  await giveOpenSpot();
+  const list = await screen.findByRole('list', { name: 'Dancers not in this dance' });
+  expect(
+    within(list)
+      .getAllByRole('button')
+      .map((button) => button.textContent),
+  ).toEqual(['Bia LimaGive']);
+});
+
+test('gives the open spot to the picked dancer', async () => {
+  const user = await giveOpenSpot();
+  await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
+  expect(updateCastMember).toHaveBeenCalledWith('school-1', 'dance-1', 'cast-1', {
+    dancerId: 'dancer-2',
+  });
+});
+
+test('lists the dancer in the spot once given', async () => {
+  const user = await giveOpenSpot();
+  await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
+  expect(await castNames()).toEqual(['BLBia LimaKitri']);
+});
+
+test('keeps the spot open when giving is cancelled', async () => {
+  const user = await giveOpenSpot();
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(await castNames()).toEqual(['Open spotKitri']);
+});
+
+test('says when the spot cannot be given', async () => {
+  const user = await giveOpenSpot();
+  vi.mocked(updateCastMember).mockRejectedValue(new Error('PATCH cast member answered 409'));
+  await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not give the spot to Bia Lima');
 });

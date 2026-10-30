@@ -1,4 +1,4 @@
-import type { CastMember, CastMemberInput, Position } from '@living-stage/shared';
+import type { CastMember, CastMemberInput, CastMemberUpdate, Position } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
 import { fetchFigures } from '../api/figures.ts';
@@ -13,6 +13,7 @@ type Ready = Extract<CastState, { status: 'ready' }>;
 export type CastActions = {
   add: (input: CastMemberInput) => Promise<void>;
   save: (castMember: CastMember) => Promise<void>;
+  give: (castMemberId: string, dancerId: string) => Promise<void>;
   remove: (castMemberId: string) => Promise<void>;
 };
 
@@ -52,13 +53,16 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
-  async function save({ id, role }: CastMember) {
-    const saved = await updateCastMember(schoolId, danceId, id, { role });
+  async function update(castMemberId: string, changes: CastMemberUpdate) {
+    const saved = await updateCastMember(schoolId, danceId, castMemberId, changes);
     change(({ cast, positions }) => ({
       cast: cast.map((each) => (each.id === saved.id ? saved : each)),
       positions,
     }));
   }
+
+  const save = ({ id, role }: CastMember) => update(id, { role });
+  const give = (castMemberId: string, dancerId: string) => update(castMemberId, { dancerId });
 
   async function remove(castMemberId: string) {
     await removeCastMember(schoolId, danceId, castMemberId);
@@ -68,5 +72,5 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
-  return { state, add, save, remove };
+  return { state, add, save, give, remove };
 }
