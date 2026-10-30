@@ -1,8 +1,17 @@
-import type { Figure, ListFiguresResponse } from '@living-stage/shared';
+import {
+  parseFigureCopy,
+  type Figure,
+  type FigureCopy,
+  type FigureResponse,
+  type ListFiguresResponse,
+} from '@living-stage/shared';
 import { Router } from 'express';
 import { prisma } from '../db.ts';
+import type { Prisma } from '../generated/prisma/client.ts';
 
 export const schoolFiguresRouter = Router();
+
+const positionFields = { select: { castMemberId: true, x: true, y: true } } as const;
 
 schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
   const dance = await prisma.dance.findFirst({
@@ -10,7 +19,7 @@ schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
     select: {
       figures: {
         orderBy: { order: 'asc' },
-        include: { positions: { select: { castMemberId: true, x: true, y: true } } },
+        include: { positions: positionFields },
       },
     },
   });
@@ -21,6 +30,69 @@ schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
 
   res.json({ figures: dance.figures.map(toFigure) } satisfies ListFiguresResponse);
 });
+
+schoolFiguresRouter.post('/dances/:danceId/figures', async (req, res) => {
+  const copy = parseFigureCopy(req.body);
+  if (!copy) {
+    res.status(400).json({ error: 'invalid_figure' });
+    return;
+  }
+  if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  const figure = await copyFigure(req.params.danceId, copy);
+  if (!figure) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  res.status(201).json({ figure: toFigure(figure) } satisfies FigureResponse);
+});
+
+// The copy keeps every position but not the name, so it shows as "Figure N" until renamed.
+function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
+  return prisma.$transaction(async (tx) => {
+    const source = await tx.figure.findFirst({
+      where: { id: copyOf, danceId },
+      include: { positions: positionFields },
+    });
+    if (!source) return null;
+
+    const { _max } = await tx.figure.aggregate({ where: { danceId }, _max: { order: true } });
+    const last = _max.order ?? source.order;
+    const order = placement === 'end' ? last + 1 : source.order + 1;
+    if (order <= last) await makeRoom(tx, danceId, { from: order, last });
+
+    return tx.figure.create({
+      data: { danceId, order, positions: { create: source.positions } },
+      include: { positions: positionFields },
+    });
+  });
+}
+
+// Postgres checks the unique (danceId, order) row by row, so shifting by one in a
+// single update would collide. The figures from `from` on first move past the last
+// order, then come back down to one place later than they were.
+async function makeRoom(
+  tx: Prisma.TransactionClient,
+  danceId: string,
+  { from, last }: { from: number; last: number },
+) {
+  const away = last + 1;
+  await tx.figure.updateMany({
+    where: { danceId, order: { gte: from } },
+    data: { order: { increment: away } },
+  });
+  await tx.figure.updateMany({
+    where: { danceId, order: { gte: from + away } },
+    data: { order: { decrement: away - 1 } },
+  });
+}
+
+function danceOfSchool(danceId: string, schoolId: string) {
+  return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
+}
 
 function toFigure({ id, order, name, positions }: Figure): Figure {
   return { id, order, name, positions };

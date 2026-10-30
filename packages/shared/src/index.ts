@@ -42,7 +42,10 @@ export {
 export {
   WING_SPOTS,
   nextWingSpot,
+  parseFigureCopy,
   type Figure,
+  type FigureCopy,
+  type FigureResponse,
   type FigurePosition,
   type ListFiguresResponse,
   type Position,
