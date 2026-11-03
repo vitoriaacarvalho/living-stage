@@ -33,6 +33,12 @@ const legDepths = [0.1, 0.45, 0.8];
 
 const figureHeight = 2;
 const labelHeight = 1.62;
+
+const openRingRadius = 0.32;
+const openRing = Array.from({ length: 49 }, (_, index) => {
+  const angle = (index / 48) * Math.PI * 2;
+  return [Math.cos(angle) * openRingRadius, lineLift, Math.sin(angle) * openRingRadius] as const;
+});
 const outerX = halfWidth + sideWing;
 const upstageZ = -halfDepth - upstageWing;
 const framedPoints = [-outerX, outerX].flatMap((x) =>
@@ -86,16 +92,17 @@ export function Stage3D({ showGuides, dancers = [] }: StageProps) {
           <Legs colors={colors} />
           <hemisphereLight args={[colors.light, colors.floor, 1.6]} />
           <directionalLight position={[2, 6, 5]} intensity={2.2} />
-          {dancers.map(
-            (dancer) =>
-              dancer.dancerId !== null && (
-                <DancerFigure
-                  key={dancer.id}
-                  dancer={dancer}
-                  dancerId={dancer.dancerId}
-                  colors={colors}
-                />
-              ),
+          {dancers.map((dancer) =>
+            dancer.dancerId === null ? (
+              <OpenSpot key={dancer.id} dancer={dancer} color={colors.edge} />
+            ) : (
+              <DancerFigure
+                key={dancer.id}
+                dancer={dancer}
+                dancerId={dancer.dancerId}
+                colors={colors}
+              />
+            ),
           )}
         </LabelLayer>
       </Canvas>
@@ -103,7 +110,7 @@ export function Stage3D({ showGuides, dancers = [] }: StageProps) {
   );
 }
 
-// Open spots get no ballerina; a dancer with no color wears the muted stage ink.
+// A dancer with no color wears the muted stage ink.
 function DancerFigure({
   dancer,
   dancerId,
@@ -129,7 +136,29 @@ function DancerFigure({
           shadow: colors.wing,
         }}
       />
-      <DancerLabel dancer={dancer} position={[x, labelHeight, z]} inWing={inWing} />
+      <DancerLabel dancer={dancer} position={[x, labelHeight, z]} />
+    </>
+  );
+}
+
+// An open spot has no ballerina, just a dashed ring on the floor, as in the 2D plan.
+function OpenSpot({ dancer, color }: { dancer: StageDancer; color: string }) {
+  const { x, z } = stageToFloor(dancer);
+  const inWing = isOffStage(dancer);
+  return (
+    <>
+      <Line
+        points={openRing}
+        position={[x, 0, z]}
+        color={color}
+        lineWidth={2}
+        dashed
+        dashSize={0.09}
+        gapSize={0.07}
+        transparent={inWing}
+        opacity={inWing ? 0.8 : 1}
+      />
+      <DancerLabel dancer={dancer} position={[x, 0, z - openRingRadius]} />
     </>
   );
 }
@@ -138,16 +167,15 @@ function DancerFigure({
 function DancerLabel({
   dancer,
   position,
-  inWing,
 }: {
   dancer: StageDancer;
   position: [x: number, y: number, z: number];
-  inWing: boolean;
 }) {
   const layer = use(LabelLayer)!;
+  const classes = [styles.label, isOffStage(dancer) && styles.inWing, dancer.open && styles.open];
   return (
     <Html position={position} portal={layer}>
-      <div className={`${styles.label} ${inWing ? styles.inWing : ''}`}>
+      <div className={classes.filter(Boolean).join(' ')}>
         <span className={stageStyles.label}>{dancer.label}</span>
         {dancer.role && <span className={stageStyles.role}>{dancer.role}</span>}
       </div>

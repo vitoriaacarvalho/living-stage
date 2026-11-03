@@ -21,6 +21,10 @@
   text-shadow: 0 0 3px var(--stage-wing);
 }
 
+.open > :first-child {
+  color: var(--stage-ink-muted);
+}
+
 .inWing {
   opacity: 0.8;
 }
