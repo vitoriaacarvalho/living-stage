@@ -142,7 +142,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part C — Formation editor
 
-- **C1.** A dance shows its stage as a 3D perspective view seen from the audience (the default, see Part L) or as a top-down 2D plan with the audience at the bottom; one tap switches between them.
+- ✅ **C1.** A dance shows its stage as a 3D perspective view seen from the audience (the default, see Part L) or as a top-down 2D plan with the audience at the bottom; one tap switches between them.
 - ✅ **C2.** The stage has wing zones on the left, right and upstage, where dancers can wait off stage, enter and exit.
 - ✅ **C3.** Optional guide lines (center and quarters) can be shown or hidden.
 - ✅ **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
@@ -225,11 +225,11 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part L — 3D stage and ballerinas
 
-- **L1.** The 3D view is a perspective stage seen from the audience, built with Three.js. The floor, wings and guide lines match the 2D plan, and dark flats ("legs") line the wings.
-- **L2.** Each dancer is a shaded 3D ballerina standing at her stage position and scaling with depth. Her tutu and bodice carry her dancer color (by dancer or by role, C6); skin, hair and tights use decorative tokens. No faces or expressions, just posture: friendly and elegant, never cartoonish. Every ballerina shares one pose; poses per role are not planned. Skin and hair are assigned automatically from the dancer's id, so they stay the same everywhere.
-- **L3.** Each ballerina has a soft floor shadow; the selected one gets a `stage-accent` ring on the floor. Dancers waiting in the wings show at 80% opacity.
-- **L4.** Name and role labels are drawn above every figure, so a front-row head never hides a back-row label.
-- **L5.** The 3D view is the default in the editor and in presentation mode; the 2D plan is one tap away ("2D plan / 3D stage"), and is always used for print and thumbnails.
+- ✅ **L1.** The 3D view is a perspective stage seen from the audience, built with Three.js. The floor, wings and guide lines match the 2D plan, and dark flats ("legs") line the wings.
+- ✅ **L2.** Each dancer is a shaded 3D ballerina standing at her stage position and scaling with depth. Her tutu and bodice carry her dancer color (by dancer or by role, C6); skin, hair and tights use decorative tokens. No faces or expressions, just posture: friendly and elegant, never cartoonish. Every ballerina shares one pose; poses per role are not planned. Skin and hair are assigned automatically from the dancer's id, so they stay the same everywhere.
+- ✅ **L3.** Each ballerina has a soft floor shadow; the selected one gets a `stage-accent` ring on the floor. Dancers waiting in the wings show at 80% opacity. Shadow and wings done; the ring comes with plan 2.4.
+- ✅ **L4.** Name and role labels are drawn above every figure, so a front-row head never hides a back-row label.
+- ✅ **L5.** The 3D view is the default in the editor and in presentation mode; the 2D plan is one tap away ("2D plan / 3D stage"), and is always used for print and thumbnails.
 - **L6.** 60 ballerinas render and animate smoothly on an iPad (E9).
 
 ## 5. Data model (first draft)
@@ -372,9 +372,9 @@ First milestone to show real teachers.
 - ✅ **2.2 Casting** · after 2.1, 1.7
   - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
   - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
-- ⬜ **9.1 3D stage and ballerinas** · after 2.2
+- ✅ **9.1 3D stage and ballerinas** · after 2.2
   - Done when: Cast dancers stand as 3D ballerinas on the perspective stage, colored by dancer or role, with readable labels; one tap switches to the 2D plan
-  - Requirements: L1–L6, C1 (3D), C5 (3D) · Screens: `Stage3D`, `DanceEditorIPad`
+  - Requirements: L1–L5, C1 (3D), C5 (3D) · Screens: `Stage3D`, `DanceEditorIPad`
 - ✅ **2.3 Figures** · after 2.2
   - Done when: Add, duplicate, rename, reorder, delete figures
   - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
@@ -383,7 +383,7 @@ First milestone to show real teachers.
   - Requirements: C8, C9, L3 (the selected ring) · Screens: `Stage`, `Stage3D`
 - ⬜ **2.7 Straight-line playback** · after 2.3, 9.1
   - Done when: 60 ballerinas animate smoothly between figures without music, on the 3D stage and the 2D plan
-  - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage3D`
+  - Requirements: D1, D4, D5, E9, L6 · Screens: `Timeline`, `Stage3D`
 
 #### MVP 4 — Show details
 
