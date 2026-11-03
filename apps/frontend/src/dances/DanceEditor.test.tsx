@@ -6,8 +6,23 @@ import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
 import { copyFigure, deleteFigure, fetchFigures, updateFigure } from '../api/figures.ts';
+import type { StageProps } from '../stage/Stage.tsx';
 import { DanceEditor } from './DanceEditor.tsx';
 
+// jsdom has no WebGL, so the 3D stage is a stand-in that shows what it was given.
+vi.mock('../stage/Stage3D.tsx', () => ({
+  Stage3D: ({ showGuides, dancers = [] }: StageProps) => (
+    <div role="img" aria-label="Stage seen from the audience">
+      {showGuides && <span data-testid="guides" />}
+      {dancers.map(({ id, label, role }) => (
+        <span key={id}>
+          <span>{label}</span>
+          {role && <span>{role}</span>}
+        </span>
+      ))}
+    </div>
+  ),
+}));
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
 vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
@@ -48,8 +63,10 @@ beforeEach(() => {
     .mockImplementation(async (_schoolId, _danceId, update) => ({ ...kitri, ...update }));
 });
 
-function openKitri(dance = kitri) {
+// Waits for the lazily loaded 3D stage.
+async function openKitri(dance = kitri) {
   render(<DanceEditor schoolId="school-1" dance={dance} onBack={() => {}} />);
+  await screen.findByRole('img', { name: /^Stage seen from/ });
 }
 
 function labelsButton(name: string) {
@@ -60,39 +77,39 @@ function guidesToggle() {
   return screen.getByRole('button', { name: 'Guides' });
 }
 
-test('shows the dance title', () => {
-  openKitri();
+test('shows the dance title', async () => {
+  await openKitri();
   expect(screen.getByRole('heading', { name: 'Kitri variation' })).toBeInTheDocument();
 });
 
-test('shows the stage', () => {
-  openKitri();
-  expect(screen.getByRole('img', { name: /^Stage seen from above/ })).toBeInTheDocument();
+test('shows the stage', async () => {
+  await openKitri();
+  expect(screen.getByRole('img', { name: /^Stage seen from/ })).toBeInTheDocument();
 });
 
-test('shows the guide lines when the dance has them on', () => {
-  openKitri();
+test('shows the guide lines when the dance has them on', async () => {
+  await openKitri();
   expect(screen.getByTestId('guides')).toBeInTheDocument();
 });
 
-test('hides the guide lines when the dance has them off', () => {
-  openKitri({ ...kitri, showGuides: false });
+test('hides the guide lines when the dance has them off', async () => {
+  await openKitri({ ...kitri, showGuides: false });
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
 
-test('marks the guides toggle as pressed when the guide lines are on', () => {
-  openKitri();
+test('marks the guides toggle as pressed when the guide lines are on', async () => {
+  await openKitri();
   expect(guidesToggle()).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('hides the guide lines when the toggle is tapped', async () => {
-  openKitri();
+  await openKitri();
   await userEvent.setup().click(guidesToggle());
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
 
 test('shows the guide lines again when the toggle is tapped twice', async () => {
-  openKitri();
+  await openKitri();
   const user = userEvent.setup();
   await user.click(guidesToggle());
   await user.click(guidesToggle());
@@ -100,38 +117,38 @@ test('shows the guide lines again when the toggle is tapped twice', async () => 
 });
 
 test('saves the guide lines choice on the dance', async () => {
-  openKitri();
+  await openKitri();
   await userEvent.setup().click(guidesToggle());
   expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { showGuides: false });
 });
 
 test('puts the guide lines back when saving fails', async () => {
   vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
-  openKitri();
+  await openKitri();
   await userEvent.setup().click(guidesToggle());
   expect(await screen.findByTestId('guides')).toBeInTheDocument();
 });
 
-test("marks the dance's label mode as chosen", () => {
-  openKitri({ ...kitri, labelMode: 'both' });
+test("marks the dance's label mode as chosen", async () => {
+  await openKitri({ ...kitri, labelMode: 'both' });
   expect(labelsButton('Both')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('saves the label mode on the dance', async () => {
-  openKitri();
+  await openKitri();
   await userEvent.setup().click(labelsButton('Role'));
   expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { labelMode: 'role' });
 });
 
 test('puts the label mode back when saving fails', async () => {
   vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
-  openKitri();
+  await openKitri();
   await userEvent.setup().click(labelsButton('Role'));
   await waitFor(() => expect(labelsButton('Name')).toHaveAttribute('aria-pressed', 'true'));
 });
 
 test('saves the color mode on the dance', async () => {
-  openKitri();
+  await openKitri();
   const colorBy = screen.getByRole('group', { name: 'Color by' });
   await userEvent.setup().click(within(colorBy).getByRole('button', { name: 'Role' }));
   expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { colorMode: 'role' });
@@ -141,14 +158,14 @@ test('labels the stage circles by role in role mode', async () => {
   vi.mocked(fetchCast).mockResolvedValue([
     { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: 'Kitri' },
   ]);
-  openKitri({ ...kitri, labelMode: 'role' });
-  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  await openKitri({ ...kitri, labelMode: 'role' });
+  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Kitri')).toBeInTheDocument();
 });
 
 test('puts the cast on the stage', async () => {
-  openKitri();
-  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  await openKitri();
+  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Clara')).toBeInTheDocument();
 });
 
@@ -159,12 +176,45 @@ test('puts a newly cast dancer in the wing on the stage', async () => {
     castMember: { id: 'cast-2', dancer: bia, role: null },
     positions: [{ figureId: 'figure-1', castMemberId: 'cast-2', x: -0.0625, y: 0.05 }],
   });
-  openKitri();
+  await openKitri();
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: 'Add' }));
   await user.click(await screen.findByRole('button', { name: /Bia/ }));
-  const stage = screen.getByRole('img', { name: /^Stage seen from above/ });
+  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Bia')).toBeInTheDocument();
+});
+
+describe('stage view', () => {
+  function viewButton(name: string) {
+    return within(screen.getByRole('group', { name: 'Stage view' })).getByRole('button', { name });
+  }
+
+  test('opens on the 3D stage', async () => {
+    await openKitri();
+    expect(screen.getByRole('img', { name: 'Stage seen from the audience' })).toBeInTheDocument();
+  });
+
+  test('switches to the 2D plan', async () => {
+    await openKitri();
+    await userEvent.setup().click(viewButton('2D plan'));
+    expect(screen.getByRole('img', { name: /^Stage seen from above/ })).toBeInTheDocument();
+  });
+
+  test('switches back to the 3D stage', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(viewButton('2D plan'));
+    await user.click(viewButton('3D stage'));
+    expect(
+      await screen.findByRole('img', { name: 'Stage seen from the audience' }),
+    ).toBeInTheDocument();
+  });
+
+  test('does not save the stage view on the dance', async () => {
+    await openKitri();
+    await userEvent.setup().click(viewButton('2D plan'));
+    expect(updateDance).not.toHaveBeenCalled();
+  });
 });
 
 test('goes back to the dances', async () => {
@@ -193,22 +243,22 @@ describe('figures', () => {
   }
 
   function stage() {
-    return screen.getByRole('img', { name: /^Stage seen from above/ });
+    return screen.getByRole('img', { name: /^Stage seen from/ });
   }
 
   test('lists the figures of the dance', async () => {
-    openKitri();
+    await openKitri();
     expect((await figureChips()).map((chip) => chip.textContent)).toEqual(['Figure 1', 'Entrance']);
   });
 
   test('starts on the first figure', async () => {
-    openKitri();
+    await openKitri();
     const [first] = await figureChips();
     expect(first).toHaveAttribute('aria-current', 'true');
   });
 
   test("shows the selected figure's positions on the stage", async () => {
-    openKitri();
+    await openKitri();
     await userEvent.setup().click(await screen.findByRole('button', { name: 'Entrance' }));
     expect(within(stage()).queryByText('Clara')).not.toBeInTheDocument();
   });
@@ -223,7 +273,7 @@ describe('figures', () => {
         { figureId: 'figure-2', castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
       ],
     });
-    openKitri();
+    await openKitri();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Add' }));
     await user.click(await screen.findByRole('button', { name: /Bia/ }));
@@ -232,7 +282,7 @@ describe('figures', () => {
   });
 
   test('shows the first figure again when it is selected', async () => {
-    openKitri();
+    await openKitri();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Entrance' }));
     await user.click(screen.getByRole('button', { name: 'Figure 1' }));
@@ -266,7 +316,7 @@ describe('figure tools', () => {
   }
 
   test('copies the selected figure to the end as a new figure', async () => {
-    openKitri();
+    await openKitri();
     await tap('New figure');
     expect(copyFigure).toHaveBeenCalledWith('school-1', 'dance-1', {
       copyOf: 'figure-1',
@@ -275,7 +325,7 @@ describe('figure tools', () => {
   });
 
   test('duplicates the selected figure right after it', async () => {
-    openKitri();
+    await openKitri();
     await tap('Duplicate');
     expect(copyFigure).toHaveBeenCalledWith('school-1', 'dance-1', {
       copyOf: 'figure-1',
@@ -284,13 +334,13 @@ describe('figure tools', () => {
   });
 
   test('lists the new figure', async () => {
-    openKitri();
+    await openKitri();
     await tap('New figure');
     await waitFor(async () => expect(await chipNames()).toEqual(['Figure 1', 'Figure 2']));
   });
 
   test('selects the new figure', async () => {
-    openKitri();
+    await openKitri();
     await tap('New figure');
     expect(await screen.findByRole('button', { name: 'Figure 2' })).toHaveAttribute(
       'aria-current',
@@ -303,7 +353,7 @@ describe('figure tools', () => {
       { id: 'figure-1', order: 0, name: null, positions: [] },
       { id: 'figure-3', order: 1, name: 'Finale', positions: [] },
     ]);
-    openKitri();
+    await openKitri();
     await tap('Duplicate');
     await waitFor(async () =>
       expect(await chipNames()).toEqual(['Figure 1', 'Figure 2', 'Finale']),
@@ -319,7 +369,7 @@ describe('figure panel', () => {
   });
 
   async function openFigurePanel() {
-    openKitri();
+    await openKitri();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Figure 1' }));
     return user;
@@ -370,7 +420,7 @@ describe('deleting figures', () => {
   });
 
   async function deleteFigureNamed(name: string) {
-    openKitri();
+    await openKitri();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name }));
     if (name !== 'Entrance') await user.click(screen.getByRole('button', { name }));

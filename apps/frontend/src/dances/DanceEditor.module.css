@@ -53,6 +53,12 @@
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
 }
 
+.stageLoading {
+  flex: 1;
+  border-radius: var(--radius-lg);
+  background: var(--stage-wing);
+}
+
 .viewControls {
   display: flex;
   flex: none;

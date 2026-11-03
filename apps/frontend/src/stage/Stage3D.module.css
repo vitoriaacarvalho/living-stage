@@ -1,0 +1,7 @@
+.stage {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--stage-wing);
+}

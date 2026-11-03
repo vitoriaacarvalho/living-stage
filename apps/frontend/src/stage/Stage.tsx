@@ -38,7 +38,7 @@ export type StageDancer = {
   open: boolean;
 };
 
-type StageProps = { showGuides: boolean; dancers?: StageDancer[] };
+export type StageProps = { showGuides: boolean; dancers?: StageDancer[] };
 
 export function Stage({ showGuides, dancers = [] }: StageProps) {
   return (
