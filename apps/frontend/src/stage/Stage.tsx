@@ -1,4 +1,5 @@
 import {
+  PLAN_BOUNDS,
   SIDE_WING_DEPTH,
   STAGE_CENTER,
   STAGE_DEPTH_M,
@@ -10,9 +11,9 @@ import {
 import { type CSSProperties, type PointerEvent, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import styles from './Stage.module.css';
-import { type StageEditing, useDancerDrag } from './useDancerDrag.ts';
+import { type SelectionBox, type StageEditing, usePlanGestures } from './usePlanGestures.ts';
 
-export type { StageEditing } from './useDancerDrag.ts';
+export type { StageEditing } from './usePlanGestures.ts';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
 const upstageWing = UPSTAGE_WING_DEPTH * STAGE_DEPTH_M;
@@ -47,11 +48,7 @@ export type StageProps = { showGuides: boolean; dancers?: StageDancer[]; edit?: 
 
 export function Stage({ showGuides, dancers = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
-  const { shown, handlers } = useDancerDrag({ dancers, edit, planRef });
-
-  function pressFloor() {
-    if (edit && edit.selectedIds.length > 0) edit.onSelect([]);
-  }
+  const { shown, box, floor, dancerPress } = usePlanGestures({ dancers, edit, planRef });
 
   return (
     <div
@@ -63,7 +60,7 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
       <div
         ref={planRef}
         className={edit ? `${styles.plan} ${styles.editable}` : styles.plan}
-        onPointerDown={pressFloor}
+        {...(edit && floor)}
       >
         <svg
           className={styles.svg}
@@ -87,9 +84,10 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
             key={dancer.id}
             dancer={dancer}
             selected={edit?.selectedIds.includes(dancer.id) ?? false}
-            hit={edit && handlers(dancer)}
+            onPress={edit && dancerPress(dancer)}
           />
         ))}
+        {box && <Box box={box} />}
       </div>
       <div className={styles.audience}>
         <span className={styles.zone}>Audience</span>
@@ -124,14 +122,28 @@ export function isOffStage({ x, y }: StageDancer): boolean {
   return x < 0 || x > 1 || y < 0;
 }
 
-type DotHit = Record<
-  'onPointerDown' | 'onPointerMove' | 'onPointerUp' | 'onPointerCancel',
-  (event: PointerEvent<HTMLElement>) => void
->;
+const percentX = (x: number) =>
+  ((x - PLAN_BOUNDS.minX) / (PLAN_BOUNDS.maxX - PLAN_BOUNDS.minX)) * 100;
+const percentY = (y: number) =>
+  ((y - PLAN_BOUNDS.minY) / (PLAN_BOUNDS.maxY - PLAN_BOUNDS.minY)) * 100;
 
-type DancerDotProps = { dancer: StageDancer; selected: boolean; hit: DotHit | undefined };
+function Box({ box }: { box: SelectionBox }) {
+  const area = {
+    left: `${percentX(box.left)}%`,
+    top: `${percentY(box.top)}%`,
+    width: `${percentX(box.right) - percentX(box.left)}%`,
+    height: `${percentY(box.bottom) - percentY(box.top)}%`,
+  };
+  return <div className={styles.box} style={area} data-testid="selection-box" />;
+}
 
-function DancerDot({ dancer, selected, hit }: DancerDotProps) {
+type DancerDotProps = {
+  dancer: StageDancer;
+  selected: boolean;
+  onPress: ((event: PointerEvent<HTMLElement>) => void) | undefined;
+};
+
+function DancerDot({ dancer, selected, onPress }: DancerDotProps) {
   const spot = {
     left: `${((dancer.x * STAGE_WIDTH_M + sideWing) / planWidth) * 100}%`,
     top: `${((dancer.y * STAGE_DEPTH_M + upstageWing) / planHeight) * 100}%`,
@@ -145,7 +157,7 @@ function DancerDot({ dancer, selected, hit }: DancerDotProps) {
   ];
   return (
     <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
-      {hit && <span className={styles.hit} data-testid="dancer-hit" {...hit} />}
+      {onPress && <span className={styles.hit} data-testid="dancer-hit" onPointerDown={onPress} />}
       <span className={styles.dot} />
       <span className={styles.label}>{dancer.label}</span>
       {dancer.role && <span className={styles.role}>{dancer.role}</span>}

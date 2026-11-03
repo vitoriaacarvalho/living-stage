@@ -1,3 +1,4 @@
+import { PLAN_BOUNDS, type StagePoint } from '@living-stage/shared';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Stage } from './Stage.tsx';
@@ -127,6 +128,24 @@ describe('editing', () => {
     fireEvent.pointerUp(target, { pointerId, clientX: 100 + dx, clientY: 100 + dy });
   }
 
+  function floor() {
+    return screen.getByRole('img').firstElementChild as HTMLElement;
+  }
+
+  // The plan is 1500 × 900 px at the top left of the page, spanning PLAN_BOUNDS.
+  function client({ x, y }: { x: number; y: number }) {
+    return {
+      clientX: ((x - PLAN_BOUNDS.minX) / (PLAN_BOUNDS.maxX - PLAN_BOUNDS.minX)) * 1500,
+      clientY: ((y - PLAN_BOUNDS.minY) / (PLAN_BOUNDS.maxY - PLAN_BOUNDS.minY)) * 900,
+    };
+  }
+
+  function boxFrom(target: HTMLElement, from: StagePoint, to: StagePoint) {
+    fireEvent.pointerDown(target, { pointerId: 1, ...client(from) });
+    fireEvent.pointerMove(target, { pointerId: 1, ...client(to) });
+    fireEvent.pointerUp(target, { pointerId: 1, ...client(to) });
+  }
+
   beforeEach(() => {
     Element.prototype.setPointerCapture = vi.fn();
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
@@ -170,8 +189,92 @@ describe('editing', () => {
   test('clears the selection when the floor is tapped', () => {
     const edit = editing(['cast-1']);
     render(<Stage showGuides dancers={[clara]} edit={edit} />);
-    fireEvent.pointerDown(screen.getByRole('img').firstElementChild!, { pointerId: 1 });
+    dragBy(floor(), 0, 0);
     expect(edit.onSelect).toHaveBeenCalledWith([]);
+  });
+
+  test('selects every dancer inside a box drawn on the floor', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    boxFrom(floor(), { x: 0.2, y: 0.4 }, { x: 0.6, y: 0.6 });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1', 'cast-2']);
+  });
+
+  test('leaves out a dancer outside the box', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    boxFrom(floor(), { x: 0.4, y: 0.4 }, { x: 0.6, y: 0.6 });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('selects a dancer in the wing with a box drawn there', () => {
+    const edit = editing();
+    const waiting = { ...clara, x: -0.0625, y: 0.05 };
+    render(<Stage showGuides dancers={[waiting]} edit={edit} />);
+    boxFrom(floor(), { x: -0.1, y: 0 }, { x: 0, y: 0.1 });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('selects a box drawn from its bottom right corner', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    boxFrom(floor(), { x: 0.6, y: 0.6 }, { x: 0.4, y: 0.4 });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('clears the selection with a box around nobody', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    boxFrom(floor(), { x: 0, y: 0 }, { x: 0.2, y: 0.2 });
+    expect(edit.onSelect).toHaveBeenCalledWith([]);
+  });
+
+  test('draws the box while it is dragged', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    fireEvent.pointerDown(floor(), { pointerId: 1, ...client({ x: 0, y: 0 }) });
+    fireEvent.pointerMove(floor(), { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
+    expect(screen.getByTestId('selection-box')).toBeInTheDocument();
+  });
+
+  test('takes the box away once it is let go', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    boxFrom(floor(), { x: 0, y: 0 }, { x: 0.5, y: 0.5 });
+    expect(screen.queryByTestId('selection-box')).not.toBeInTheDocument();
+  });
+
+  test('adds a dancer to the selection with Shift-click', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.pointerDown(hitOf('Odile'), { pointerId: 1, shiftKey: true });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1', 'cast-2']);
+  });
+
+  test('takes a dancer out of the selection with Shift-click', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, shiftKey: true });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-2']);
+  });
+
+  test('moves the whole selection when one of its dancers is dragged', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    dragBy(hitOf('Odile'), 120, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 },
+      { castMemberId: 'cast-2', x: expect.closeTo(0.35), y: 0.5 },
+    ]);
+  });
+
+  test('stops the whole selection when one dancer reaches the edge', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    const front = { ...odile, y: 0.9 };
+    render(<Stage showGuides dancers={[clara, front]} edit={edit} />);
+    dragBy(hitOf('Odile'), 0, 800);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      expect.objectContaining({ y: expect.closeTo(0.6) }),
+      expect.objectContaining({ y: 1 }),
+    ]);
   });
 
   test('moves a dragged dancer by the distance dragged', () => {

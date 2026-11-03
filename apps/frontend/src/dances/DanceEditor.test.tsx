@@ -594,4 +594,36 @@ describe('dragging on the 2D plan', () => {
     await waitFor(() => expect(screen.getAllByTestId('dancer')).toHaveLength(1));
     expect(screen.getByTestId('dancer')).toHaveClass(/selected/);
   });
+
+  test('clears the whole selection when a selected dancer leaves the cast', async () => {
+    vi.mocked(removeCastMember).mockResolvedValue();
+    vi.mocked(fetchCast).mockResolvedValue([
+      { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: null },
+      { id: 'cast-2', dancer: { id: 'dancer-2', name: 'Odile', color: 5 }, role: null },
+    ]);
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [
+          { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
+          { castMemberId: 'cast-2', x: 0.25, y: 0.5 },
+        ],
+      },
+    ]);
+    const user = await openPlan();
+    const [clara] = screen.getAllByTestId('dancer-hit');
+    fireEvent.pointerDown(clara!, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(clara!, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(screen.getAllByTestId('dancer-hit')[1]!, {
+      pointerId: 1,
+      shiftKey: true,
+    });
+    await user.click(screen.getByRole('button', { name: 'Edit Odile' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.getAllByTestId('dancer')).toHaveLength(1));
+    expect(screen.getByTestId('dancer')).not.toHaveClass(/selected/);
+  });
 });

@@ -103,6 +103,13 @@
   cursor: grabbing;
 }
 
+.box {
+  position: absolute;
+  border: 1px solid var(--stage-accent);
+  background: color-mix(in srgb, var(--stage-accent) 10%, transparent);
+  pointer-events: none;
+}
+
 .dot {
   position: relative;
   flex: none;
