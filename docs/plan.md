@@ -380,7 +380,7 @@ First milestone to show real teachers.
   - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
 - ⬜ **2.4 Dragging and selection** · after 2.3, 9.1
   - Done when: Drag one or many dancers in the 2D plan and the 3D stage, with optional snapping, by finger and mouse
-  - Requirements: C8, C9 · Screens: `Stage`, `Stage3D`
+  - Requirements: C8, C9, L3 (the selected ring) · Screens: `Stage`, `Stage3D`
 - ⬜ **2.7 Straight-line playback** · after 2.3, 9.1
   - Done when: 60 ballerinas animate smoothly between figures without music, on the 3D stage and the 2D plan
   - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage3D`
