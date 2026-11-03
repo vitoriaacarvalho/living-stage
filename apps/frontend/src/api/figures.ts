@@ -63,3 +63,14 @@ export async function reorderFigures(
   const body: ListFiguresResponse = await res.json();
   return body.figures;
 }
+
+export async function deleteFigure(
+  schoolId: string,
+  danceId: string,
+  figureId: string,
+): Promise<void> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}/figures/${figureId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`DELETE figure answered ${res.status}`);
+}

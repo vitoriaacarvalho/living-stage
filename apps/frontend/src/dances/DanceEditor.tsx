@@ -53,6 +53,15 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     setSelectedFigureId(copy.id);
   }
 
+  // The figure before the deleted one is selected next, or the new first figure.
+  async function deleteFigure(figureId: string) {
+    const index = figures.findIndex(({ id }) => id === figureId);
+    const next = figures[index - 1] ?? figures[index + 1];
+    await castActions.deleteFigure(figureId);
+    setSelectedFigureId(next?.id ?? null);
+    setFigurePanelOpen(false);
+  }
+
   // Shown right away; put back if saving fails.
   function saveView<K extends ViewSetting>(setting: K, value: Dance[K]) {
     const previous = dance[setting];
@@ -116,6 +125,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             actions={{
               rename: (name) => castActions.renameFigure(figure.id, name),
               move: (step) => castActions.reorderFigures(movedOrder(figures, figure.id, step)),
+              remove: () => deleteFigure(figure.id),
             }}
             onClose={() => setFigurePanelOpen(false)}
           />

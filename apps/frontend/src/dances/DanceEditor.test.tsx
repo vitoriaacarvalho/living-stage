@@ -5,7 +5,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { copyFigure, fetchFigures, reorderFigures, updateFigure } from '../api/figures.ts';
+import {
+  copyFigure,
+  deleteFigure,
+  fetchFigures,
+  reorderFigures,
+  updateFigure,
+} from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
 
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
@@ -16,6 +22,7 @@ vi.mock('../api/figures.ts', () => ({
   copyFigure: vi.fn(),
   updateFigure: vi.fn(),
   reorderFigures: vi.fn(),
+  deleteFigure: vi.fn(),
 }));
 
 const kitri: Dance = {
@@ -407,5 +414,67 @@ describe('moving figures', () => {
         'true',
       ),
     );
+  });
+});
+
+describe('deleting figures', () => {
+  const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
+  const middle = { id: 'figure-2', order: 1, name: 'Middle', positions: [] };
+  const finale = { id: 'figure-3', order: 2, name: 'Finale', positions: [] };
+
+  beforeEach(() => {
+    vi.mocked(fetchFigures).mockResolvedValue([entrance, middle, finale]);
+    vi.mocked(deleteFigure).mockReset().mockResolvedValue();
+  });
+
+  async function deleteFigureNamed(name: string) {
+    openKitri();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name }));
+    if (name !== 'Entrance') await user.click(screen.getByRole('button', { name }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+  }
+
+  async function chipNames() {
+    const strip = screen.getByRole('list', { name: 'Figures' });
+    return within(strip)
+      .getAllByRole('button')
+      .map((chip) => chip.textContent);
+  }
+
+  test('deletes the figure', async () => {
+    await deleteFigureNamed('Middle');
+    expect(deleteFigure).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-2');
+  });
+
+  test('takes the figure off the list', async () => {
+    await deleteFigureNamed('Middle');
+    await waitFor(async () => expect(await chipNames()).toEqual(['Entrance', 'Finale']));
+  });
+
+  test('selects the figure before the deleted one', async () => {
+    await deleteFigureNamed('Finale');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Middle' })).toHaveAttribute(
+        'aria-current',
+        'true',
+      ),
+    );
+  });
+
+  test('selects the new first figure when the first one is deleted', async () => {
+    await deleteFigureNamed('Entrance');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Middle' })).toHaveAttribute(
+        'aria-current',
+        'true',
+      ),
+    );
+  });
+
+  test('goes back to the cast list once the figure is deleted', async () => {
+    await deleteFigureNamed('Middle');
+    expect(await screen.findByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
   });
 });

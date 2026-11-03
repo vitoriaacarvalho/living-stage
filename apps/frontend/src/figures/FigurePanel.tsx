@@ -12,6 +12,7 @@ import ownStyles from './FigurePanel.module.css';
 export type FigureActions = {
   rename: (name: string | null) => Promise<void>;
   move: (step: Step) => Promise<void>;
+  remove: () => Promise<void>;
 };
 
 type FigurePanelProps = {
@@ -22,6 +23,8 @@ type FigurePanelProps = {
 };
 
 export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelProps) {
+  const label = figureLabel(figure, figures.indexOf(figure));
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -54,7 +57,7 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
     <aside className={panelStyles.panel} aria-label="Figure">
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.head}>
-          <h2 className={styles.title}>{figureLabel(figure, figures.indexOf(figure))}</h2>
+          <h2 className={styles.title}>{label}</h2>
           <Button variant="ghost" icon="x" aria-label="Close" onClick={onClose} />
         </div>
         <TextField
@@ -87,10 +90,37 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
           </p>
         )}
         <div className={styles.actions}>
-          <span className={styles.spacer} />
-          <Button variant="primary" type="submit" disabled={pending}>
-            Save
-          </Button>
+          {confirming ? (
+            <>
+              <p className={styles.confirm}>Delete {label} and its positions?</p>
+              <Button variant="secondary" onClick={() => setConfirming(false)} disabled={pending}>
+                Keep
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => run(actions.remove, 'Could not delete the figure. Try again.')}
+                disabled={pending}
+              >
+                Delete
+              </Button>
+            </>
+          ) : (
+            <>
+              {figures.length > 1 && (
+                <Button
+                  variant="ghost"
+                  className={styles.remove}
+                  onClick={() => setConfirming(true)}
+                >
+                  Delete
+                </Button>
+              )}
+              <span className={styles.spacer} />
+              <Button variant="primary" type="submit" disabled={pending}>
+                Save
+              </Button>
+            </>
+          )}
         </div>
       </form>
     </aside>

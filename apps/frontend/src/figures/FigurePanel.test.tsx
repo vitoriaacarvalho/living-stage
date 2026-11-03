@@ -11,6 +11,7 @@ function renderPanel(changes: Partial<FigureActions> = {}, figure = entrance) {
   const actions = {
     rename: vi.fn().mockResolvedValue(undefined),
     move: vi.fn().mockResolvedValue(undefined),
+    remove: vi.fn().mockResolvedValue(undefined),
     ...changes,
   };
   const onClose = vi.fn();
@@ -99,4 +100,46 @@ test('says when the figure cannot be moved', async () => {
   const { user } = renderPanel({ move: failing() });
   await user.click(screen.getByRole('button', { name: 'Move later' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not move the figure');
+});
+
+async function askToDelete() {
+  const panel = renderPanel();
+  await panel.user.click(screen.getByRole('button', { name: 'Delete' }));
+  return panel;
+}
+
+test('asks before deleting a figure', async () => {
+  await askToDelete();
+  expect(screen.getByText('Delete Entrance and its positions?')).toBeInTheDocument();
+});
+
+test('keeps the figure when the delete is not confirmed', async () => {
+  const { actions, user } = await askToDelete();
+  await user.click(screen.getByRole('button', { name: 'Keep' }));
+  expect(actions.remove).not.toHaveBeenCalled();
+});
+
+test('deletes the figure once confirmed', async () => {
+  const { actions, user } = await askToDelete();
+  await user.click(screen.getByRole('button', { name: 'Delete' }));
+  expect(actions.remove).toHaveBeenCalled();
+});
+
+test('says when the figure cannot be deleted', async () => {
+  const panel = renderPanel({ remove: failing() });
+  await panel.user.click(screen.getByRole('button', { name: 'Delete' }));
+  await panel.user.click(screen.getByRole('button', { name: 'Delete' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete the figure');
+});
+
+test('offers no delete for the only figure of the dance', () => {
+  render(
+    <FigurePanel
+      figure={entrance}
+      figures={[entrance]}
+      actions={{ rename: vi.fn(), move: vi.fn(), remove: vi.fn() }}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
 });

@@ -17,6 +17,7 @@ vi.mock('../db.ts', () => ({
       findFirst: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
       aggregate: vi.fn(),
       updateMany: vi.fn(),
       findUniqueOrThrow: vi.fn(),
@@ -353,6 +354,89 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/order', () => {
   test('responds 404 for a dance of another school', async () => {
     vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
     const res = await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('DELETE /api/schools/:schoolId/dances/:danceId/figures/:figureId', () => {
+  function remove(figureId = 'figure-1') {
+    return fetch(`${url}/${figureId}`, { method: 'DELETE' });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.figure.aggregate).mockResolvedValue({
+      _count: 3,
+      _max: { order: 2 },
+    } as never);
+    vi.mocked(prisma.figure.delete).mockReset();
+  });
+
+  test('responds 204 once the figure is deleted', async () => {
+    const res = await remove();
+    expect(res.status).toBe(204);
+  });
+
+  test('deletes the figure', async () => {
+    await remove();
+    expect(prisma.figure.delete).toHaveBeenCalledWith({ where: { id: 'figure-1' } });
+  });
+
+  test('looks the figure up in this dance', async () => {
+    await remove();
+    expect(prisma.figure.findFirst).toHaveBeenCalledWith({
+      where: { id: 'figure-1', danceId: 'dance-1' },
+    });
+  });
+
+  test('moves the later figures past the last order before closing the gap', async () => {
+    await remove();
+    expect(prisma.figure.updateMany).toHaveBeenNthCalledWith(1, {
+      where: { danceId: 'dance-1', order: { gte: 1 } },
+      data: { order: { increment: 3 } },
+    });
+  });
+
+  test('brings the later figures back one place earlier than they were', async () => {
+    await remove();
+    expect(prisma.figure.updateMany).toHaveBeenNthCalledWith(2, {
+      where: { danceId: 'dance-1', order: { gte: 4 } },
+      data: { order: { decrement: 4 } },
+    });
+  });
+
+  test('moves no figure when deleting the last one in the order', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue({ ...firstFigure, order: 2 } as never);
+    await remove();
+    expect(prisma.figure.updateMany).not.toHaveBeenCalled();
+  });
+
+  test('responds 409 for the only figure of the dance', async () => {
+    vi.mocked(prisma.figure.aggregate).mockResolvedValue({
+      _count: 1,
+      _max: { order: 0 },
+    } as never);
+    const res = await remove();
+    expect(res.status).toBe(409);
+  });
+
+  test('keeps the only figure of the dance', async () => {
+    vi.mocked(prisma.figure.aggregate).mockResolvedValue({
+      _count: 1,
+      _max: { order: 0 },
+    } as never);
+    await remove();
+    expect(prisma.figure.delete).not.toHaveBeenCalled();
+  });
+
+  test('responds 404 for a figure of another dance', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(null);
+    const res = await remove('figure-9');
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    const res = await remove();
     expect(res.status).toBe(404);
   });
 });

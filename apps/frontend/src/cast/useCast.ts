@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
 import {
   copyFigure as postFigureCopy,
+  deleteFigure as sendFigureDelete,
   fetchFigures,
   reorderFigures as putFigureOrder,
   updateFigure,
@@ -29,6 +30,7 @@ export type CastActions = {
   copyFigure: (copy: FigureCopy) => Promise<Figure>;
   renameFigure: (figureId: string, name: string | null) => Promise<void>;
   reorderFigures: (figureIds: string[]) => Promise<void>;
+  deleteFigure: (figureId: string) => Promise<void>;
 };
 
 export function useCast(schoolId: string, danceId: string): { state: CastState } & CastActions {
@@ -111,7 +113,27 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     change(({ cast }) => ({ cast, figures }));
   }
 
-  return { state, add, save, give, remove, copyFigure, renameFigure, reorderFigures };
+  async function deleteFigure(figureId: string) {
+    await sendFigureDelete(schoolId, danceId, figureId);
+    change(({ cast, figures }) => ({
+      cast,
+      figures: figures
+        .filter(({ id }) => id !== figureId)
+        .map((figure, order) => ({ ...figure, order })),
+    }));
+  }
+
+  return {
+    state,
+    add,
+    save,
+    give,
+    remove,
+    copyFigure,
+    renameFigure,
+    reorderFigures,
+    deleteFigure,
+  };
 }
 
 // Mirrors the server, which shifts every later figure up by one.

@@ -99,6 +99,24 @@ schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res)
   res.json({ figure: toFigure(figure) } satisfies FigureResponse);
 });
 
+schoolFiguresRouter.delete('/dances/:danceId/figures/:figureId', async (req, res) => {
+  if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  const result = await deleteFigure(req.params.danceId, req.params.figureId);
+  if (result === 'not_found') {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  if (result === 'last_figure') {
+    res.status(409).json({ error: 'last_figure' });
+    return;
+  }
+  res.status(204).end();
+});
+
 // The copy keeps every position but not the name, so it shows as "Figure N" until renamed.
 function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
   return prisma.$transaction(async (tx) => {
@@ -111,7 +129,7 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
     const { _max } = await tx.figure.aggregate({ where: { danceId }, _max: { order: true } });
     const last = _max.order ?? source.order;
     const order = placement === 'end' ? last + 1 : source.order + 1;
-    if (order <= last) await makeRoom(tx, danceId, { from: order, last });
+    if (order <= last) await shiftOrders(tx, danceId, { from: order, last, by: 1 });
 
     return tx.figure.create({
       data: { danceId, order, positions: { create: source.positions } },
@@ -140,13 +158,38 @@ function reorderFigures(danceId: string, { figureIds }: FigureOrder) {
   });
 }
 
+type DeleteResult = 'deleted' | 'not_found' | 'last_figure';
+
+// A dance always keeps at least one figure; the later figures close the gap.
+function deleteFigure(danceId: string, figureId: string): Promise<DeleteResult> {
+  return prisma.$transaction(async (tx) => {
+    const figure = await tx.figure.findFirst({ where: { id: figureId, danceId } });
+    if (!figure) return 'not_found';
+    const { _count, _max } = await tx.figure.aggregate({
+      where: { danceId },
+      _count: true,
+      _max: { order: true },
+    });
+    if (_count === 1) return 'last_figure';
+
+    await tx.figure.delete({ where: { id: figureId } });
+    const last = _max.order ?? figure.order;
+    if (figure.order < last) {
+      await shiftOrders(tx, danceId, { from: figure.order + 1, last, by: -1 });
+    }
+    return 'deleted';
+  });
+}
+
+type Shift = { from: number; last: number; by: 1 | -1 };
+
 // Postgres checks the unique (danceId, order) row by row, so shifting by one in a
 // single update would collide. The figures from `from` on first move past the last
-// order, then come back down to one place later than they were.
-async function makeRoom(
+// order, then come back to one place later (by 1) or earlier (by -1) than they were.
+async function shiftOrders(
   tx: Prisma.TransactionClient,
   danceId: string,
-  { from, last }: { from: number; last: number },
+  { from, last, by }: Shift,
 ) {
   const away = last + 1;
   await tx.figure.updateMany({
@@ -155,7 +198,7 @@ async function makeRoom(
   });
   await tx.figure.updateMany({
     where: { danceId, order: { gte: from + away } },
-    data: { order: { decrement: away - 1 } },
+    data: { order: { decrement: away - by } },
   });
 }
 
