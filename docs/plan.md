@@ -148,7 +148,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
 - ✅ **C5.** Dancers appear as 3D ballerinas in the 3D view and as colored circles in the 2D plan; the label can show name, role or both.
 - ✅ **C6.** Dancers can be colored by their own color or by role, chosen per dance.
-- **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
+- ✅ **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
 - **C8.** Dancers are placed by dragging, in both views; several can be selected and moved together. In 3D the finger moves the ballerina's feet across the floor.
 - **C9.** Optional snapping to guide lines.
 - **C10.** Layout tools for a selection: mirror left/right, align in a line, spread evenly, arrange in a circle. *(after the MVP)*
@@ -375,7 +375,7 @@ First milestone to show real teachers.
 - ⬜ **9.1 3D stage and ballerinas** · after 2.2
   - Done when: Cast dancers stand as 3D ballerinas on the perspective stage, colored by dancer or role, with readable labels; one tap switches to the 2D plan
   - Requirements: L1–L6, C1 (3D), C5 (3D) · Screens: `Stage3D`, `DanceEditorIPad`
-- ⬜ **2.3 Figures** · after 2.2
+- ✅ **2.3 Figures** · after 2.2
   - Done when: Add, duplicate, rename, reorder, delete figures
   - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
 - ⬜ **2.4 Dragging and selection** · after 2.3, 9.1
