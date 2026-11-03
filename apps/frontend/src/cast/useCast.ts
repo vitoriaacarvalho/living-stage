@@ -4,6 +4,7 @@ import type {
   CastMemberUpdate,
   Figure,
   FigureCopy,
+  Position,
 } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
@@ -11,6 +12,7 @@ import {
   copyFigure as postFigureCopy,
   deleteFigure as sendFigureDelete,
   fetchFigures,
+  moveFigurePositions,
   reorderFigures as putFigureOrder,
   updateFigure,
 } from '../api/figures.ts';
@@ -31,6 +33,7 @@ export type CastActions = {
   renameFigure: (figureId: string, name: string | null) => Promise<void>;
   reorderFigures: (figureIds: string[]) => Promise<void>;
   deleteFigure: (figureId: string) => Promise<void>;
+  movePositions: (figureId: string, positions: Position[]) => Promise<void>;
 };
 
 export function useCast(schoolId: string, danceId: string): { state: CastState } & CastActions {
@@ -130,6 +133,22 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
+  // Shown right away; only the moved dancers go back if saving fails.
+  async function movePositions(figureId: string, positions: Position[]) {
+    const figure =
+      state.status === 'ready' ? state.figures.find(({ id }) => id === figureId) : null;
+    const previous = (figure?.positions ?? []).filter(({ castMemberId }) =>
+      positions.some((moved) => moved.castMemberId === castMemberId),
+    );
+    change(({ cast, figures }) => ({ cast, figures: placed(figures, figureId, positions) }));
+    try {
+      await moveFigurePositions(schoolId, danceId, figureId, { positions });
+    } catch (error) {
+      change(({ cast, figures }) => ({ cast, figures: placed(figures, figureId, previous) }));
+      throw error;
+    }
+  }
+
   return {
     state,
     add,
@@ -140,6 +159,7 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     renameFigure,
     reorderFigures,
     deleteFigure,
+    movePositions,
   };
 }
 
@@ -158,4 +178,19 @@ function inOrder(figures: Figure[], figureIds: string[]) {
     const figure = figures.find((each) => each.id === id);
     return figure ? [{ ...figure, order }] : [];
   });
+}
+
+function placed(figures: Figure[], figureId: string, positions: Position[]) {
+  return figures.map((figure) =>
+    figure.id === figureId
+      ? {
+          ...figure,
+          positions: figure.positions.map(
+            (position) =>
+              positions.find(({ castMemberId }) => castMemberId === position.castMemberId) ??
+              position,
+          ),
+        }
+      : figure,
+  );
 }

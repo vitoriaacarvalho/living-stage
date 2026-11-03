@@ -9,6 +9,11 @@
   aspect-ratio: var(--plan-aspect);
 }
 
+.editable {
+  touch-action: none;
+  user-select: none;
+}
+
 .svg {
   display: block;
   width: 100%;
@@ -82,7 +87,24 @@
   pointer-events: none;
 }
 
+.hit {
+  position: absolute;
+  top: calc(var(--dancer-hit) / -2);
+  left: calc(var(--dancer-hit) / -2);
+  z-index: 1;
+  width: var(--dancer-hit);
+  height: var(--dancer-hit);
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.hit:active {
+  cursor: grabbing;
+}
+
 .dot {
+  position: relative;
   flex: none;
   width: var(--dancer-dot-ipad);
   height: var(--dancer-dot-ipad);
@@ -90,6 +112,18 @@
   border-radius: 50%;
   background: var(--dot);
   box-shadow: 0 0 0 2px var(--stage-ink);
+}
+
+.selected .dot::after {
+  content: '';
+  position: absolute;
+  inset: -7.25px;
+  border: 2.5px solid var(--stage-accent);
+  border-radius: 50%;
+}
+
+.selected .label {
+  margin-top: 6px;
 }
 
 .label {

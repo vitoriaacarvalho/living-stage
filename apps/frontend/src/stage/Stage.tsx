@@ -7,9 +7,12 @@ import {
   UPSTAGE_WING_DEPTH,
   type DancerColor,
 } from '@living-stage/shared';
-import type { CSSProperties } from 'react';
+import { type CSSProperties, type PointerEvent, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import styles from './Stage.module.css';
+import { type StageEditing, useDancerDrag } from './useDancerDrag.ts';
+
+export type { StageEditing } from './useDancerDrag.ts';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
 const upstageWing = UPSTAGE_WING_DEPTH * STAGE_DEPTH_M;
@@ -39,9 +42,17 @@ export type StageDancer = {
   open: boolean;
 };
 
-export type StageProps = { showGuides: boolean; dancers?: StageDancer[] };
+// Without edit the plan is only shown, as in print and thumbnails.
+export type StageProps = { showGuides: boolean; dancers?: StageDancer[]; edit?: StageEditing };
 
-export function Stage({ showGuides, dancers = [] }: StageProps) {
+export function Stage({ showGuides, dancers = [], edit }: StageProps) {
+  const planRef = useRef<HTMLDivElement>(null);
+  const { shown, handlers } = useDancerDrag({ dancers, edit, planRef });
+
+  function pressFloor() {
+    if (edit && edit.selectedIds.length > 0) edit.onSelect([]);
+  }
+
   return (
     <div
       className={styles.stage}
@@ -49,7 +60,11 @@ export function Stage({ showGuides, dancers = [] }: StageProps) {
       role="img"
       aria-label="Stage seen from above, audience at the bottom"
     >
-      <div className={styles.plan}>
+      <div
+        ref={planRef}
+        className={edit ? `${styles.plan} ${styles.editable}` : styles.plan}
+        onPointerDown={pressFloor}
+      >
         <svg
           className={styles.svg}
           viewBox={`${-sideWing} ${-upstageWing} ${planWidth} ${planHeight}`}
@@ -67,8 +82,13 @@ export function Stage({ showGuides, dancers = [] }: StageProps) {
         <span className={`${styles.zone} ${styles.upstage}`}>Upstage</span>
         <span className={`${styles.zone} ${styles.leftWing}`}>Wing</span>
         <span className={`${styles.zone} ${styles.rightWing}`}>Wing</span>
-        {dancers.map((dancer) => (
-          <DancerDot key={dancer.id} dancer={dancer} />
+        {shown.map((dancer) => (
+          <DancerDot
+            key={dancer.id}
+            dancer={dancer}
+            selected={edit?.selectedIds.includes(dancer.id) ?? false}
+            hit={edit && handlers(dancer)}
+          />
         ))}
       </div>
       <div className={styles.audience}>
@@ -104,7 +124,14 @@ export function isOffStage({ x, y }: StageDancer): boolean {
   return x < 0 || x > 1 || y < 0;
 }
 
-function DancerDot({ dancer }: { dancer: StageDancer }) {
+type DotHit = Record<
+  'onPointerDown' | 'onPointerMove' | 'onPointerUp' | 'onPointerCancel',
+  (event: PointerEvent<HTMLElement>) => void
+>;
+
+type DancerDotProps = { dancer: StageDancer; selected: boolean; hit: DotHit | undefined };
+
+function DancerDot({ dancer, selected, hit }: DancerDotProps) {
   const spot = {
     left: `${((dancer.x * STAGE_WIDTH_M + sideWing) / planWidth) * 100}%`,
     top: `${((dancer.y * STAGE_DEPTH_M + upstageWing) / planHeight) * 100}%`,
@@ -114,9 +141,11 @@ function DancerDot({ dancer }: { dancer: StageDancer }) {
     styles.dancer,
     isOffStage(dancer) && styles.offStage,
     dancer.open && styles.open,
+    selected && styles.selected,
   ];
   return (
     <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
+      {hit && <span className={styles.hit} data-testid="dancer-hit" {...hit} />}
       <span className={styles.dot} />
       <span className={styles.label}>{dancer.label}</span>
       {dancer.role && <span className={styles.role}>{dancer.role}</span>}

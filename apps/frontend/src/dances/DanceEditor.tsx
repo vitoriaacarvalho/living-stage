@@ -1,5 +1,5 @@
-import type { Dance, FigureCopy } from '@living-stage/shared';
-import { type CSSProperties, lazy, Suspense, useState } from 'react';
+import type { Dance, FigureCopy, Position } from '@living-stage/shared';
+import { type CSSProperties, lazy, Suspense, useEffect, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
@@ -47,10 +47,29 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [selectedFigureId, setSelectedFigureId] = useState<string | null>(null);
   const [figurePanelOpen, setFigurePanelOpen] = useState(false);
   const [stageView, setStageView] = useState<StageViewMode>('3d');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const castIds = cast.status === 'ready' ? cast.cast.map(({ id }) => id) : [];
+  // The whole selection goes once one of its dancers leaves the cast.
+  const selection = selectedIds.every((id) => castIds.includes(id)) ? selectedIds : [];
   const figures = cast.status === 'ready' ? cast.figures : [];
   const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
   const dancers =
     cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
+
+  useEffect(() => {
+    if (selection.length === 0) return;
+    function clearOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSelectedIds([]);
+    }
+    document.addEventListener('keydown', clearOnEscape);
+    return () => document.removeEventListener('keydown', clearOnEscape);
+  }, [selection.length]);
+
+  // A failed save puts the dancers back, which is the only feedback needed.
+  function moveDancers(positions: Position[]) {
+    if (!figure) return;
+    castActions.movePositions(figure.id, positions).catch(() => {});
+  }
 
   // Tapping the selected figure again opens its panel. The id is kept even then, since
   // the first figure is only selected by default and may be moved away from first place.
@@ -133,7 +152,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               </Suspense>
             ) : (
               <div className={styles.stageFit}>
-                <Stage showGuides={dance.showGuides} dancers={dancers} />
+                <Stage
+                  showGuides={dance.showGuides}
+                  dancers={dancers}
+                  edit={{ selectedIds: selection, onSelect: setSelectedIds, onMove: moveDancers }}
+                />
               </div>
             )}
           </div>

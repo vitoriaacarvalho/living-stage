@@ -5,6 +5,7 @@ import type {
   FigureResponse,
   FigureUpdate,
   ListFiguresResponse,
+  PositionsUpdate,
 } from '@living-stage/shared';
 
 export async function fetchFigures(
@@ -62,6 +63,25 @@ export async function reorderFigures(
   if (!res.ok) throw new Error(`PUT figure order answered ${res.status}`);
   const body: ListFiguresResponse = await res.json();
   return body.figures;
+}
+
+export async function moveFigurePositions(
+  schoolId: string,
+  danceId: string,
+  figureId: string,
+  update: PositionsUpdate,
+): Promise<Figure> {
+  const res = await fetch(
+    `/api/schools/${schoolId}/dances/${danceId}/figures/${figureId}/positions`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(update),
+    },
+  );
+  if (!res.ok) throw new Error(`PUT figure positions answered ${res.status}`);
+  const body: FigureResponse = await res.json();
+  return body.figure;
 }
 
 export async function deleteFigure(

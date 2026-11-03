@@ -1,11 +1,17 @@
 import type { Dance } from '@living-stage/shared';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { addCastMember, fetchCast } from '../api/cast.ts';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { addCastMember, fetchCast, removeCastMember } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { copyFigure, deleteFigure, fetchFigures, updateFigure } from '../api/figures.ts';
+import {
+  copyFigure,
+  deleteFigure,
+  fetchFigures,
+  moveFigurePositions,
+  updateFigure,
+} from '../api/figures.ts';
 import type { StageProps } from '../stage/Stage.tsx';
 import { DanceEditor } from './DanceEditor.tsx';
 
@@ -24,13 +30,18 @@ vi.mock('../stage/Stage3D.tsx', () => ({
   ),
 }));
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
-vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn(), addCastMember: vi.fn() }));
+vi.mock('../api/cast.ts', () => ({
+  fetchCast: vi.fn(),
+  addCastMember: vi.fn(),
+  removeCastMember: vi.fn(),
+}));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
 vi.mock('../api/figures.ts', () => ({
   fetchFigures: vi.fn(),
   copyFigure: vi.fn(),
   updateFigure: vi.fn(),
   deleteFigure: vi.fn(),
+  moveFigurePositions: vi.fn(),
 }));
 
 const kitri: Dance = {
@@ -468,5 +479,119 @@ describe('deleting figures', () => {
   test('goes back to the cast list once the figure is deleted', async () => {
     await deleteFigureNamed('Middle');
     expect(await screen.findByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
+  });
+});
+
+describe('dragging on the 2D plan', () => {
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      DOMRect.fromRect({ width: 1500, height: 900 }),
+    );
+    vi.mocked(moveFigurePositions)
+      .mockReset()
+      .mockReturnValue(new Promise(() => {}));
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: 'Entrance',
+        positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.25 }],
+      },
+    ]);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function openPlan() {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(
+      within(screen.getByRole('group', { name: 'Stage view' })).getByRole('button', {
+        name: '2D plan',
+      }),
+    );
+    return user;
+  }
+
+  function claraDot() {
+    return screen.getByTestId('dancer');
+  }
+
+  function tapClara() {
+    const hit = screen.getByTestId('dancer-hit');
+    fireEvent.pointerDown(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+  }
+
+  test('saves a dropped dancer in the figure shown', async () => {
+    await openPlan();
+    const hit = screen.getByTestId('dancer-hit');
+    fireEvent.pointerDown(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(hit, { pointerId: 1, clientX: 220, clientY: 100 });
+    fireEvent.pointerUp(hit, { pointerId: 1, clientX: 220, clientY: 100 });
+    expect(moveFigurePositions).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-1', {
+      positions: [{ castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 }],
+    });
+  });
+
+  test('clears the selection on Escape', async () => {
+    const user = await openPlan();
+    tapClara();
+    await user.keyboard('{Escape}');
+    expect(claraDot()).not.toHaveClass(/selected/);
+  });
+
+  test('keeps the selection on another figure', async () => {
+    const user = await openPlan();
+    tapClara();
+    await user.click(screen.getByRole('button', { name: 'Entrance' }));
+    expect(claraDot()).toHaveClass(/selected/);
+  });
+
+  test('keeps the selection across the 3D stage and back', async () => {
+    const user = await openPlan();
+    tapClara();
+    const views = within(screen.getByRole('group', { name: 'Stage view' }));
+    await user.click(views.getByRole('button', { name: '3D stage' }));
+    await screen.findByRole('img', { name: 'Stage seen from the audience' });
+    await user.click(views.getByRole('button', { name: '2D plan' }));
+    expect(claraDot()).toHaveClass(/selected/);
+  });
+
+  test('keeps the selection when another dancer leaves the cast', async () => {
+    vi.mocked(removeCastMember).mockResolvedValue();
+    vi.mocked(fetchCast).mockResolvedValue([
+      { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: null },
+      { id: 'cast-2', dancer: { id: 'dancer-2', name: 'Odile', color: 5 }, role: null },
+    ]);
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [
+          { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
+          { castMemberId: 'cast-2', x: 0.25, y: 0.5 },
+        ],
+      },
+    ]);
+    const user = await openPlan();
+    const [clara] = screen.getAllByTestId('dancer-hit');
+    fireEvent.pointerDown(clara!, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(clara!, { pointerId: 1, clientX: 100, clientY: 100 });
+    await user.click(screen.getByRole('button', { name: 'Edit Odile' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.getAllByTestId('dancer')).toHaveLength(1));
+    expect(screen.getByTestId('dancer')).toHaveClass(/selected/);
   });
 });

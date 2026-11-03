@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Stage } from './Stage.tsx';
 
 test('is named as the stage seen from above', () => {
@@ -107,4 +107,131 @@ test('draws an open spot apart from the dancers', () => {
     />,
   );
   expect(screen.getByTestId('dancer')).toHaveClass(/open/);
+});
+
+describe('editing', () => {
+  const odile = { ...clara, id: 'cast-2', dancerId: 'dancer-2', label: 'Odile', x: 0.25 };
+
+  function editing(selectedIds: string[] = []) {
+    return { selectedIds, onSelect: vi.fn(), onMove: vi.fn() };
+  }
+
+  function hitOf(label: string) {
+    const dot = screen.getByText(label).closest('[data-testid="dancer"]') as HTMLElement;
+    return within(dot).getByTestId('dancer-hit');
+  }
+
+  function dragBy(target: HTMLElement, dx: number, dy: number, pointerId = 1) {
+    fireEvent.pointerDown(target, { pointerId, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(target, { pointerId, clientX: 100 + dx, clientY: 100 + dy });
+    fireEvent.pointerUp(target, { pointerId, clientX: 100 + dx, clientY: 100 + dy });
+  }
+
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      DOMRect.fromRect({ width: 1500, height: 900 }),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('gives no dancer a drag area when the plan is only shown', () => {
+    render(<Stage showGuides dancers={[clara]} />);
+    expect(screen.queryByTestId('dancer-hit')).not.toBeInTheDocument();
+  });
+
+  test('selects a dancer when she is tapped', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 0, 0);
+    expect(edit.onSelect).toHaveBeenLastCalledWith(['cast-1']);
+  });
+
+  test('replaces the selection with the dancer tapped', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    dragBy(hitOf('Odile'), 0, 0);
+    expect(edit.onSelect).toHaveBeenLastCalledWith(['cast-2']);
+  });
+
+  test('rings a selected dancer', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    expect(screen.getByTestId('dancer')).toHaveClass(/selected/);
+  });
+
+  test('does not ring a dancer who is not selected', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    expect(screen.getByTestId('dancer')).not.toHaveClass(/selected/);
+  });
+
+  test('clears the selection when the floor is tapped', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    fireEvent.pointerDown(screen.getByRole('img').firstElementChild!, { pointerId: 1 });
+    expect(edit.onSelect).toHaveBeenCalledWith([]);
+  });
+
+  test('moves a dragged dancer by the distance dragged', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 120, 80);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: expect.closeTo(0.6) },
+    ]);
+  });
+
+  test('keeps the dancer under the finger while dragging', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(hitOf('Clara'), { pointerId: 1, clientX: 220, clientY: 100 });
+    expect(parseFloat(screen.getByTestId('dancer').style.left)).toBeCloseTo(58);
+  });
+
+  test('selects a dancer who was not selected before dragging her', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    dragBy(hitOf('Clara'), 120, 0);
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('moves only the dragged dancer when she was not selected', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    dragBy(hitOf('Clara'), 120, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ castMemberId: 'cast-1' })]);
+  });
+
+  test('treats a press that barely moves as a tap', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 2, 2);
+    expect(edit.onMove).not.toHaveBeenCalled();
+  });
+
+  test('stops a dancer at the downstage edge', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 0, 800);
+    expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ y: 1 })]);
+  });
+
+  test('ignores a second finger while one dancer is dragged', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
+    dragBy(hitOf('Odile'), 120, 0, 2);
+    expect(edit.onMove).not.toHaveBeenCalled();
+  });
+
+  test('moves nobody when the drag is cancelled', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(hitOf('Clara'), { pointerId: 1, clientX: 220, clientY: 100 });
+    fireEvent.pointerCancel(hitOf('Clara'), { pointerId: 1 });
+    expect(screen.getByTestId('dancer')).toHaveStyle({ left: '50%' });
+  });
 });
