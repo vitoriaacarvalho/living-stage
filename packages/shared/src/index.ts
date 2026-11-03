@@ -74,6 +74,15 @@ export {
 } from './invite.ts';
 export type { MeResponse } from './me.ts';
 export {
+  PLAN_BOUNDS,
+  SNAP_DISTANCE_M,
+  isInsidePlan,
+  moveGroup,
+  parsePositionsUpdate,
+  snapToGuides,
+  type PositionsUpdate,
+} from './placement.ts';
+export {
   SCHOOL_NAME_MAX_LENGTH,
   parseSchoolName,
   type CreateSchoolRequest,
