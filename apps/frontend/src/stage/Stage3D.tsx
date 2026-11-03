@@ -11,13 +11,14 @@ import {
   ballerinaLook,
   stageToFloor,
 } from '@living-stage/shared';
-import { Line } from '@react-three/drei';
+import { Html, Line } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useLayoutEffect, useState } from 'react';
+import { type RefObject, createContext, use, useLayoutEffect, useRef, useState } from 'react';
 import { type PerspectiveCamera, Vector3 } from 'three';
 import { Ballerina } from './Ballerina.tsx';
 import { cssToken } from './css-token.ts';
 import { isOffStage, type StageDancer, type StageProps } from './Stage.tsx';
+import stageStyles from './Stage.module.css';
 import styles from './Stage3D.module.css';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
@@ -31,6 +32,7 @@ const legHeight = 4;
 const legDepths = [0.1, 0.45, 0.8];
 
 const figureHeight = 2;
+const labelHeight = 1.62;
 const outerX = halfWidth + sideWing;
 const upstageZ = -halfDepth - upstageWing;
 const framedPoints = [-outerX, outerX].flatMap((x) =>
@@ -61,29 +63,41 @@ function palette() {
 
 type Palette = ReturnType<typeof palette>;
 
+// Labels mount into the stage itself. Left to find their own parent, drei's Html
+// can mount before the canvas connects and then lose its content when it moves.
+const LabelLayer = createContext<RefObject<HTMLElement> | null>(null);
+
 export function Stage3D({ showGuides, dancers = [] }: StageProps) {
   const [colors] = useState(palette);
+  const labelLayer = useRef<HTMLDivElement>(null!);
   return (
-    <div className={styles.stage} role="img" aria-label="Stage seen from the audience">
+    <div
+      ref={labelLayer}
+      className={styles.stage}
+      role="img"
+      aria-label="Stage seen from the audience"
+    >
       <Canvas flat frameloop="demand" dpr={[1, 2]} camera={{ fov: 35, near: 0.5, far: 80 }}>
         <color attach="background" args={[colors.wing]} />
-        <FittedCamera />
-        <Floor colors={colors} />
-        {showGuides && <Guides color={colors.line} />}
-        <Legs colors={colors} />
-        <hemisphereLight args={[colors.light, colors.floor, 1.6]} />
-        <directionalLight position={[2, 6, 5]} intensity={2.2} />
-        {dancers.map(
-          (dancer) =>
-            dancer.dancerId !== null && (
-              <DancerFigure
-                key={dancer.id}
-                dancer={dancer}
-                dancerId={dancer.dancerId}
-                colors={colors}
-              />
-            ),
-        )}
+        <LabelLayer value={labelLayer}>
+          <FittedCamera />
+          <Floor colors={colors} />
+          {showGuides && <Guides color={colors.line} />}
+          <Legs colors={colors} />
+          <hemisphereLight args={[colors.light, colors.floor, 1.6]} />
+          <directionalLight position={[2, 6, 5]} intensity={2.2} />
+          {dancers.map(
+            (dancer) =>
+              dancer.dancerId !== null && (
+                <DancerFigure
+                  key={dancer.id}
+                  dancer={dancer}
+                  dancerId={dancer.dancerId}
+                  colors={colors}
+                />
+              ),
+          )}
+        </LabelLayer>
       </Canvas>
     </div>
   );
@@ -101,18 +115,43 @@ function DancerFigure({
 }) {
   const { x, z } = stageToFloor(dancer);
   const look = ballerinaLook(dancerId);
+  const inWing = isOffStage(dancer);
   return (
-    <Ballerina
-      position={[x, 0, z]}
-      inWing={isOffStage(dancer)}
-      colors={{
-        costume: dancer.color === null ? colors.edge : colors.dancers[dancer.color - 1]!,
-        skin: colors.skins[look.skin - 1]!,
-        hair: colors.hairs[look.hair - 1]!,
-        tights: colors.tights,
-        shadow: colors.wing,
-      }}
-    />
+    <>
+      <Ballerina
+        position={[x, 0, z]}
+        inWing={inWing}
+        colors={{
+          costume: dancer.color === null ? colors.edge : colors.dancers[dancer.color - 1]!,
+          skin: colors.skins[look.skin - 1]!,
+          hair: colors.hairs[look.hair - 1]!,
+          tights: colors.tights,
+          shadow: colors.wing,
+        }}
+      />
+      <DancerLabel dancer={dancer} position={[x, labelHeight, z]} inWing={inWing} />
+    </>
+  );
+}
+
+// Real DOM over the canvas, so a label is never hidden behind a figure.
+function DancerLabel({
+  dancer,
+  position,
+  inWing,
+}: {
+  dancer: StageDancer;
+  position: [x: number, y: number, z: number];
+  inWing: boolean;
+}) {
+  const layer = use(LabelLayer)!;
+  return (
+    <Html position={position} portal={layer}>
+      <div className={`${styles.label} ${inWing ? styles.inWing : ''}`}>
+        <span className={stageStyles.label}>{dancer.label}</span>
+        {dancer.role && <span className={stageStyles.role}>{dancer.role}</span>}
+      </div>
+    </Html>
   );
 }
 
