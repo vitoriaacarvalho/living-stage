@@ -61,6 +61,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Frontend | React + Vite | Single-page app, responsive, installable as a PWA |
 | Stage rendering | 3D: Three.js through React Three Fiber (`@react-three/fiber`, `@react-three/drei`). 2D plan: SVG rendered by React | Both views read the same normalized stage coordinates. The 3D view is a WebGL canvas; the 2D plan keeps a fixed `viewBox`. No game engine |
 | Touch and gestures | Pointer Events + `@use-gesture/react` | Drag, multi-select, pinch-to-zoom, pan; finger, mouse and Apple Pencil |
+| Reorderable lists | `@dnd-kit/core` + `@dnd-kit/sortable` | Drag to reorder figures, and later acts and dances (H3); touch, mouse and keyboard |
 | Animation | Custom `requestAnimationFrame` loop | Cubic Bézier paths with easing; the audio's current time drives the frame |
 | Audio waveform | `wavesurfer.js` | Waveform, playhead, regions for loops |
 | Backend | Node + Express | REST API |

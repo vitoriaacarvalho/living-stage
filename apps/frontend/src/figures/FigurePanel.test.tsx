@@ -7,17 +7,16 @@ const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
 const finale = { id: 'figure-2', order: 1, name: 'Finale', positions: [] };
 const failing = () => vi.fn().mockRejectedValue(new Error('figure request answered 500'));
 
-function renderPanel(changes: Partial<FigureActions> = {}, figure = entrance) {
+function renderPanel(changes: Partial<FigureActions> = {}) {
   const actions = {
     rename: vi.fn().mockResolvedValue(undefined),
-    move: vi.fn().mockResolvedValue(undefined),
     remove: vi.fn().mockResolvedValue(undefined),
     ...changes,
   };
   const onClose = vi.fn();
   render(
     <FigurePanel
-      figure={figure}
+      figure={entrance}
       figures={[entrance, finale]}
       actions={actions}
       onClose={onClose}
@@ -68,40 +67,6 @@ test('stays open when the name cannot be saved', async () => {
   expect(onClose).not.toHaveBeenCalled();
 });
 
-test('moves the figure later', async () => {
-  const { actions, user } = renderPanel();
-  await user.click(screen.getByRole('button', { name: 'Move later' }));
-  expect(actions.move).toHaveBeenCalledWith(1);
-});
-
-test('moves the figure earlier', async () => {
-  const { actions, user } = renderPanel({}, finale);
-  await user.click(screen.getByRole('button', { name: 'Move earlier' }));
-  expect(actions.move).toHaveBeenCalledWith(-1);
-});
-
-test('stays open after moving, to move again', async () => {
-  const { onClose, user } = renderPanel();
-  await user.click(screen.getByRole('button', { name: 'Move later' }));
-  expect(onClose).not.toHaveBeenCalled();
-});
-
-test('cannot move the first figure earlier', () => {
-  renderPanel();
-  expect(screen.getByRole('button', { name: 'Move earlier' })).toBeDisabled();
-});
-
-test('cannot move the last figure later', () => {
-  renderPanel({}, finale);
-  expect(screen.getByRole('button', { name: 'Move later' })).toBeDisabled();
-});
-
-test('says when the figure cannot be moved', async () => {
-  const { user } = renderPanel({ move: failing() });
-  await user.click(screen.getByRole('button', { name: 'Move later' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Could not move the figure');
-});
-
 async function askToDelete() {
   const panel = renderPanel();
   await panel.user.click(screen.getByRole('button', { name: 'Delete' }));
@@ -137,7 +102,7 @@ test('offers no delete for the only figure of the dance', () => {
     <FigurePanel
       figure={entrance}
       figures={[entrance]}
-      actions={{ rename: vi.fn(), move: vi.fn(), remove: vi.fn() }}
+      actions={{ rename: vi.fn(), remove: vi.fn() }}
       onClose={vi.fn()}
     />,
   );

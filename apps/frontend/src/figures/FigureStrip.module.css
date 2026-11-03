@@ -31,3 +31,13 @@
   background: var(--primary-soft);
   color: var(--primary-strong);
 }
+
+.lifted {
+  position: relative;
+  z-index: 1;
+}
+
+.lifted .chip {
+  box-shadow: var(--shadow-card);
+  cursor: grabbing;
+}

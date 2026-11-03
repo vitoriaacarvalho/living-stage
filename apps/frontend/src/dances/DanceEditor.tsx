@@ -4,7 +4,6 @@ import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
-import { movedOrder } from '../figures/figure-order.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
@@ -114,7 +113,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             </div>
           </div>
           {figure && (
-            <FigureStrip figures={figures} selectedId={figure.id} onSelect={selectFigure} />
+            <FigureStrip
+              figures={figures}
+              selectedId={figure.id}
+              onSelect={selectFigure}
+              onReorder={castActions.reorderFigures}
+            />
           )}
         </main>
         {figurePanelOpen && figure ? (
@@ -124,7 +128,6 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             figures={figures}
             actions={{
               rename: (name) => castActions.renameFigure(figure.id, name),
-              move: (step) => castActions.reorderFigures(movedOrder(figures, figure.id, step)),
               remove: () => deleteFigure(figure.id),
             }}
             onClose={() => setFigurePanelOpen(false)}

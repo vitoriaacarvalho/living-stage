@@ -6,12 +6,9 @@ import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { TextField } from '../ui/TextField.tsx';
 import { figureLabel } from './figure-label.ts';
-import { canMove, type Step } from './figure-order.ts';
-import ownStyles from './FigurePanel.module.css';
 
 export type FigureActions = {
   rename: (name: string | null) => Promise<void>;
-  move: (step: Step) => Promise<void>;
   remove: () => Promise<void>;
 };
 
@@ -49,10 +46,6 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
     }, 'Could not save the name. Try again.');
   }
 
-  function move(step: Step) {
-    run(() => actions.move(step), 'Could not move the figure. Try again.');
-  }
-
   return (
     <aside className={panelStyles.panel} aria-label="Figure">
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -68,22 +61,6 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
           maxLength={FIGURE_NAME_MAX_LENGTH}
           autoComplete="off"
         />
-        <div className={ownStyles.moves}>
-          <Button
-            variant="secondary"
-            disabled={pending || !canMove(figures, figure.id, -1)}
-            onClick={() => move(-1)}
-          >
-            Move earlier
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={pending || !canMove(figures, figure.id, 1)}
-            onClick={() => move(1)}
-          >
-            Move later
-          </Button>
-        </div>
         {error && (
           <p role="alert" className={formStyles.error}>
             {error}

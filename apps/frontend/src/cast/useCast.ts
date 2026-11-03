@@ -108,9 +108,16 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
+  // Shown right away; put back if saving fails.
   async function reorderFigures(figureIds: string[]) {
-    const figures = await putFigureOrder(schoolId, danceId, { figureIds });
-    change(({ cast }) => ({ cast, figures }));
+    const previous = state.status === 'ready' ? state.figures : [];
+    change(({ cast, figures }) => ({ cast, figures: inOrder(figures, figureIds) }));
+    try {
+      await putFigureOrder(schoolId, danceId, { figureIds });
+    } catch (error) {
+      change(({ cast }) => ({ cast, figures: previous }));
+      throw error;
+    }
   }
 
   async function deleteFigure(figureId: string) {
@@ -144,4 +151,11 @@ function insertFigure(figures: Figure[], figure: Figure) {
     figure,
     ...later.map((each) => ({ ...each, order: each.order + 1 })),
   ];
+}
+
+function inOrder(figures: Figure[], figureIds: string[]) {
+  return figureIds.flatMap((id, order) => {
+    const figure = figures.find((each) => each.id === id);
+    return figure ? [{ ...figure, order }] : [];
+  });
 }
