@@ -2,11 +2,13 @@ import {
   parseFigureCopy,
   parseFigureOrder,
   parseFigureUpdate,
+  parsePositionsUpdate,
   type Figure,
   type FigureCopy,
   type FigureOrder,
   type FigureResponse,
   type ListFiguresResponse,
+  type PositionsUpdate,
 } from '@living-stage/shared';
 import { Router } from 'express';
 import { prisma } from '../db.ts';
@@ -99,6 +101,29 @@ schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res)
   res.json({ figure: toFigure(figure) } satisfies FigureResponse);
 });
 
+schoolFiguresRouter.put('/dances/:danceId/figures/:figureId/positions', async (req, res) => {
+  const update = parsePositionsUpdate(req.body);
+  if (!update) {
+    res.status(400).json({ error: 'invalid_positions' });
+    return;
+  }
+  if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  const result = await movePositions(req.params.danceId, req.params.figureId, update);
+  if (result === 'not_found') {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  if (result === 'unknown_cast') {
+    res.status(400).json({ error: 'invalid_positions' });
+    return;
+  }
+  res.json({ figure: toFigure(result) } satisfies FigureResponse);
+});
+
 schoolFiguresRouter.delete('/dances/:danceId/figures/:figureId', async (req, res) => {
   if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
     res.status(404).json({ error: 'not_found' });
@@ -153,6 +178,28 @@ function reorderFigures(danceId: string, { figureIds }: FigureOrder) {
     return tx.figure.findMany({
       where: { danceId },
       orderBy: { order: 'asc' },
+      include: { positions: positionFields },
+    });
+  });
+}
+
+// Every cast member has a spot in every figure, so each listed one is an update.
+function movePositions(danceId: string, figureId: string, { positions }: PositionsUpdate) {
+  return prisma.$transaction(async (tx) => {
+    const figure = await tx.figure.findFirst({ where: { id: figureId, danceId } });
+    if (!figure) return 'not_found';
+    const castMemberIds = positions.map(({ castMemberId }) => castMemberId);
+    const cast = await tx.castMember.count({ where: { danceId, id: { in: castMemberIds } } });
+    if (cast !== castMemberIds.length) return 'unknown_cast';
+
+    for (const { castMemberId, x, y } of positions) {
+      await tx.position.update({
+        where: { figureId_castMemberId: { figureId, castMemberId } },
+        data: { x, y },
+      });
+    }
+    return tx.figure.findUniqueOrThrow({
+      where: { id: figureId },
       include: { positions: positionFields },
     });
   });

@@ -23,6 +23,8 @@ vi.mock('../db.ts', () => ({
       findUniqueOrThrow: vi.fn(),
       create: vi.fn(),
     },
+    castMember: { count: vi.fn() },
+    position: { update: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -354,6 +356,108 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/order', () => {
   test('responds 404 for a dance of another school', async () => {
     vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
     const res = await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/positions', () => {
+  const moved = [
+    { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
+    { castMemberId: 'cast-2', x: 0.75, y: 0.25 },
+  ];
+
+  function move(body: unknown) {
+    return fetch(`${url}/figure-1/positions`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.castMember.count).mockReset().mockResolvedValue(2);
+    vi.mocked(prisma.position.update).mockReset();
+    vi.mocked(prisma.figure.findUniqueOrThrow)
+      .mockReset()
+      .mockResolvedValue({ ...firstFigure, positions: moved } as never);
+  });
+
+  test('responds with the figure and its new positions', async () => {
+    const res = await move({ positions: moved });
+    expect(await res.json()).toEqual({
+      figure: { id: 'figure-1', order: 0, name: null, positions: moved },
+    });
+  });
+
+  test('saves each listed position in this figure', async () => {
+    await move({ positions: moved });
+    expect(prisma.position.update).toHaveBeenCalledWith({
+      where: { figureId_castMemberId: { figureId: 'figure-1', castMemberId: 'cast-2' } },
+      data: { x: 0.75, y: 0.25 },
+    });
+  });
+
+  test('changes only the listed positions', async () => {
+    await move({ positions: moved });
+    expect(prisma.position.update).toHaveBeenCalledTimes(2);
+  });
+
+  test('looks the figure up in this dance', async () => {
+    await move({ positions: moved });
+    expect(prisma.figure.findFirst).toHaveBeenCalledWith({
+      where: { id: 'figure-1', danceId: 'dance-1' },
+    });
+  });
+
+  test('counts only cast members of this dance', async () => {
+    await move({ positions: moved });
+    expect(prisma.castMember.count).toHaveBeenCalledWith({
+      where: { danceId: 'dance-1', id: { in: ['cast-1', 'cast-2'] } },
+    });
+  });
+
+  test('responds 400 for a cast member who is not in this dance', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(1);
+    const res = await move({ positions: moved });
+    expect(res.status).toBe(400);
+  });
+
+  test('moves nobody when a cast member is not in this dance', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(1);
+    await move({ positions: moved });
+    expect(prisma.position.update).not.toHaveBeenCalled();
+  });
+
+  test('responds 400 for a spot outside the plan', async () => {
+    const res = await move({ positions: [{ castMemberId: 'cast-1', x: 0.5, y: 1.5 }] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 for a cast member listed twice', async () => {
+    const res = await move({ positions: [moved[0], { ...moved[0], x: 0.2 }] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 for an invalid body', async () => {
+    const res = await move({ positions: 'here' });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 404 for a figure of another dance', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(null);
+    const res = await move({ positions: moved });
+    expect(res.status).toBe(404);
+  });
+
+  test('moves nobody in a figure of another dance', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(null);
+    await move({ positions: moved });
+    expect(prisma.position.update).not.toHaveBeenCalled();
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    const res = await move({ positions: moved });
     expect(res.status).toBe(404);
   });
 });
