@@ -30,6 +30,7 @@ const geometry = {
 // role is a second line under the label.
 export type StageDancer = {
   id: string;
+  dancerId: string | null;
   label: string;
   role: string | null;
   color: DancerColor | null;
@@ -99,14 +100,21 @@ function GuidePair({ at, className }: { at: number; className?: string }) {
   );
 }
 
+export function isOffStage({ x, y }: StageDancer): boolean {
+  return x < 0 || x > 1 || y < 0;
+}
+
 function DancerDot({ dancer }: { dancer: StageDancer }) {
-  const offStage = dancer.x < 0 || dancer.x > 1 || dancer.y < 0;
   const spot = {
     left: `${((dancer.x * STAGE_WIDTH_M + sideWing) / planWidth) * 100}%`,
     top: `${((dancer.y * STAGE_DEPTH_M + upstageWing) / planHeight) * 100}%`,
     '--dot': dancer.color === null ? 'var(--stage-line)' : dancerColorVar(dancer.color),
   } as CSSProperties;
-  const classes = [styles.dancer, offStage && styles.offStage, dancer.open && styles.open];
+  const classes = [
+    styles.dancer,
+    isOffStage(dancer) && styles.offStage,
+    dancer.open && styles.open,
+  ];
   return (
     <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
       <span className={styles.dot} />

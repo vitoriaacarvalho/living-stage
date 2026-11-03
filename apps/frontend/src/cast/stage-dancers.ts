@@ -23,6 +23,7 @@ export function stageDancers(
     return [
       {
         id: castMember.id,
+        dancerId: castMember.dancer?.id ?? null,
         ...labels(castMember, labelMode),
         color: castMemberColor(castMember, colorMode, colors),
         x,

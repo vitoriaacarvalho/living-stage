@@ -1,18 +1,23 @@
 import {
+  DANCER_COLOR_COUNT,
+  HAIR_COUNT,
   SIDE_WING_DEPTH,
+  SKIN_COUNT,
   STAGE_CENTER,
   STAGE_DEPTH_M,
   STAGE_QUARTERS,
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
+  ballerinaLook,
   stageToFloor,
 } from '@living-stage/shared';
 import { Line } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useState } from 'react';
 import { type PerspectiveCamera, Vector3 } from 'three';
+import { Ballerina } from './Ballerina.tsx';
 import { cssToken } from './css-token.ts';
-import type { StageProps } from './Stage.tsx';
+import { isOffStage, type StageDancer, type StageProps } from './Stage.tsx';
 import styles from './Stage3D.module.css';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
@@ -36,18 +41,27 @@ const cameraElevation = (30 * Math.PI) / 180;
 const cameraTarget = new Vector3(0, 0.6, -0.4);
 const frameMargin = 0.94;
 
+function numbered(prefix: string, count: number): string[] {
+  return Array.from({ length: count }, (_, index) => cssToken(`--${prefix}-${index + 1}`));
+}
+
 function palette() {
   return {
     floor: cssToken('--stage-floor'),
     line: cssToken('--stage-line'),
     wing: cssToken('--stage-wing'),
     edge: cssToken('--stage-ink-muted'),
+    light: cssToken('--stage-ink'),
+    tights: cssToken('--tights'),
+    dancers: numbered('dancer', DANCER_COLOR_COUNT),
+    skins: numbered('skin', SKIN_COUNT),
+    hairs: numbered('hair', HAIR_COUNT),
   };
 }
 
 type Palette = ReturnType<typeof palette>;
 
-export function Stage3D({ showGuides }: StageProps) {
+export function Stage3D({ showGuides, dancers = [] }: StageProps) {
   const [colors] = useState(palette);
   return (
     <div className={styles.stage} role="img" aria-label="Stage seen from the audience">
@@ -57,8 +71,48 @@ export function Stage3D({ showGuides }: StageProps) {
         <Floor colors={colors} />
         {showGuides && <Guides color={colors.line} />}
         <Legs colors={colors} />
+        <hemisphereLight args={[colors.light, colors.floor, 1.6]} />
+        <directionalLight position={[2, 6, 5]} intensity={2.2} />
+        {dancers.map(
+          (dancer) =>
+            dancer.dancerId !== null && (
+              <DancerFigure
+                key={dancer.id}
+                dancer={dancer}
+                dancerId={dancer.dancerId}
+                colors={colors}
+              />
+            ),
+        )}
       </Canvas>
     </div>
+  );
+}
+
+// Open spots get no ballerina; a dancer with no color wears the muted stage ink.
+function DancerFigure({
+  dancer,
+  dancerId,
+  colors,
+}: {
+  dancer: StageDancer;
+  dancerId: string;
+  colors: Palette;
+}) {
+  const { x, z } = stageToFloor(dancer);
+  const look = ballerinaLook(dancerId);
+  return (
+    <Ballerina
+      position={[x, 0, z]}
+      inWing={isOffStage(dancer)}
+      colors={{
+        costume: dancer.color === null ? colors.edge : colors.dancers[dancer.color - 1]!,
+        skin: colors.skins[look.skin - 1]!,
+        hair: colors.hairs[look.hair - 1]!,
+        tights: colors.tights,
+        shadow: colors.wing,
+      }}
+    />
   );
 }
 

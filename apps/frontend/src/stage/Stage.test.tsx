@@ -58,7 +58,16 @@ test('hides the guide lines when the dance turns them off', () => {
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
 
-const clara = { id: 'cast-1', label: 'Clara', role: null, color: 3, x: 0.5, y: 0.5, open: false };
+const clara = {
+  id: 'cast-1',
+  dancerId: 'dancer-1',
+  label: 'Clara',
+  role: null,
+  color: 3,
+  x: 0.5,
+  y: 0.5,
+  open: false,
+};
 
 test('labels each dancer with her name', () => {
   render(<Stage showGuides dancers={[clara]} />);
@@ -92,7 +101,10 @@ test('does not dim a dancer on stage', () => {
 
 test('draws an open spot apart from the dancers', () => {
   render(
-    <Stage showGuides dancers={[{ ...clara, label: 'Open spot', color: null, open: true }]} />,
+    <Stage
+      showGuides
+      dancers={[{ ...clara, label: 'Open spot', dancerId: null, color: null, open: true }]}
+    />,
   );
   expect(screen.getByTestId('dancer')).toHaveClass(/open/);
 });

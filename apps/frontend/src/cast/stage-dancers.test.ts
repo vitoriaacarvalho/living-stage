@@ -17,13 +17,31 @@ function labelsOf(changes: Partial<CastMember>, labelMode: LabelMode) {
 
 test('puts each cast member at her position', () => {
   expect(stageDancers([clara], [atCenter], byName)).toEqual([
-    { id: 'cast-1', label: 'Clara', role: null, color: 3, x: 0.5, y: 0.5, open: false },
+    {
+      id: 'cast-1',
+      dancerId: 'dancer-1',
+      label: 'Clara',
+      role: null,
+      color: 3,
+      x: 0.5,
+      y: 0.5,
+      open: false,
+    },
   ]);
 });
 
 test('shows a removed dancer as an open spot', () => {
   expect(stageDancers([{ ...clara, dancer: null }], [atCenter], byName)).toEqual([
-    { id: 'cast-1', label: 'Open spot', role: null, color: null, x: 0.5, y: 0.5, open: true },
+    {
+      id: 'cast-1',
+      dancerId: null,
+      label: 'Open spot',
+      role: null,
+      color: null,
+      x: 0.5,
+      y: 0.5,
+      open: true,
+    },
   ]);
 });
 
