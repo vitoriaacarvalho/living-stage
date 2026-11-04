@@ -1,5 +1,5 @@
 import type { Dance, FigureCopy, Position } from '@living-stage/shared';
-import { type CSSProperties, lazy, Suspense, useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
@@ -12,19 +12,7 @@ import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import styles from './DanceEditor.module.css';
 
-// Three.js is only downloaded once a 3D stage is shown.
-const Stage3D = lazy(() =>
-  import('../stage/Stage3D.tsx').then(({ Stage3D }) => ({ default: Stage3D })),
-);
-
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
-
-const stageViewOptions = [
-  { value: '2d', label: '2D plan' },
-  { value: '3d', label: '3D stage' },
-] as const;
-
-type StageViewMode = (typeof stageViewOptions)[number]['value'];
 
 const labelOptions = [
   { value: 'name', label: 'Name' },
@@ -46,7 +34,6 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const { state: cast, ...castActions } = useCast(schoolId, opened.id);
   const [selectedFigureId, setSelectedFigureId] = useState<string | null>(null);
   const [figurePanelOpen, setFigurePanelOpen] = useState(false);
-  const [stageView, setStageView] = useState<StageViewMode>('3d');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [snap, setSnap] = useState(false);
   // Snapping is only on while guides are shown, since nobody can aim at hidden lines.
@@ -114,12 +101,6 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       <div className={styles.body}>
         <main className={styles.main}>
           <div className={styles.viewControls}>
-            <SegmentedControl
-              label="Stage view"
-              options={stageViewOptions}
-              value={stageView}
-              onChange={setStageView}
-            />
             <span className={styles.controlLabel} aria-hidden="true">
               Labels
             </span>
@@ -158,24 +139,18 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           </div>
           <FigureToolbar disabled={!figure} onCopy={copyFigure} />
           <div className={styles.stageArea} style={stageFit}>
-            {stageView === '3d' ? (
-              <Suspense fallback={<div className={styles.stageLoading} />}>
-                <Stage3D showGuides={dance.showGuides} dancers={dancers} />
-              </Suspense>
-            ) : (
-              <div className={styles.stageFit}>
-                <Stage
-                  showGuides={dance.showGuides}
-                  dancers={dancers}
-                  edit={{
-                    selectedIds: selection,
-                    snap: snapping,
-                    onSelect: setSelectedIds,
-                    onMove: moveDancers,
-                  }}
-                />
-              </div>
-            )}
+            <div className={styles.stageFit}>
+              <Stage
+                showGuides={dance.showGuides}
+                dancers={dancers}
+                edit={{
+                  selectedIds: selection,
+                  snap: snapping,
+                  onSelect: setSelectedIds,
+                  onMove: moveDancers,
+                }}
+              />
+            </div>
           </div>
           {figure && (
             <FigureStrip

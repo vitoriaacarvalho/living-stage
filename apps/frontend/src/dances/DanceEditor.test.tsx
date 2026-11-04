@@ -12,23 +12,8 @@ import {
   moveFigurePositions,
   updateFigure,
 } from '../api/figures.ts';
-import type { StageProps } from '../stage/Stage.tsx';
 import { DanceEditor } from './DanceEditor.tsx';
 
-// jsdom has no WebGL, so the 3D stage is a stand-in that shows what it was given.
-vi.mock('../stage/Stage3D.tsx', () => ({
-  Stage3D: ({ showGuides, dancers = [] }: StageProps) => (
-    <div role="img" aria-label="Stage seen from the audience">
-      {showGuides && <span data-testid="guides" />}
-      {dancers.map(({ id, label, role }) => (
-        <span key={id}>
-          <span>{label}</span>
-          {role && <span>{role}</span>}
-        </span>
-      ))}
-    </div>
-  ),
-}));
 vi.mock('../api/dances.ts', () => ({ updateDance: vi.fn() }));
 vi.mock('../api/cast.ts', () => ({
   fetchCast: vi.fn(),
@@ -74,10 +59,9 @@ beforeEach(() => {
     .mockImplementation(async (_schoolId, _danceId, update) => ({ ...kitri, ...update }));
 });
 
-// Waits for the lazily loaded 3D stage.
 async function openKitri(dance = kitri) {
   render(<DanceEditor schoolId="school-1" dance={dance} onBack={() => {}} />);
-  await screen.findByRole('img', { name: /^Stage seen from/ });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Add' })).toBeEnabled());
 }
 
 function labelsButton(name: string) {
@@ -229,39 +213,6 @@ test('puts a newly cast dancer in the wing on the stage', async () => {
   await user.click(await screen.findByRole('button', { name: /Bia/ }));
   const stage = screen.getByRole('img', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Bia')).toBeInTheDocument();
-});
-
-describe('stage view', () => {
-  function viewButton(name: string) {
-    return within(screen.getByRole('group', { name: 'Stage view' })).getByRole('button', { name });
-  }
-
-  test('opens on the 3D stage', async () => {
-    await openKitri();
-    expect(screen.getByRole('img', { name: 'Stage seen from the audience' })).toBeInTheDocument();
-  });
-
-  test('switches to the 2D plan', async () => {
-    await openKitri();
-    await userEvent.setup().click(viewButton('2D plan'));
-    expect(screen.getByRole('img', { name: /^Stage seen from above/ })).toBeInTheDocument();
-  });
-
-  test('switches back to the 3D stage', async () => {
-    await openKitri();
-    const user = userEvent.setup();
-    await user.click(viewButton('2D plan'));
-    await user.click(viewButton('3D stage'));
-    expect(
-      await screen.findByRole('img', { name: 'Stage seen from the audience' }),
-    ).toBeInTheDocument();
-  });
-
-  test('does not save the stage view on the dance', async () => {
-    await openKitri();
-    await userEvent.setup().click(viewButton('2D plan'));
-    expect(updateDance).not.toHaveBeenCalled();
-  });
 });
 
 test('goes back to the dances', async () => {
@@ -549,13 +500,7 @@ describe('dragging on the 2D plan', () => {
 
   async function openPlan() {
     await openKitri();
-    const user = userEvent.setup();
-    await user.click(
-      within(screen.getByRole('group', { name: 'Stage view' })).getByRole('button', {
-        name: '2D plan',
-      }),
-    );
-    return user;
+    return userEvent.setup();
   }
 
   function claraDot() {
@@ -602,16 +547,6 @@ describe('dragging on the 2D plan', () => {
     const user = await openPlan();
     tapClara();
     await user.click(screen.getByRole('button', { name: 'Entrance' }));
-    expect(claraDot()).toHaveClass(/selected/);
-  });
-
-  test('keeps the selection across the 3D stage and back', async () => {
-    const user = await openPlan();
-    tapClara();
-    const views = within(screen.getByRole('group', { name: 'Stage view' }));
-    await user.click(views.getByRole('button', { name: '3D stage' }));
-    await screen.findByRole('img', { name: 'Stage seen from the audience' });
-    await user.click(views.getByRole('button', { name: '2D plan' }));
     expect(claraDot()).toHaveClass(/selected/);
   });
 
