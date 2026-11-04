@@ -1,7 +1,5 @@
 export const APP_NAME = 'Living Stage';
 
-export { HAIR_COUNT, SKIN_COUNT, ballerinaLook, type BallerinaLook } from './ballerina-look.ts';
-
 export {
   CAST_ROLE_MAX_LENGTH,
   parseCastMemberInput,
@@ -97,6 +95,4 @@ export {
   STAGE_QUARTERS,
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
-  stageToFloor,
-  type FloorPoint,
 } from './stage.ts';
