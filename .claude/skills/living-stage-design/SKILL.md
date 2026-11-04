@@ -24,7 +24,7 @@ The design changes over time, so read it live with the Artifact tool (`action: "
 | One component's guidelines | `project/components/<Name>/README.md` |
 | How a component or screen looks | `project/components/<Name>/preview.html` |
 
-Components: `Button`, `SegmentedControl`, `Toolbar`, `Stage`, `Stage3D`, `Timeline`, `CastList`, `EditingBanner`, `DanceRow`, `ShowCard`, `Login`, `Register`, `Access` (inviting teachers), `Home`, `DancerRoster`, `DanceEditorIPad`, `DanceEditorIPhone`, `ShowManager`, `PresentationMode`, `PrintView`. If a name is missing, list the files (`action: "list"`, `scope: "files"`).
+Components: `Button`, `SegmentedControl`, `Toolbar`, `Stage`, `Timeline`, `CastList`, `EditingBanner`, `DanceRow`, `ShowCard`, `Login`, `Register`, `Access` (inviting teachers), `Home`, `DancerRoster`, `DanceEditorIPad`, `DanceEditorIPhone`, `ShowManager`, `PresentationMode`, `PrintView`. If a name is missing, list the files (`action: "list"`, `scope: "files"`).
 
 The pencil sketches are uploaded assets, not published files: `project/README.md` › Illustration says where they go, and `AppDS.sketches` and `AppDS.watermark` in `project/components/bundle.js` give their asset ids and watermark layouts. Fetch one with `action: "read"` and `path` set to its asset id. The app's copies live in `apps/frontend/src/assets/sketches/`, and `ui/Watermark.tsx` mirrors the layouts.
 

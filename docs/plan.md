@@ -21,7 +21,7 @@ Living Stage is a responsive web app where dance schools plan group choreography
 
 The first release is about choreography and shows, and it should ship fast:
 
-- **In:** create shows with acts and dances, manage the school's dances, cast dancers into each dance (with how many there are), place them in formations on a 3D stage of ballerinas (with a 2D plan one tap away), animate them from one formation to the next (straight, curved and circular paths), show it full screen in rehearsal, and quick edits on iPhone.
+- **In:** create shows with acts and dances, manage the school's dances, cast dancers into each dance (with how many there are), place them in formations on a top-down 2D stage plan as colored circles, animate them from one formation to the next (straight, curved and circular paths), show it full screen in rehearsal, and quick edits on iPhone.
 - **Out, for later:** music and the timeline, costume photos, live viewing and the edit lock, PDF export, Portuguese, email invites, installing as an app, layout tools, ghost view, and undo and redo.
 
 Section 7 lists the MVP plans in build order and keeps the rest under "After the MVP".
@@ -47,7 +47,7 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 | Offline | Not required |
 | Props and set pieces | Not included |
 | Export | Printable PDF of formations, after the MVP |
-| 3D | Dancers appear as 3D ballerinas on a perspective stage seen from the audience. This is the default view in the editor and in presentation mode, and it is in the MVP. The flat top-down 2D plan with colored circles is one tap away for precise placement, and is always used for print and thumbnails |
+| Stage view | One view only: a flat top-down 2D plan with the audience at the bottom, where each dancer is a circle in her dancer color. Used in the editor, presentation mode, print and thumbnails. No 3D view |
 
 Note: on iPad and iPhone, Chrome uses Apple's WebKit engine, so testing must happen on real Apple devices, not only desktop Chrome.
 
@@ -59,7 +59,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Language | TypeScript | Frontend, backend and shared code |
 | Package manager | npm (workspaces) | Root `package.json` with `"workspaces": ["apps/*", "packages/*"]` |
 | Frontend | React + Vite | Single-page app, responsive, installable as a PWA |
-| Stage rendering | 3D: Three.js through React Three Fiber (`@react-three/fiber`, `@react-three/drei`). 2D plan: SVG rendered by React | Both views read the same normalized stage coordinates. The 3D view is a WebGL canvas; the 2D plan keeps a fixed `viewBox`. No game engine |
+| Stage rendering | SVG rendered by React | The plan reads normalized stage coordinates and keeps a fixed `viewBox`. No WebGL or game engine |
 | Touch and gestures | Pointer Events + `@use-gesture/react` | Drag, multi-select, pinch-to-zoom, pan; finger, mouse and Apple Pencil |
 | Reorderable lists | `@dnd-kit/core` + `@dnd-kit/sortable` | Drag to reorder figures, and later acts and dances (H3); touch, mouse and keyboard |
 | Animation | Custom `requestAnimationFrame` loop | Cubic Bézier paths with easing; the audio's current time drives the frame |
@@ -83,7 +83,7 @@ The web app talks to one API, which owns the data.
 
 ```
 Web app (React + Vite)  ──REST──▶  API (Node + Express)  ──▶  PostgreSQL (schools, dances, shows)
-3D stage + SVG plan, timeline ◀─live updates─  REST + WebSockets, edit lock  ──▶  File storage / R2 (audio, photos)
+SVG stage plan, timeline ◀─live updates─  REST + WebSockets, edit lock  ──▶  File storage / R2 (audio, photos)
 iPad, iPhone, desktop
 
         both import packages/shared: types, validation, animation math
@@ -142,17 +142,17 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part C — Formation editor
 
-- ✅ **C1.** A dance shows its stage as a 3D perspective view seen from the audience (the default, see Part L) or as a top-down 2D plan with the audience at the bottom; one tap switches between them.
+- ✅ **C1.** A dance shows its stage as a top-down 2D plan with the audience at the bottom.
 - ✅ **C2.** The stage has wing zones on the left, right and upstage, where dancers can wait off stage, enter and exit.
 - ✅ **C3.** Optional guide lines (center and quarters) can be shown or hidden.
 - ✅ **C4.** A member casts dancers from the roster into a dance, each with an optional free-text role.
-- ✅ **C5.** Dancers appear as 3D ballerinas in the 3D view and as colored circles in the 2D plan; the label can show name, role or both.
+- ✅ **C5.** Dancers appear as colored circles on the plan; the label can show name, role or both.
 - ✅ **C6.** Dancers can be colored by their own color or by role, chosen per dance.
 - ✅ **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
-- **C8.** Dancers are placed by dragging, in both views; several can be selected and moved together. In 3D the finger moves the ballerina's feet across the floor.
-- **C9.** Optional snapping to guide lines.
+- **C8.** Dancers are placed by dragging; several can be selected and moved together.
+- ✅ **C9.** Optional snapping to guide lines.
 - **C10.** Layout tools for a selection: mirror left/right, align in a line, spread evenly, arrange in a circle. *(after the MVP)*
-- **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one: dashed circles in 2D, dashed footprints on the floor in 3D. *(after the MVP)*
+- **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one, as dashed circles. *(after the MVP)*
 - **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - ✅ **C14.** A dance shows its cast list and how many dancers are in it.
@@ -175,7 +175,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
 - **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
 - **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
-- **E9.** Up to 60 dancers per dance.
+- **E9.** Up to 60 dancers per dance, rendering and animating smoothly on an iPad.
 
 ### Part F — Editing lock and live viewing *(after the MVP)*
 
@@ -223,15 +223,6 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **K4.** The app is installable to the home screen and opens full-screen (PWA). *(after the MVP)*
 - ✅ **K5.** The interface follows the Living Stage design system (tokens, fonts, icons, base components).
 
-### Part L — 3D stage and ballerinas
-
-- ✅ **L1.** The 3D view is a perspective stage seen from the audience, built with Three.js. The floor, wings and guide lines match the 2D plan, and dark flats ("legs") line the wings.
-- ✅ **L2.** Each dancer is a shaded 3D ballerina standing at her stage position and scaling with depth. Her tutu and bodice carry her dancer color (by dancer or by role, C6); skin, hair and tights use decorative tokens. No faces or expressions, just posture: friendly and elegant, never cartoonish. Every ballerina shares one pose; poses per role are not planned. Skin and hair are assigned automatically from the dancer's id, so they stay the same everywhere.
-- ✅ **L3.** Each ballerina has a soft floor shadow; the selected one gets a `stage-accent` ring on the floor. Dancers waiting in the wings show at 80% opacity. Shadow and wings done; the ring comes with plan 2.4.
-- ✅ **L4.** Name and role labels are drawn above every figure, so a front-row head never hides a back-row label.
-- ✅ **L5.** The 3D view is the default in the editor and in presentation mode; the 2D plan is one tap away ("2D plan / 3D stage"), and is always used for print and thumbnails.
-- **L6.** 60 ballerinas render and animate smoothly on an iPad (E9).
-
 ## 5. Data model (first draft)
 
 Everything belongs to a school; dances live at school level and are linked into shows.
@@ -261,7 +252,7 @@ EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 
 `AudioTrack`, `CostumePhoto` and `EditLock` are not built in the MVP.
 
-**Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The 3D view maps 0–1 onto a 12 × 8 m floor, so the same position drives both views.
+**Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The plan maps 0–1 onto a 12 × 8 m floor; guides, snapping and keyboard moves work in those metres.
 
 **Paths.** A path is a list of cubic Bézier segments (start, two control points, end). A straight line is a segment with its controls on the line; waypoints and circles are several segments joined.
 
@@ -286,7 +277,7 @@ The full design system (tokens, components, screens) lives in Claude Design (lin
 
 **Dancer colors** (one per role, 12 max): `#E4572E` `#F3A712` `#7BB661` `#29A3A3` `#3F7FBF` `#7A5CC9` `#D05AA8` `#8C5A3C` `#A8B820` `#5AB8E0` `#E88AA0` `#9AA0A6`
 
-**Ballerinas.** On the 3D stage each dancer is a shaded ballerina: tutu and bodice in her dancer color, skin (`skin-1`–`skin-4`), hair (`hair-1`–`hair-3`) and `tights` as decorative tokens used only on figures. The 2D plan keeps the colored circles with a 2px `stage-ink` ring.
+**Dancers on stage.** Each dancer is a circle in her dancer color (by dancer or by role) with a 2px `stage-ink` ring.
 
 **Fonts:** Instrument Sans for the interface; Cormorant Garamond for large titles only (show names, screen titles, 24px and up).
 
@@ -372,18 +363,15 @@ First milestone to show real teachers.
 - ✅ **2.2 Casting** · after 2.1, 1.7
   - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
   - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
-- ✅ **9.1 3D stage and ballerinas** · after 2.2
-  - Done when: Cast dancers stand as 3D ballerinas on the perspective stage, colored by dancer or role, with readable labels; one tap switches to the 2D plan
-  - Requirements: L1–L5, C1 (3D), C5 (3D) · Screens: `Stage3D`, `DanceEditorIPad`
 - ✅ **2.3 Figures** · after 2.2
   - Done when: Add, duplicate, rename, reorder, delete figures
   - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
-- ⬜ **2.4 Dragging and selection** · after 2.3, 9.1
-  - Done when: Drag one or many dancers in the 2D plan and the 3D stage, with optional snapping, by finger and mouse
-  - Requirements: C8, C9, L3 (the selected ring) · Screens: `Stage`, `Stage3D`
-- ⬜ **2.7 Straight-line playback** · after 2.3, 9.1
-  - Done when: 60 ballerinas animate smoothly between figures without music, on the 3D stage and the 2D plan
-  - Requirements: D1, D4, D5, E9, L6 · Screens: `Timeline`, `Stage3D`
+- 🟨 **2.4 Dragging and selection** · after 2.3
+  - Done when: Drag one or many dancers on the plan, with optional snapping, by finger and mouse
+  - Requirements: C8, C9 · Screens: `Stage`
+- ⬜ **2.7 Straight-line playback** · after 2.3
+  - Done when: 60 dancers animate smoothly between figures without music on an iPad
+  - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage`
 
 #### MVP 4 — Show details
 
@@ -474,10 +462,7 @@ Not ordered yet; plan it when the MVP ships.
 - [x] PDF export: in the browser
 - [x] Limits: 60 dancers, 30 MB audio, 10 MB photos (resized before upload)
 - [x] Deleted dancers: kept as placeholders
-- [x] MVP scope: shows, dances, casting, formations, the 3D stage, paths, presentation mode and iPhone editing; see §1
-- [x] 3D view: 3D ballerinas on a perspective stage, the default view, in the MVP (plan 9.1)
-- [x] 3D ballerinas: built from Three.js primitives first; a Blender model (glTF) can replace it later, since the rest of the app only knows a figure with tutu, bodice, skin, hair and tights parts
-- [x] 3D ballerinas: one shared pose, no poses per role
-- [x] 3D ballerinas: skin and hair are assigned automatically from the dancer's id; no roster fields
+- [x] MVP scope: shows, dances, casting, formations, the stage plan, paths, presentation mode and iPhone editing; see §1
+- [x] Stage view: 2D plan only, dancers as colored circles; the 3D stage and ballerinas were dropped (Nov 2026)
 - [ ] Deleting a dance: removed for good after a confirm in plan 2.0; revisit in plan 6.1, once a dance can belong to shows
 - [ ] App name: Living Stage check domain and trademark
