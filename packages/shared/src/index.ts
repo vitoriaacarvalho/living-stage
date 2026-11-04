@@ -72,8 +72,11 @@ export {
 } from './invite.ts';
 export type { MeResponse } from './me.ts';
 export {
+  ARROW_LARGE_STEP_M,
+  ARROW_STEP_M,
   PLAN_BOUNDS,
   SNAP_DISTANCE_M,
+  arrowStep,
   isInsidePlan,
   moveGroup,
   parsePositionsUpdate,

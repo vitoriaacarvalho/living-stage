@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import {
+  ARROW_LARGE_STEP_M,
+  ARROW_STEP_M,
   PLAN_BOUNDS,
   SNAP_DISTANCE_M,
+  arrowStep,
   isInsidePlan,
   moveGroup,
   parsePositionsUpdate,
@@ -126,6 +129,38 @@ describe('snapToGuides', () => {
 
   test('leaves a spot far from every guide alone', () => {
     expect(snapToGuides({ x: 0.4, y: 0.4 })).toEqual({ x: 0.4, y: 0.4 });
+  });
+});
+
+describe('arrowStep', () => {
+  test('moves left by the step across the width', () => {
+    expect(arrowStep('ArrowLeft', ARROW_STEP_M)).toEqual({
+      x: -ARROW_STEP_M / STAGE_WIDTH_M,
+      y: 0,
+    });
+  });
+
+  test('moves right by the step across the width', () => {
+    expect(arrowStep('ArrowRight', ARROW_STEP_M)).toEqual({
+      x: ARROW_STEP_M / STAGE_WIDTH_M,
+      y: 0,
+    });
+  });
+
+  test('moves up towards upstage by the step across the depth', () => {
+    expect(arrowStep('ArrowUp', ARROW_STEP_M)).toEqual({ x: 0, y: -ARROW_STEP_M / STAGE_DEPTH_M });
+  });
+
+  test('moves down towards the audience by the step across the depth', () => {
+    expect(arrowStep('ArrowDown', ARROW_STEP_M)).toEqual({ x: 0, y: ARROW_STEP_M / STAGE_DEPTH_M });
+  });
+
+  test('takes the large step when given it', () => {
+    expect(arrowStep('ArrowRight', ARROW_LARGE_STEP_M)).toEqual({ x: 1 / STAGE_WIDTH_M, y: 0 });
+  });
+
+  test('ignores a key that is not an arrow', () => {
+    expect(arrowStep('Enter', ARROW_STEP_M)).toBeNull();
   });
 });
 

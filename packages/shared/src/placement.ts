@@ -17,6 +17,8 @@ export const PLAN_BOUNDS = {
 } as const;
 
 export const SNAP_DISTANCE_M = 0.25;
+export const ARROW_STEP_M = 0.25;
+export const ARROW_LARGE_STEP_M = 1;
 
 const GUIDES = [STAGE_QUARTERS[0], STAGE_CENTER, STAGE_QUARTERS[1]];
 
@@ -51,6 +53,24 @@ function snapAxis(value: number, metresPerUnit: number): number {
 
 export function snapToGuides({ x, y }: StagePoint): StagePoint {
   return { x: snapAxis(x, STAGE_WIDTH_M), y: snapAxis(y, STAGE_DEPTH_M) };
+}
+
+// Up is upstage, so it lowers y. Any key that isn't an arrow gives null.
+export function arrowStep(key: string, metres: number): StagePoint | null {
+  const x = metres / STAGE_WIDTH_M;
+  const y = metres / STAGE_DEPTH_M;
+  switch (key) {
+    case 'ArrowLeft':
+      return { x: -x, y: 0 };
+    case 'ArrowRight':
+      return { x, y: 0 };
+    case 'ArrowUp':
+      return { x: 0, y: -y };
+    case 'ArrowDown':
+      return { x: 0, y };
+    default:
+      return null;
+  }
 }
 
 function parsePosition(value: unknown): Position | null {
