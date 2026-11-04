@@ -48,6 +48,9 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [figurePanelOpen, setFigurePanelOpen] = useState(false);
   const [stageView, setStageView] = useState<StageViewMode>('3d');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [snap, setSnap] = useState(false);
+  // Snapping is only on while guides are shown, since nobody can aim at hidden lines.
+  const snapping = snap && dance.showGuides;
   const castIds = cast.status === 'ready' ? cast.cast.map(({ id }) => id) : [];
   // The whole selection goes once one of its dancers leaves the cast.
   const selection = selectedIds.every((id) => castIds.includes(id)) ? selectedIds : [];
@@ -143,6 +146,15 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             >
               Guides
             </button>
+            <button
+              type="button"
+              className={styles.toggle}
+              aria-pressed={snapping}
+              disabled={!dance.showGuides}
+              onClick={() => setSnap(!snap)}
+            >
+              Snap
+            </button>
           </div>
           <FigureToolbar disabled={!figure} onCopy={copyFigure} />
           <div className={styles.stageArea} style={stageFit}>
@@ -155,7 +167,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                 <Stage
                   showGuides={dance.showGuides}
                   dancers={dancers}
-                  edit={{ selectedIds: selection, onSelect: setSelectedIds, onMove: moveDancers }}
+                  edit={{
+                    selectedIds: selection,
+                    snap: snapping,
+                    onSelect: setSelectedIds,
+                    onMove: moveDancers,
+                  }}
                 />
               </div>
             )}

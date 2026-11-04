@@ -114,7 +114,7 @@ describe('editing', () => {
   const odile = { ...clara, id: 'cast-2', dancerId: 'dancer-2', label: 'Odile', x: 0.25 };
 
   function editing(selectedIds: string[] = []) {
-    return { selectedIds, onSelect: vi.fn(), onMove: vi.fn() };
+    return { selectedIds, snap: false, onSelect: vi.fn(), onMove: vi.fn() };
   }
 
   function hitOf(label: string) {
@@ -263,6 +263,41 @@ describe('editing', () => {
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 },
       { castMemberId: 'cast-2', x: expect.closeTo(0.35), y: 0.5 },
+    ]);
+  });
+
+  test('snaps the dragged dancer onto a quarter line', () => {
+    const edit = { ...editing(['cast-1']), snap: true };
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 276, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.75, y: 0.5 }]);
+  });
+
+  test('leaves the dragged dancer where she is dropped when snapping is off', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 276, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: expect.closeTo(0.73), y: 0.5 },
+    ]);
+  });
+
+  test('does not snap a dancer dropped far from every guide', () => {
+    const edit = { ...editing(['cast-1']), snap: true };
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 120, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 },
+    ]);
+  });
+
+  test('keeps the offsets of the rest of the group when snapping', () => {
+    const edit = { ...editing(['cast-1', 'cast-2']), snap: true };
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    dragBy(hitOf('Clara'), 276, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([
+      expect.objectContaining({ x: 0.75 }),
+      expect.objectContaining({ x: expect.closeTo(0.5) }),
     ]);
   });
 

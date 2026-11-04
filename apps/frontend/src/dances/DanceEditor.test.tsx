@@ -140,6 +140,42 @@ test('puts the guide lines back when saving fails', async () => {
   expect(await screen.findByTestId('guides')).toBeInTheDocument();
 });
 
+describe('snap toggle', () => {
+  function snapToggle() {
+    return screen.getByRole('button', { name: 'Snap' });
+  }
+
+  test('starts with snapping off', async () => {
+    await openKitri();
+    expect(snapToggle()).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('turns snapping on when tapped', async () => {
+    await openKitri();
+    await userEvent.setup().click(snapToggle());
+    expect(snapToggle()).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('does not save snapping on the dance', async () => {
+    await openKitri();
+    await userEvent.setup().click(snapToggle());
+    expect(updateDance).not.toHaveBeenCalled();
+  });
+
+  test('is disabled while the guides are hidden', async () => {
+    await openKitri({ ...kitri, showGuides: false });
+    expect(snapToggle()).toBeDisabled();
+  });
+
+  test('shows snapping off once the guides are hidden', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(snapToggle());
+    await user.click(guidesToggle());
+    expect(snapToggle()).toHaveAttribute('aria-pressed', 'false');
+  });
+});
+
 test("marks the dance's label mode as chosen", async () => {
   await openKitri({ ...kitri, labelMode: 'both' });
   expect(labelsButton('Both')).toHaveAttribute('aria-pressed', 'true');
@@ -540,6 +576,18 @@ describe('dragging on the 2D plan', () => {
     fireEvent.pointerUp(hit, { pointerId: 1, clientX: 220, clientY: 100 });
     expect(moveFigurePositions).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-1', {
       positions: [{ castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 }],
+    });
+  });
+
+  test('snaps a dropped dancer onto a guide when Snap is on', async () => {
+    const user = await openPlan();
+    await user.click(screen.getByRole('button', { name: 'Snap' }));
+    const hit = screen.getByTestId('dancer-hit');
+    fireEvent.pointerDown(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(hit, { pointerId: 1, clientX: 376, clientY: 100 });
+    fireEvent.pointerUp(hit, { pointerId: 1, clientX: 376, clientY: 100 });
+    expect(moveFigurePositions).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-1', {
+      positions: [{ castMemberId: 'cast-1', x: 0.75, y: 0.5 }],
     });
   });
 

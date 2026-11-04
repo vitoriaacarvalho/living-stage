@@ -1,18 +1,30 @@
-import { PLAN_BOUNDS, moveGroup, type Position, type StagePoint } from '@living-stage/shared';
+import {
+  PLAN_BOUNDS,
+  moveGroup,
+  snapToGuides,
+  type Position,
+  type StagePoint,
+} from '@living-stage/shared';
 import { type PointerEvent, type RefObject, useState } from 'react';
 import type { StageDancer } from './Stage.tsx';
 
 export type StageEditing = {
   selectedIds: string[];
+  snap: boolean;
   onSelect: (ids: string[]) => void;
   onMove: (positions: Position[]) => void;
 };
 
 type Press = { pointerId: number; start: { clientX: number; clientY: number }; moved: boolean };
 
-type Gesture =
-  | (Press & { kind: 'drag'; dancerId: string; origins: Position[]; delta: StagePoint })
-  | (Press & { kind: 'box'; from: StagePoint; to: StagePoint });
+type DragGesture = Press & {
+  kind: 'drag';
+  dancerId: string;
+  origins: Position[];
+  delta: StagePoint;
+};
+
+type Gesture = DragGesture | (Press & { kind: 'box'; from: StagePoint; to: StagePoint });
 
 export type SelectionBox = { left: number; top: number; right: number; bottom: number };
 
@@ -39,6 +51,16 @@ function boxOf({ from, to }: { from: StagePoint; to: StagePoint }): SelectionBox
 
 function inBox({ x, y }: StagePoint, box: SelectionBox) {
   return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+}
+
+// The dragged dancer lands on the guide and the rest of the group keeps its offsets.
+function snapped(
+  { origins, dancerId }: Pick<DragGesture, 'origins' | 'dancerId'>,
+  delta: StagePoint,
+) {
+  const origin = origins.find(({ castMemberId }) => castMemberId === dancerId)!;
+  const target = snapToGuides({ x: origin.x + delta.x, y: origin.y + delta.y });
+  return { x: target.x - origin.x, y: target.y - origin.y };
 }
 
 export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
@@ -114,7 +136,7 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
     }
     const { width, height } = planRef.current!.getBoundingClientRect();
     const delta = { x: (dx / width) * spanX, y: (dy / height) * spanY };
-    setGesture({ ...gesture, moved: true, delta });
+    setGesture({ ...gesture, moved: true, delta: edit?.snap ? snapped(gesture, delta) : delta });
   }
 
   function release(event: PointerEvent<HTMLElement>) {

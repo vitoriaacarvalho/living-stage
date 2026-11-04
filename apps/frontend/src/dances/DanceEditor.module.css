@@ -89,6 +89,11 @@
     color 150ms ease-out;
 }
 
+.toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .toggle[aria-pressed='true'] {
   border-color: transparent;
   background: var(--primary-soft);
