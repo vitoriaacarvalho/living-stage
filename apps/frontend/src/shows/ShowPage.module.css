@@ -1,0 +1,128 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 1200px;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+}
+
+.crumb {
+  margin-left: calc(-1 * var(--space-3));
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-display);
+  letter-spacing: var(--text-display-tracking);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  color: var(--ink-muted);
+}
+
+.meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.acts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.actTitle {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: var(--text-title-2);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-3) var(--space-1);
+  color: var(--ink-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.order {
+  flex: none;
+  width: 24px;
+  color: var(--ink-muted);
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.danceTitle {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-body-strong);
+  overflow-wrap: anywhere;
+}
+
+.cast {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ink-muted);
+  font: var(--text-label);
+  white-space: nowrap;
+}
+
+.cast svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (min-width: 600px) {
+  .page {
+    padding: var(--space-5) var(--space-6) var(--space-6);
+  }
+}

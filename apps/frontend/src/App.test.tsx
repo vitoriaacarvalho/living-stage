@@ -10,6 +10,7 @@ vi.mock('./auth/client.ts', () => ({
   authClient: { useSession: vi.fn(), signOut: vi.fn() },
 }));
 vi.mock('./api/schools.ts', () => ({ fetchSchools: vi.fn(), createSchool: vi.fn() }));
+vi.mock('./api/shows.ts', () => ({ fetchShows: () => new Promise(() => {}) }));
 vi.mock('./api/invites.ts', () => ({
   fetchInvite: vi.fn(),
   createInvite: vi.fn(),

@@ -11,6 +11,7 @@ import { readJoinCode } from './schools/join-link.ts';
 import { JoinFromLink } from './schools/JoinFromLink.tsx';
 import { NoSchool } from './schools/NoSchool.tsx';
 import { SchoolPicker } from './schools/SchoolPicker.tsx';
+import { ShowPage } from './shows/ShowPage.tsx';
 import { TeamPage } from './schools/TeamPage.tsx';
 import { findChosenSchool, useChosenSchoolId } from './schools/useChosenSchool.ts';
 import { useSchools } from './schools/useSchools.ts';
@@ -101,17 +102,30 @@ type HomeProps = { userName: string; school: School; onSwitch: () => void };
 function Home({ userName, school, onSwitch }: HomeProps) {
   const [section, setSection] = useState<Section>('home');
   const [openDance, setOpenDance] = useState<Dance | null>(null);
+  const [openShowId, setOpenShowId] = useState<string | null>(null);
+
+  function go(next: Section) {
+    setOpenShowId(null);
+    setSection(next);
+  }
 
   if (openDance) {
     return <DanceEditor schoolId={school.id} dance={openDance} onBack={() => setOpenDance(null)} />;
   }
   return (
     <AppShell
-      nav={{ current: section, onGo: setSection }}
+      nav={{ current: section, onGo: go }}
       account={{ userName, schoolName: school.name, onSwitch }}
     >
-      {section === 'home' && (
-        <HomePage userName={userName} schoolId={school.id} onOpen={setOpenDance} />
+      {section === 'home' && openShowId && (
+        <ShowPage schoolId={school.id} showId={openShowId} onBack={() => setOpenShowId(null)} />
+      )}
+      {section === 'home' && !openShowId && (
+        <HomePage
+          userName={userName}
+          schoolId={school.id}
+          open={{ dance: setOpenDance, show: ({ id }) => setOpenShowId(id) }}
+        />
       )}
       {section === 'dancers' && <DancerRoster school={school} />}
       {section === 'team' && <TeamPage schoolId={school.id} onDone={() => setSection('home')} />}

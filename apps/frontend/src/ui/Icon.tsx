@@ -3,6 +3,12 @@ import styles from './Icon.module.css';
 
 const paths = {
   back: <path d="M15 18l-6-6 6-6" />,
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
   copy: (
     <>
       <rect x="9" y="9" width="11" height="11" rx="2" />
@@ -34,6 +40,12 @@ const paths = {
     </>
   ),
   pencil: <path d="M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4zM13.5 6.5l4 4" />,
+  pin: (
+    <>
+      <path d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0 1 13 0c0 5.2-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.3" />
+    </>
+  ),
   play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   plus: <path d="M12 5v14M5 12h14" />,
   school: (

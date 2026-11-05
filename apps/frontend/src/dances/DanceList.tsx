@@ -34,7 +34,7 @@ export function DanceList({ schoolId, onOpen }: DanceListProps) {
         </h2>
         {state.status === 'ready' && <span className={styles.count}>{state.dances.length}</span>}
         {!editing && (
-          <Button variant="primary" icon="plus" onClick={() => setEditing({ dance: null })}>
+          <Button variant="secondary" icon="plus" onClick={() => setEditing({ dance: null })}>
             New dance
           </Button>
         )}
