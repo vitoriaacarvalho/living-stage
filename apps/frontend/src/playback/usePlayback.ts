@@ -45,7 +45,7 @@ export function usePlayback({ figures, selectedIndex, onFinish }: PlaybackSetup)
     const atMs =
       clock.status === 'paused'
         ? clock.atMs
-        : figureTimeMs(selectedIndex >= lastIndex ? 0 : selectedIndex);
+        : figureTimeMs(figures, selectedIndex >= lastIndex ? 0 : selectedIndex);
     origin.current = { atMs, since: performance.now() };
     setClock({ status: 'playing', atMs });
   }
@@ -60,7 +60,7 @@ export function usePlayback({ figures, selectedIndex, onFinish }: PlaybackSetup)
 
   return {
     status: clock.status,
-    timeMs: clock.status === 'stopped' ? figureTimeMs(selectedIndex) : clock.atMs,
+    timeMs: clock.status === 'stopped' ? figureTimeMs(figures, selectedIndex) : clock.atMs,
     lengthMs,
     play,
     pause,

@@ -1,6 +1,6 @@
 import type { Figure, Position } from './figure.ts';
 
-// Until music pins figures to the song (E4), every transition takes the same time.
+// A new figure's time to arrive, until the teacher changes it or music pins figures (E4).
 export const TRANSITION_MS = 4000;
 
 export type StageMoment = {
@@ -15,12 +15,13 @@ export function easeInOutCubic(progress: number): number {
   return progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
 }
 
-export function figureTimeMs(index: number): number {
-  return index * TRANSITION_MS;
+// The first figure starts at 0, so its own time to arrive never counts.
+export function figureTimeMs(figures: Figure[], index: number): number {
+  return figures.slice(1, index + 1).reduce((sum, { transitionMs }) => sum + transitionMs, 0);
 }
 
 export function playbackLengthMs(figures: Figure[]): number {
-  return figureTimeMs(Math.max(0, figures.length - 1));
+  return figureTimeMs(figures, figures.length - 1);
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -30,10 +31,15 @@ export function stageAt(figures: Figure[], timeMs: number): StageMoment | null {
   if (figures.length === 0) return null;
   const last = figures.length - 1;
   const time = clamp(timeMs, 0, playbackLengthMs(figures));
-  const index = Math.min(Math.floor(time / TRANSITION_MS), Math.max(0, last - 1));
+  let index = 0;
+  let start = 0;
+  while (index < last - 1 && start + figures[index + 1]!.transitionMs <= time) {
+    index += 1;
+    start += figures[index]!.transitionMs;
+  }
   const from = figures[index]!;
   const to = figures[Math.min(index + 1, last)]!;
-  const progress = from === to ? 0 : (time - figureTimeMs(index)) / TRANSITION_MS;
+  const progress = from === to ? 0 : (time - start) / to.transitionMs;
   return { positions: between(from, to, easeInOutCubic(progress)), from, to, progress };
 }
 

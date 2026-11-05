@@ -3,15 +3,17 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { usePlayback } from './usePlayback.ts';
 
-const figure = (order: number): Figure => ({
+const figure = (order: number, transitionMs = TRANSITION_MS): Figure => ({
   id: `f${order}`,
   order,
   name: null,
-  transitionMs: TRANSITION_MS,
+  transitionMs,
   positions: [],
 });
 
 const three = [figure(0), figure(1), figure(2)];
+
+const quickThenSlow = [figure(0), figure(1, 1500), figure(2, 9000)];
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
@@ -61,6 +63,24 @@ test('starts at the selected figure', () => {
   act(() => result.current.play());
   advance(500);
   expect(result.current.timeMs).toBeCloseTo(TRANSITION_MS + 500, -2);
+});
+
+test("starts after the earlier figures' own times", () => {
+  const { result } = setup(2, [...quickThenSlow, figure(3)]);
+  act(() => result.current.play());
+  advance(500);
+  expect(result.current.timeMs).toBeCloseTo(1500 + 9000 + 500, -2);
+});
+
+test('lasts as long as every time to arrive added up', () => {
+  expect(setup(0, quickThenSlow).result.current.lengthMs).toBe(10_500);
+});
+
+test('stops at the end of figures with their own times', () => {
+  const { result } = setup(0, quickThenSlow);
+  act(() => result.current.play());
+  advance(10_600);
+  expect(result.current.status).toBe('stopped');
 });
 
 test('starts again at the first figure from the last one', () => {

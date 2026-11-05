@@ -1,19 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import type { Figure, Position } from './figure.ts';
-import {
-  TRANSITION_MS,
-  easeInOutCubic,
-  figureTimeMs,
-  playbackLengthMs,
-  stageAt,
-} from './playback.ts';
+import { easeInOutCubic, figureTimeMs, playbackLengthMs, stageAt } from './playback.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
 
-const figure = (order: number, positions: Position[]): Figure => ({
+const figure = (order: number, transitionMs: number, positions: Position[]): Figure => ({
   id: `f${order}`,
   order,
   name: null,
-  transitionMs: TRANSITION_MS,
+  transitionMs,
   positions,
 });
 
@@ -21,10 +15,15 @@ const spot = (castMemberId: string, x: number, y: number): Position => ({ castMe
 
 const wing = -SIDE_WING_DEPTH / 2;
 
+// The first figure's 9 s never count: nothing comes before it.
+const intoSecond = 2000;
+const intoThird = 6000;
+const atThird = intoSecond + intoThird;
+
 const figures = [
-  figure(0, [spot('a', 0.2, 0.2), spot('b', wing, 0.5)]),
-  figure(1, [spot('a', 0.6, 0.2), spot('b', 0.5, 0.5)]),
-  figure(2, [spot('a', 0.6, 0.8), spot('b', 1 + SIDE_WING_DEPTH / 2, 0.5)]),
+  figure(0, 9000, [spot('a', 0.2, 0.2), spot('b', wing, 0.5)]),
+  figure(1, intoSecond, [spot('a', 0.6, 0.2), spot('b', 0.5, 0.5)]),
+  figure(2, intoThird, [spot('a', 0.6, 0.8), spot('b', 1 + SIDE_WING_DEPTH / 2, 0.5)]),
 ];
 
 const xy = (positions: Position[] | undefined) =>
@@ -56,8 +55,8 @@ describe('easeInOutCubic', () => {
 });
 
 describe('playbackLengthMs', () => {
-  test('is one transition per figure after the first', () => {
-    expect(playbackLengthMs(figures)).toBe(2 * TRANSITION_MS);
+  test("adds up each later figure's time to arrive", () => {
+    expect(playbackLengthMs(figures)).toBe(atThird);
   });
 
   test('is zero for a single figure', () => {
@@ -71,11 +70,15 @@ describe('playbackLengthMs', () => {
 
 describe('figureTimeMs', () => {
   test('puts the first figure at the start', () => {
-    expect(figureTimeMs(0)).toBe(0);
+    expect(figureTimeMs(figures, 0)).toBe(0);
   });
 
-  test('puts each figure one transition after the one before', () => {
-    expect(figureTimeMs(2)).toBe(2 * TRANSITION_MS);
+  test('puts the second figure after its own time to arrive', () => {
+    expect(figureTimeMs(figures, 1)).toBe(intoSecond);
+  });
+
+  test('puts a later figure after every time to arrive before it', () => {
+    expect(figureTimeMs(figures, 2)).toBe(atThird);
   });
 });
 
@@ -97,75 +100,81 @@ describe('stageAt', () => {
   });
 
   test('shows a figure exactly at its time', () => {
-    expect(near(stageAt(figures, TRANSITION_MS)!.positions)).toEqual(near(figures[1]!.positions));
+    expect(near(stageAt(figures, intoSecond)!.positions)).toEqual(near(figures[1]!.positions));
   });
 
   test('is leaving a figure exactly at its time', () => {
-    expect(stageAt(figures, TRANSITION_MS)?.from).toBe(figures[1]);
+    expect(stageAt(figures, intoSecond)?.from).toBe(figures[1]);
   });
 
-  test('is halfway between two figures at half the transition', () => {
-    expect(near(stageAt(figures, TRANSITION_MS / 2)!.positions)).toEqual(
+  test('is halfway between two figures at half the time to arrive', () => {
+    expect(near(stageAt(figures, intoSecond / 2)!.positions)).toEqual(
       near([spot('a', 0.4, 0.2), spot('b', (wing + 0.5) / 2, 0.5)]),
     );
   });
 
+  test('is halfway through a later move at half its own time', () => {
+    expect(stageAt(figures, intoSecond + intoThird / 2)?.progress).toBe(0.5);
+  });
+
+  test('is still on the first move just before the second figure', () => {
+    expect(stageAt(figures, intoSecond - 1)?.to).toBe(figures[1]);
+  });
+
   test('reports linear progress', () => {
-    expect(stageAt(figures, TRANSITION_MS / 4)?.progress).toBe(0.25);
+    expect(stageAt(figures, intoSecond / 4)?.progress).toBe(0.25);
   });
 
   test('eases the positions', () => {
-    const [a] = stageAt(figures, TRANSITION_MS / 4)!.positions;
+    const [a] = stageAt(figures, intoSecond / 4)!.positions;
     expect(a!.x).toBeCloseTo(0.2 + 0.4 * 0.0625);
   });
 
   test('shows the last figure at the end', () => {
-    expect(near(stageAt(figures, 2 * TRANSITION_MS)!.positions)).toEqual(
-      near(figures[2]!.positions),
-    );
+    expect(near(stageAt(figures, atThird)!.positions)).toEqual(near(figures[2]!.positions));
   });
 
   test('ends with full progress', () => {
-    expect(stageAt(figures, 2 * TRANSITION_MS)?.progress).toBe(1);
+    expect(stageAt(figures, atThird)?.progress).toBe(1);
   });
 
   test('holds the last figure past the end', () => {
-    expect(xy(stageAt(figures, 99 * TRANSITION_MS)?.positions)).toEqual(xy(figures[2]!.positions));
+    expect(xy(stageAt(figures, atThird * 10)?.positions)).toEqual(xy(figures[2]!.positions));
   });
 
   test('is reaching the last figure past the end', () => {
-    expect(stageAt(figures, 99 * TRANSITION_MS)?.to).toBe(figures[2]);
+    expect(stageAt(figures, atThird * 10)?.to).toBe(figures[2]);
   });
 
   test('holds the first figure before the start', () => {
-    expect(xy(stageAt(figures, -TRANSITION_MS)?.positions)).toEqual(xy(figures[0]!.positions));
+    expect(xy(stageAt(figures, -intoSecond)?.positions)).toEqual(xy(figures[0]!.positions));
   });
 
   test('shows a single figure at any time', () => {
-    expect(xy(stageAt([figures[0]!], TRANSITION_MS)?.positions)).toEqual(xy(figures[0]!.positions));
+    expect(xy(stageAt([figures[0]!], intoSecond)?.positions)).toEqual(xy(figures[0]!.positions));
   });
 
   test('stays still with a single figure', () => {
-    expect(stageAt([figures[0]!], TRANSITION_MS)?.progress).toBe(0);
+    expect(stageAt([figures[0]!], intoSecond)?.progress).toBe(0);
   });
 
   test('brings a dancer in from the wing in a straight line', () => {
-    const b = stageAt(figures, TRANSITION_MS / 2)!.positions[1]!;
+    const b = stageAt(figures, intoSecond / 2)!.positions[1]!;
     expect([b.x, b.y]).toEqual([expect.closeTo((wing + 0.5) / 2), 0.5]);
   });
 
   test('takes a dancer out to the far wing', () => {
-    const b = stageAt(figures, 2 * TRANSITION_MS)!.positions[1]!;
+    const b = stageAt(figures, atThird)!.positions[1]!;
     expect(b.x).toBeCloseTo(1 + SIDE_WING_DEPTH / 2);
   });
 
   test('keeps a dancer still when the next figure has no spot for her', () => {
-    const pair = [figure(0, [spot('a', 0.2, 0.2)]), figure(1, [])];
-    expect(xy(stageAt(pair, TRANSITION_MS / 2)?.positions)).toEqual([['a', 0.2, 0.2]]);
+    const pair = [figure(0, 4000, [spot('a', 0.2, 0.2)]), figure(1, 4000, [])];
+    expect(xy(stageAt(pair, 2000)?.positions)).toEqual([['a', 0.2, 0.2]]);
   });
 
   test('shows a dancer who only has a spot in the next figure', () => {
-    const pair = [figure(0, []), figure(1, [spot('a', 0.6, 0.2)])];
-    expect(xy(stageAt(pair, TRANSITION_MS / 2)?.positions)).toEqual([['a', 0.6, 0.2]]);
+    const pair = [figure(0, 4000, []), figure(1, 4000, [spot('a', 0.6, 0.2)])];
+    expect(xy(stageAt(pair, 2000)?.positions)).toEqual([['a', 0.6, 0.2]]);
   });
 });
