@@ -20,6 +20,17 @@ vi.mock('../db.ts', () => ({
       updateManyAndReturn: vi.fn(),
       deleteMany: vi.fn(),
     },
+    act: {
+      aggregate: vi.fn(),
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+    },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -81,6 +92,9 @@ afterAll(() => {
 
 beforeEach(() => {
   for (const mock of Object.values(prisma.show)) vi.mocked(mock).mockReset();
+  for (const mock of Object.values(prisma.act)) vi.mocked(mock).mockReset();
+  vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
+    run(prisma)) as never);
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user,
     session: { id: 'session-1', userId: user.id } as never,
@@ -290,6 +304,152 @@ describe('DELETE /shows/:showId', () => {
 
   test('responds 404 for a show of another school', async () => {
     vi.mocked(prisma.show.deleteMany).mockResolvedValue({ count: 0 });
+    expect((await remove()).status).toBe(404);
+  });
+});
+
+const actRow = (id: string, order: number, name: string | null = null) => ({
+  id,
+  showId: 'show-1',
+  order,
+  name,
+  items: [],
+});
+
+describe('POST /shows/:showId/acts', () => {
+  const post = () => fetch(`${baseUrl}/shows/show-1/acts`, { method: 'POST' });
+
+  beforeEach(() => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue({ id: 'show-1' } as never);
+    vi.mocked(prisma.act.aggregate).mockResolvedValue({ _max: { order: 1 } } as never);
+    vi.mocked(prisma.act.create).mockResolvedValue(actRow('act-3', 2) as never);
+  });
+
+  test('responds 201 with the new act', async () => {
+    const res = await post();
+    expect(await res.json()).toEqual({ act: { id: 'act-3', order: 2, name: null, dances: [] } });
+  });
+
+  test('puts the new act after the last one', async () => {
+    await post();
+    expect(vi.mocked(prisma.act.create).mock.calls[0]![0].data).toEqual({
+      showId: 'show-1',
+      order: 2,
+    });
+  });
+
+  test('looks the show up in this school', async () => {
+    await post();
+    expect(vi.mocked(prisma.show.findFirst).mock.calls[0]![0]).toMatchObject({
+      where: { id: 'show-1', schoolId: 'school-1' },
+    });
+  });
+
+  test('responds 404 for a show of another school', async () => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue(null);
+    expect((await post()).status).toBe(404);
+  });
+
+  test('adds no act to a show of another school', async () => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue(null);
+    await post();
+    expect(prisma.act.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('PATCH /shows/:showId/acts/:actId', () => {
+  const patch = (body: unknown) => fetch(`${baseUrl}/shows/show-1/acts/act-1`, send('PATCH', body));
+
+  beforeEach(() => {
+    vi.mocked(prisma.act.updateMany).mockResolvedValue({ count: 1 });
+    vi.mocked(prisma.act.findUniqueOrThrow).mockResolvedValue(
+      actRow('act-1', 0, 'Classics') as never,
+    );
+  });
+
+  test('answers with the renamed act', async () => {
+    const res = await patch({ name: 'Classics' });
+    expect(await res.json()).toEqual({
+      act: { id: 'act-1', order: 0, name: 'Classics', dances: [] },
+    });
+  });
+
+  test('renames only an act of this show in this school', async () => {
+    await patch({ name: ' Classics ' });
+    expect(prisma.act.updateMany).toHaveBeenCalledWith({
+      where: { id: 'act-1', showId: 'show-1', show: { schoolId: 'school-1' } },
+      data: { name: 'Classics' },
+    });
+  });
+
+  test('responds 400 for a name over the maximum length', async () => {
+    expect((await patch({ name: 'a'.repeat(41) })).status).toBe(400);
+  });
+
+  test('responds 404 for an act of another show or school', async () => {
+    vi.mocked(prisma.act.updateMany).mockResolvedValue({ count: 0 });
+    expect((await patch({ name: 'Classics' })).status).toBe(404);
+  });
+});
+
+describe('DELETE /shows/:showId/acts/:actId', () => {
+  const remove = (actId = 'act-1') =>
+    fetch(`${baseUrl}/shows/show-1/acts/${actId}`, { method: 'DELETE' });
+
+  beforeEach(() => {
+    vi.mocked(prisma.act.findFirst).mockResolvedValue(actRow('act-1', 0) as never);
+    vi.mocked(prisma.act.findMany).mockResolvedValue([
+      { id: 'act-1' },
+      { id: 'act-2' },
+      { id: 'act-3' },
+    ] as never);
+  });
+
+  test('responds 204 once the act is deleted', async () => {
+    expect((await remove()).status).toBe(204);
+  });
+
+  test('deletes the act', async () => {
+    await remove();
+    expect(prisma.act.delete).toHaveBeenCalledWith({ where: { id: 'act-1' } });
+  });
+
+  test('moves the other acts past every current order first', async () => {
+    await remove();
+    expect(prisma.act.updateMany).toHaveBeenCalledWith({
+      where: { showId: 'show-1' },
+      data: { order: { increment: 3 } },
+    });
+  });
+
+  test('numbers the remaining acts from the start', async () => {
+    await remove();
+    expect(vi.mocked(prisma.act.update).mock.calls.map(([call]) => call)).toEqual([
+      { where: { id: 'act-2' }, data: { order: 0 } },
+      { where: { id: 'act-3' }, data: { order: 1 } },
+    ]);
+  });
+
+  test('looks the act up in this show and school', async () => {
+    await remove();
+    expect(prisma.act.findFirst).toHaveBeenCalledWith({
+      where: { id: 'act-1', showId: 'show-1', show: { schoolId: 'school-1' } },
+    });
+  });
+
+  test('responds 409 for the only act of the show', async () => {
+    vi.mocked(prisma.act.findMany).mockResolvedValue([{ id: 'act-1' }] as never);
+    expect((await remove()).status).toBe(409);
+  });
+
+  test('keeps the only act of the show', async () => {
+    vi.mocked(prisma.act.findMany).mockResolvedValue([{ id: 'act-1' }] as never);
+    await remove();
+    expect(prisma.act.delete).not.toHaveBeenCalled();
+  });
+
+  test('responds 404 for an act of another show or school', async () => {
+    vi.mocked(prisma.act.findFirst).mockResolvedValue(null);
     expect((await remove()).status).toBe(404);
   });
 });
