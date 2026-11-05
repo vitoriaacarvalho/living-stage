@@ -24,6 +24,7 @@ const kitri: DanceSource = {
         { castMemberId: 'cast-1', x: 0.25, y: 0.5 },
         { castMemberId: 'cast-2', x: 0.75, y: 0.5 },
       ],
+      paths: [],
     },
     {
       id: 'figure-2',
@@ -31,6 +32,7 @@ const kitri: DanceSource = {
       name: null,
       transitionMs: 2500,
       positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.25 }],
+      paths: [{ castMemberId: 'cast-1', points: [{ along: 0.4, side: -0.3 }] }],
     },
   ],
 };
@@ -91,6 +93,13 @@ describe('danceCopy', () => {
       { figureId: entrance, castMemberId: clara, x: 0.25, y: 0.5 },
       { figureId: entrance, castMemberId: open, x: 0.75, y: 0.5 },
       { figureId: second, castMemberId: clara, x: 0.5, y: 0.25 },
+    ]);
+  });
+
+  test("bends each copied cast member's path like the original", () => {
+    const { cast, figures, paths } = danceCopy(kitri);
+    expect(paths).toEqual([
+      { figureId: figures[1]!.id, castMemberId: cast[0]!.id, points: [{ along: 0.4, side: -0.3 }] },
     ]);
   });
 

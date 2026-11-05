@@ -95,16 +95,17 @@ function copyDance(danceId: string, schoolId: string) {
       where: { id: danceId, schoolId },
       include: {
         cast: { orderBy: { createdAt: 'asc' } },
-        figures: { orderBy: { order: 'asc' }, include: { positions: true } },
+        figures: { orderBy: { order: 'asc' }, include: { positions: true, paths: true } },
       },
     });
     if (!source) return null;
 
-    const { dance, cast, figures, positions } = danceCopy(source);
+    const { dance, cast, figures, positions, paths } = danceCopy(source);
     await tx.dance.create({ data: dance });
     await tx.castMember.createMany({ data: cast });
     await tx.figure.createMany({ data: figures });
     await tx.position.createMany({ data: positions });
+    await tx.path.createMany({ data: paths });
     return tx.dance.findUniqueOrThrow({ where: { id: dance.id }, include: summaryFields });
   });
 }

@@ -25,6 +25,7 @@ vi.mock('../db.ts', () => ({
     castMember: { createMany: vi.fn() },
     figure: { createMany: vi.fn() },
     position: { createMany: vi.fn() },
+    path: { createMany: vi.fn() },
   },
 }));
 
@@ -83,6 +84,7 @@ beforeEach(() => {
   vi.mocked(prisma.castMember.createMany).mockReset();
   vi.mocked(prisma.figure.createMany).mockReset();
   vi.mocked(prisma.position.createMany).mockReset();
+  vi.mocked(prisma.path.createMany).mockReset();
   vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
     run(prisma)) as never);
   vi.mocked(auth.api.getSession).mockResolvedValue({
@@ -241,6 +243,18 @@ describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
         name: 'Entrance',
         transitionMs: 4000,
         positions: [{ figureId: 'figure-1', castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
+        paths: [],
+      },
+      {
+        id: 'figure-2',
+        danceId: 'dance-1',
+        order: 1,
+        name: null,
+        transitionMs: 4000,
+        positions: [{ figureId: 'figure-2', castMemberId: 'cast-1', x: 0.75, y: 0.5 }],
+        paths: [
+          { figureId: 'figure-2', castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }] },
+        ],
       },
     ],
   };
@@ -317,6 +331,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
     const { id } = vi.mocked(prisma.dance.create).mock.calls[0]![0].data;
     expect(vi.mocked(prisma.figure.createMany).mock.calls[0]![0]!.data).toMatchObject([
       { danceId: id, order: 0, name: 'Entrance' },
+      { danceId: id, order: 1, name: null },
     ]);
   });
 
@@ -324,6 +339,14 @@ describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
     await copyOfKitri();
     expect(vi.mocked(prisma.position.createMany).mock.calls[0]![0]!.data).toMatchObject([
       { x: 0.25, y: 0.5 },
+      { x: 0.75, y: 0.5 },
+    ]);
+  });
+
+  test('creates the copied paths', async () => {
+    await copyOfKitri();
+    expect(vi.mocked(prisma.path.createMany).mock.calls[0]![0]!.data).toMatchObject([
+      { points: [{ along: 0.5, side: 0.2 }] },
     ]);
   });
 

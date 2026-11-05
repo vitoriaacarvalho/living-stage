@@ -2,12 +2,16 @@ import {
   parseFigureCopy,
   parseFigureOrder,
   parseFigureUpdate,
+  parsePathUpdate,
   parsePositionsUpdate,
   type Figure,
   type FigureCopy,
   type FigureOrder,
   type FigureResponse,
   type ListFiguresResponse,
+  type PathPoint,
+  type PathResponse,
+  type PathUpdate,
   type PositionsUpdate,
 } from '@living-stage/shared';
 import { Router } from 'express';
@@ -16,7 +20,10 @@ import type { Prisma } from '../generated/prisma/client.ts';
 
 export const schoolFiguresRouter = Router();
 
-const positionFields = { select: { castMemberId: true, x: true, y: true } } as const;
+const figureFields = {
+  positions: { select: { castMemberId: true, x: true, y: true } },
+  paths: { select: { castMemberId: true, points: true } },
+} as const;
 
 schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
   const dance = await prisma.dance.findFirst({
@@ -24,7 +31,7 @@ schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
     select: {
       figures: {
         orderBy: { order: 'asc' },
-        include: { positions: positionFields },
+        include: figureFields,
       },
     },
   });
@@ -96,7 +103,7 @@ schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res)
 
   const figure = await prisma.figure.findUniqueOrThrow({
     where: { id: req.params.figureId },
-    include: { positions: positionFields },
+    include: figureFields,
   });
   res.json({ figure: toFigure(figure) } satisfies FigureResponse);
 });
@@ -124,6 +131,48 @@ schoolFiguresRouter.put('/dances/:danceId/figures/:figureId/positions', async (r
   res.json({ figure: toFigure(result) } satisfies FigureResponse);
 });
 
+schoolFiguresRouter.put(
+  '/dances/:danceId/figures/:figureId/paths/:castMemberId',
+  async (req, res) => {
+    const update = parsePathUpdate(req.body);
+    if (!update) {
+      res.status(400).json({ error: 'invalid_path' });
+      return;
+    }
+    if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+
+    const { danceId, figureId, castMemberId } = req.params;
+    const result = await bendPath({ danceId, figureId, castMemberId }, update);
+    if (result === 'not_found') {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+    if (result === 'first_figure') {
+      res.status(400).json({ error: 'first_figure' });
+      return;
+    }
+    res.json({ path: { castMemberId, points: update.points } } satisfies PathResponse);
+  },
+);
+
+// A path that isn't there is already straight, so this answers 204 either way.
+schoolFiguresRouter.delete(
+  '/dances/:danceId/figures/:figureId/paths/:castMemberId',
+  async (req, res) => {
+    if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+
+    const { danceId, figureId, castMemberId } = req.params;
+    await prisma.path.deleteMany({ where: { figureId, castMemberId, figure: { danceId } } });
+    res.status(204).end();
+  },
+);
+
 schoolFiguresRouter.delete('/dances/:danceId/figures/:figureId', async (req, res) => {
   if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
     res.status(404).json({ error: 'not_found' });
@@ -148,7 +197,7 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
   return prisma.$transaction(async (tx) => {
     const source = await tx.figure.findFirst({
       where: { id: copyOf, danceId },
-      include: { positions: positionFields },
+      include: figureFields,
     });
     if (!source) return null;
 
@@ -164,7 +213,7 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
         transitionMs: source.transitionMs,
         positions: { create: source.positions },
       },
-      include: { positions: positionFields },
+      include: figureFields,
     });
   });
 }
@@ -184,7 +233,7 @@ function reorderFigures(danceId: string, { figureIds }: FigureOrder) {
     return tx.figure.findMany({
       where: { danceId },
       orderBy: { order: 'asc' },
-      include: { positions: positionFields },
+      include: figureFields,
     });
   });
 }
@@ -206,8 +255,27 @@ function movePositions(danceId: string, figureId: string, { positions }: Positio
     }
     return tx.figure.findUniqueOrThrow({
       where: { id: figureId },
-      include: { positions: positionFields },
+      include: figureFields,
     });
+  });
+}
+
+type PathKey = { danceId: string; figureId: string; castMemberId: string };
+
+// Nothing arrives into the first figure, so it holds no paths.
+function bendPath({ danceId, figureId, castMemberId }: PathKey, { points }: PathUpdate) {
+  return prisma.$transaction(async (tx) => {
+    const figure = await tx.figure.findFirst({ where: { id: figureId, danceId } });
+    const cast = await tx.castMember.count({ where: { id: castMemberId, danceId } });
+    if (!figure || cast === 0) return 'not_found';
+    if (figure.order === 0) return 'first_figure';
+
+    await tx.path.upsert({
+      where: { figureId_castMemberId: { figureId, castMemberId } },
+      create: { figureId, castMemberId, points },
+      update: { points },
+    });
+    return 'bent';
   });
 }
 
@@ -259,6 +327,15 @@ function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
 }
 
-function toFigure({ id, order, name, transitionMs, positions }: Omit<Figure, 'paths'>): Figure {
-  return { id, order, name, transitionMs, positions, paths: [] };
+type FigureRow = Omit<Figure, 'paths'> & {
+  paths: { castMemberId: string; points: Prisma.JsonValue }[];
+};
+
+// points is JSON in the database and only ever written after parsePathPoints.
+function toFigure({ id, order, name, transitionMs, positions, paths }: FigureRow): Figure {
+  const bent = paths.map(({ castMemberId, points }) => ({
+    castMemberId,
+    points: points as PathPoint[],
+  }));
+  return { id, order, name, transitionMs, positions, paths: bent };
 }

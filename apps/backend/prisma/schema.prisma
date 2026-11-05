@@ -156,6 +156,7 @@ model CastMember {
   role      String?
   createdAt DateTime   @default(now())
   positions Position[]
+  paths     Path[]
 
   @@unique([danceId, dancerId])
   @@map("cast_member")
@@ -169,6 +170,7 @@ model Figure {
   name         String?
   transitionMs Int        @default(4000)
   positions    Position[]
+  paths        Path[]
 
   @@unique([danceId, order])
   @@map("figure")
@@ -184,6 +186,19 @@ model Position {
 
   @@id([figureId, castMemberId])
   @@map("position")
+}
+
+// The route a cast member takes into a figure; points are { along, side } relative to
+// the straight line from her spot in the figure before (see PathPoint in shared).
+model Path {
+  figureId     String
+  figure       Figure     @relation(fields: [figureId], references: [id], onDelete: Cascade)
+  castMemberId String
+  castMember   CastMember @relation(fields: [castMemberId], references: [id], onDelete: Cascade)
+  points       Json
+
+  @@id([figureId, castMemberId])
+  @@map("path")
 }
 
 model Show {

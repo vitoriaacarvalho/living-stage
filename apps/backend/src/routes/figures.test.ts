@@ -1,5 +1,6 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { ListFiguresResponse } from '@living-stage/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import { auth } from '../auth/auth.ts';
@@ -25,6 +26,7 @@ vi.mock('../db.ts', () => ({
     },
     castMember: { count: vi.fn() },
     position: { update: vi.fn() },
+    path: { upsert: vi.fn(), deleteMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -46,6 +48,7 @@ const firstFigure = {
   name: null,
   transitionMs: 4000,
   positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
+  paths: [],
 };
 
 let server: Server;
@@ -88,6 +91,16 @@ beforeEach(() => {
     })) as never);
   vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
     run(prisma)) as never);
+});
+
+test('lists the bent paths into each figure', async () => {
+  const bent = [{ castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }] }];
+  vi.mocked(prisma.dance.findFirst).mockResolvedValue({
+    figures: [firstFigure, { ...firstFigure, id: 'figure-2', order: 1, paths: bent }],
+  } as never);
+  const res = await fetch(url);
+  const { figures } = (await res.json()) as ListFiguresResponse;
+  expect(figures[1]!.paths).toEqual(bent);
 });
 
 test('lists the figures of the dance with their positions', async () => {
@@ -589,5 +602,120 @@ describe('DELETE /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =
     vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
     const res = await remove();
     expect(res.status).toBe(404);
+  });
+});
+
+describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/:castMemberId', () => {
+  const points = [{ along: 0.5, side: 0.2 }];
+  const secondFigure = { ...firstFigure, id: 'figure-2', order: 1 };
+
+  function bend(body: unknown, figureId = 'figure-2') {
+    return fetch(`${url}/${figureId}/paths/cast-1`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(secondFigure as never);
+    vi.mocked(prisma.castMember.count).mockReset().mockResolvedValue(1);
+    vi.mocked(prisma.path.upsert).mockReset();
+  });
+
+  test('responds with the bent path', async () => {
+    const res = await bend({ points });
+    expect(await res.json()).toEqual({ path: { castMemberId: 'cast-1', points } });
+  });
+
+  test('saves the points for this cast member in this figure', async () => {
+    await bend({ points });
+    expect(prisma.path.upsert).toHaveBeenCalledWith({
+      where: { figureId_castMemberId: { figureId: 'figure-2', castMemberId: 'cast-1' } },
+      create: { figureId: 'figure-2', castMemberId: 'cast-1', points },
+      update: { points },
+    });
+  });
+
+  test('looks the figure up in this dance', async () => {
+    await bend({ points });
+    expect(prisma.figure.findFirst).toHaveBeenCalledWith({
+      where: { id: 'figure-2', danceId: 'dance-1' },
+    });
+  });
+
+  test('looks the cast member up in this dance', async () => {
+    await bend({ points });
+    expect(prisma.castMember.count).toHaveBeenCalledWith({
+      where: { id: 'cast-1', danceId: 'dance-1' },
+    });
+  });
+
+  test('responds 400 for points a path cannot hold', async () => {
+    const res = await bend({ points: [{ along: 1, side: 0 }] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 for the first figure, which nothing arrives into', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(firstFigure as never);
+    const res = await bend({ points }, 'figure-1');
+    expect(res.status).toBe(400);
+  });
+
+  test('saves no path into the first figure', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(firstFigure as never);
+    await bend({ points }, 'figure-1');
+    expect(prisma.path.upsert).not.toHaveBeenCalled();
+  });
+
+  test('responds 404 for a figure of another dance', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue(null);
+    const res = await bend({ points });
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 404 for a cast member of another dance', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(0);
+    const res = await bend({ points });
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    const res = await bend({ points });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('DELETE /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/:castMemberId', () => {
+  function straighten() {
+    return fetch(`${url}/figure-2/paths/cast-1`, { method: 'DELETE' });
+  }
+
+  beforeEach(() => {
+    vi.mocked(prisma.path.deleteMany)
+      .mockReset()
+      .mockResolvedValue({ count: 1 } as never);
+  });
+
+  test('responds 204', async () => {
+    expect((await straighten()).status).toBe(204);
+  });
+
+  test('deletes only the path of this cast member into this figure of this dance', async () => {
+    await straighten();
+    expect(prisma.path.deleteMany).toHaveBeenCalledWith({
+      where: { figureId: 'figure-2', castMemberId: 'cast-1', figure: { danceId: 'dance-1' } },
+    });
+  });
+
+  test('responds 204 for a path that is already straight', async () => {
+    vi.mocked(prisma.path.deleteMany).mockResolvedValue({ count: 0 } as never);
+    expect((await straighten()).status).toBe(204);
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    expect((await straighten()).status).toBe(404);
   });
 });

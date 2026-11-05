@@ -1,10 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { copyTitle } from '@living-stage/shared';
-import type { CastMember, Dance, Figure, Position, Prisma } from '../generated/prisma/client.ts';
+import type {
+  CastMember,
+  Dance,
+  Figure,
+  Path,
+  Position,
+  Prisma,
+} from '../generated/prisma/client.ts';
 
 export type DanceSource = Omit<Dance, 'id' | 'createdAt'> & {
   cast: Omit<CastMember, 'danceId'>[];
-  figures: (Omit<Figure, 'danceId'> & { positions: Omit<Position, 'figureId'>[] })[];
+  figures: (Omit<Figure, 'danceId'> & {
+    positions: Omit<Position, 'figureId'>[];
+    paths: Omit<Path, 'figureId'>[];
+  })[];
 };
 
 export type DanceCopy = {
@@ -12,9 +22,11 @@ export type DanceCopy = {
   cast: Prisma.CastMemberCreateManyInput[];
   figures: Prisma.FigureCreateManyInput[];
   positions: Prisma.PositionCreateManyInput[];
+  paths: Prisma.PathCreateManyInput[];
 };
 
-// Ids are made here rather than by the database so positions can point at the new rows.
+// Ids are made here rather than by the database so positions and paths can point at the
+// new rows.
 // Cast members keep their createdAt because it is what orders the cast.
 export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy {
   const danceId = randomUUID();
@@ -52,6 +64,13 @@ export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy 
         castMemberId: castIds.get(castMemberId)!,
         x,
         y,
+      })),
+    ),
+    paths: figures.flatMap(({ id, paths }) =>
+      paths.map(({ castMemberId, points }) => ({
+        figureId: figureIds.get(id)!,
+        castMemberId: castIds.get(castMemberId)!,
+        points: points as Prisma.InputJsonValue,
       })),
     ),
   };
