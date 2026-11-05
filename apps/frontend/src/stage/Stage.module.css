@@ -89,6 +89,10 @@
 
 .hit {
   position: absolute;
+  padding: 0;
+  border: 0;
+  background: none;
+  appearance: none;
   top: calc(var(--dancer-hit) / -2);
   left: calc(var(--dancer-hit) / -2);
   z-index: 1;
@@ -101,6 +105,11 @@
 
 .hit:active {
   cursor: grabbing;
+}
+
+.hit:focus-visible {
+  outline: 2px solid var(--stage-accent);
+  outline-offset: 2px;
 }
 
 .box {

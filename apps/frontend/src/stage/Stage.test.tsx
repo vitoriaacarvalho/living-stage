@@ -129,7 +129,7 @@ describe('editing', () => {
   }
 
   function floor() {
-    return screen.getByRole('img').firstElementChild as HTMLElement;
+    return screen.getByRole('group').firstElementChild as HTMLElement;
   }
 
   // The plan is 1500 × 900 px at the top left of the page, spanning PLAN_BOUNDS.
@@ -155,6 +155,74 @@ describe('editing', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  test('is a group named as the stage while editing', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    expect(
+      screen.getByRole('group', { name: 'Stage seen from above, audience at the bottom' }),
+    ).toBeInTheDocument();
+  });
+
+  test('makes each dancer a button named after her', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    expect(screen.getByRole('button', { name: 'Clara' })).toBeInTheDocument();
+  });
+
+  test('names a dancer button with her role too', () => {
+    render(<Stage showGuides dancers={[{ ...clara, role: 'Kitri' }]} edit={editing()} />);
+    expect(screen.getByRole('button', { name: 'Clara, Kitri' })).toBeInTheDocument();
+  });
+
+  test('shows a selected dancer button as pressed', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('shows a dancer button that is not selected as not pressed', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('selects only the dancer when Enter is pressed on her', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'Enter' });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('selects the dancer when Space is pressed on her', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: ' ' });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('adds the dancer to the selection with Shift and Enter', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
+      key: 'Enter',
+      shiftKey: true,
+    });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-2', 'cast-1']);
+  });
+
+  test('takes a selected dancer out of the selection with Shift and Enter', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
+      key: 'Enter',
+      shiftKey: true,
+    });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-2']);
+  });
+
+  test('ignores other keys on a dancer', () => {
+    const edit = editing();
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'a' });
+    expect(edit.onSelect).not.toHaveBeenCalled();
   });
 
   test('gives no dancer a drag area when the plan is only shown', () => {

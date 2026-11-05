@@ -5,7 +5,7 @@ import {
   type Position,
   type StagePoint,
 } from '@living-stage/shared';
-import { type PointerEvent, type RefObject, useState } from 'react';
+import { type KeyboardEvent, type PointerEvent, type RefObject, useState } from 'react';
 import type { StageDancer } from './Stage.tsx';
 
 export type StageEditing = {
@@ -25,6 +25,11 @@ type DragGesture = Press & {
 };
 
 type Gesture = DragGesture | (Press & { kind: 'box'; from: StagePoint; to: StagePoint });
+
+export type DancerHandlers = {
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+};
 
 export type SelectionBox = { left: number; top: number; right: number; bottom: number };
 
@@ -119,6 +124,13 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
     });
   }
 
+  function pressKey(dancer: StageDancer, event: KeyboardEvent<HTMLElement>) {
+    if (!edit || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    if (event.shiftKey) toggle(dancer.id);
+    else edit.onSelect([dancer.id]);
+  }
+
   function pressFloor(event: PointerEvent<HTMLElement>) {
     if (!edit || gesture) return;
     const from = toStage(event.clientX, event.clientY);
@@ -163,8 +175,10 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
     onPointerUp: release,
     onPointerCancel: cancel,
   };
-  const dancerPress = (dancer: StageDancer) => (event: PointerEvent<HTMLElement>) =>
-    pressDancer(dancer, event);
+  const dancerHandlers = (dancer: StageDancer): DancerHandlers => ({
+    onPointerDown: (event) => pressDancer(dancer, event),
+    onKeyDown: (event) => pressKey(dancer, event),
+  });
 
-  return { shown, box, floor, dancerPress };
+  return { shown, box, floor, dancerHandlers };
 }

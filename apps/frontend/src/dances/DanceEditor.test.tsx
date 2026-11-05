@@ -79,7 +79,7 @@ test('shows the dance title', async () => {
 
 test('shows the stage', async () => {
   await openKitri();
-  expect(screen.getByRole('img', { name: /^Stage seen from/ })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: /^Stage seen from/ })).toBeInTheDocument();
 });
 
 test('shows the guide lines when the dance has them on', async () => {
@@ -190,13 +190,13 @@ test('labels the stage circles by role in role mode', async () => {
     { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: 'Kitri' },
   ]);
   await openKitri({ ...kitri, labelMode: 'role' });
-  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
+  const stage = screen.getByRole('group', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Kitri')).toBeInTheDocument();
 });
 
 test('puts the cast on the stage', async () => {
   await openKitri();
-  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
+  const stage = screen.getByRole('group', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Clara')).toBeInTheDocument();
 });
 
@@ -211,7 +211,7 @@ test('puts a newly cast dancer in the wing on the stage', async () => {
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: 'Add' }));
   await user.click(await screen.findByRole('button', { name: /Bia/ }));
-  const stage = screen.getByRole('img', { name: /^Stage seen from/ });
+  const stage = screen.getByRole('group', { name: /^Stage seen from/ });
   expect(await within(stage).findByText('Bia')).toBeInTheDocument();
 });
 
@@ -241,7 +241,7 @@ describe('figures', () => {
   }
 
   function stage() {
-    return screen.getByRole('img', { name: /^Stage seen from/ });
+    return screen.getByRole('group', { name: /^Stage seen from/ });
   }
 
   test('lists the figures of the dance', async () => {

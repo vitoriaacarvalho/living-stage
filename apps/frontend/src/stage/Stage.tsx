@@ -8,10 +8,15 @@ import {
   UPSTAGE_WING_DEPTH,
   type DancerColor,
 } from '@living-stage/shared';
-import { type CSSProperties, type PointerEvent, useRef } from 'react';
+import { type CSSProperties, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import styles from './Stage.module.css';
-import { type SelectionBox, type StageEditing, usePlanGestures } from './usePlanGestures.ts';
+import {
+  type DancerHandlers,
+  type SelectionBox,
+  type StageEditing,
+  usePlanGestures,
+} from './usePlanGestures.ts';
 
 export type { StageEditing } from './usePlanGestures.ts';
 
@@ -48,13 +53,14 @@ export type StageProps = { showGuides: boolean; dancers?: StageDancer[]; edit?: 
 
 export function Stage({ showGuides, dancers = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
-  const { shown, box, floor, dancerPress } = usePlanGestures({ dancers, edit, planRef });
+  const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, edit, planRef });
 
   return (
     <div
       className={styles.stage}
       style={geometry}
-      role="img"
+      // An image hides its contents from screen readers, so the editable plan is a group of buttons.
+      role={edit ? 'group' : 'img'}
       aria-label="Stage seen from above, audience at the bottom"
     >
       <div
@@ -84,7 +90,7 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
             key={dancer.id}
             dancer={dancer}
             selected={edit?.selectedIds.includes(dancer.id) ?? false}
-            onPress={edit && dancerPress(dancer)}
+            handlers={edit && dancerHandlers(dancer)}
           />
         ))}
         {box && <Box box={box} />}
@@ -140,10 +146,10 @@ function Box({ box }: { box: SelectionBox }) {
 type DancerDotProps = {
   dancer: StageDancer;
   selected: boolean;
-  onPress: ((event: PointerEvent<HTMLElement>) => void) | undefined;
+  handlers: DancerHandlers | undefined;
 };
 
-function DancerDot({ dancer, selected, onPress }: DancerDotProps) {
+function DancerDot({ dancer, selected, handlers }: DancerDotProps) {
   const spot = {
     left: `${((dancer.x * STAGE_WIDTH_M + sideWing) / planWidth) * 100}%`,
     top: `${((dancer.y * STAGE_DEPTH_M + upstageWing) / planHeight) * 100}%`,
@@ -157,7 +163,16 @@ function DancerDot({ dancer, selected, onPress }: DancerDotProps) {
   ];
   return (
     <div className={classes.filter(Boolean).join(' ')} style={spot} data-testid="dancer">
-      {onPress && <span className={styles.hit} data-testid="dancer-hit" onPointerDown={onPress} />}
+      {handlers && (
+        <button
+          type="button"
+          className={styles.hit}
+          aria-label={dancer.role ? `${dancer.label}, ${dancer.role}` : dancer.label}
+          aria-pressed={selected}
+          data-testid="dancer-hit"
+          {...handlers}
+        />
+      )}
       <span className={styles.dot} />
       <span className={styles.label}>{dancer.label}</span>
       {dancer.role && <span className={styles.role}>{dancer.role}</span>}
