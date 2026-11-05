@@ -355,6 +355,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 - ⬜ **6.2 Reordering** · after 6.1
   - Done when: Drag acts and dances into a new order
   - Requirements: H3 · Screens: `ShowManager`
+  - Note: a dance can be dragged into another act; acts carry their dances
 
 #### MVP 3 — Casting and formations
 
