@@ -196,7 +196,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **H1.** A member can create a show with a name, date and optional venue.
 - ✅ **H2.** A show contains ordered acts; each act contains ordered dances.
-- **H3.** Acts and dances can be reordered by dragging.
+- ✅ **H3.** Acts and dances can be reordered by dragging.
 - **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song and costume photos are added after the MVP.
 - **H5.** A member can upload costume photos to a dance. *(after the MVP)*
 - **H6.** The show's total running time is calculated from the dance durations. In the MVP the teacher types each dance's duration; once music ships, it comes from the song.
@@ -352,7 +352,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
   - Done when: Create a show with acts holding dances
   - Requirements: H1, H2 · Screens: `ShowManager`, `ShowCard`, `DanceRow`
   - Note: shows have an optional time; the only status is "Performed", from the date
-- ⬜ **6.2 Reordering** · after 6.1
+- ✅ **6.2 Reordering** · after 6.1
   - Done when: Drag acts and dances into a new order
   - Requirements: H3 · Screens: `ShowManager`
   - Note: a dance can be dragged into another act; acts carry their dances
