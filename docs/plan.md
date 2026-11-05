@@ -175,7 +175,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
 - **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
 - **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
-- **E9.** Up to 60 dancers per dance, rendering and animating smoothly on an iPad.
+- **E9.** Up to 40 dancers per dance, rendering and animating smoothly on an iPad.
 
 ### Part F — Editing lock and live viewing *(after the MVP)*
 
@@ -370,7 +370,7 @@ First milestone to show real teachers.
   - Done when: Drag one or many dancers on the plan, with optional snapping, by finger and mouse
   - Requirements: C8, C9 · Screens: `Stage`
 - ⬜ **2.7 Straight-line playback** · after 2.3
-  - Done when: 60 dancers animate smoothly between figures without music on an iPad
+  - Done when: 40 dancers animate smoothly between figures without music on an iPad
   - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage`
 
 #### MVP 4 — Show details
@@ -461,7 +461,7 @@ Not ordered yet; plan it when the MVP ships.
 - [x] Undo/redo: per figure
 - [x] Counts: the teacher chooses tapped counts or BPM per song
 - [x] PDF export: in the browser
-- [x] Limits: 60 dancers, 30 MB audio, 10 MB photos (resized before upload)
+- [x] Limits: 40 dancers (lowered from 60 in Nov 2026), 30 MB audio, 10 MB photos (resized before upload)
 - [x] Deleted dancers: kept as placeholders
 - [x] MVP scope: shows, dances, casting, formations, the stage plan, paths, presentation mode and iPhone editing; see §1
 - [x] Stage view: 2D plan only, dancers as colored circles; the 3D stage and ballerinas were dropped (Nov 2026)
