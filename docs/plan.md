@@ -219,7 +219,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part K — Responsiveness and devices
 
 - **K1.** Every screen works on iPad, iPhone and desktop.
-- **K2.** Touch targets are large enough for finger dragging on a tablet.
+- ✅ **K2.** Touch targets are large enough for finger dragging on a tablet.
 - **K3.** On iPhone, the editor is optimized for viewing and quick edits; landscape is suggested for heavy editing.
 - **K4.** The app is installable to the home screen and opens full-screen (PWA). *(after the MVP)*
 - ✅ **K5.** The interface follows the Living Stage design system (tokens, fonts, icons, base components).
@@ -335,7 +335,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 - 🟨 **1.3 Schools and data isolation** · after 1.6a
   - Done when: Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404
   - Requirements: A2, A3 (code and link), A4, A5, A6 · Screens: `Access` (create or join a school), school picker and switcher
-- ⬜ **1.6 Responsive app shell** · after 1.6a
+- 🟨 **1.6 Responsive app shell** · after 1.6a
   - Done when: Navigation and layout work on iPhone, iPad and desktop
   - Requirements: K1, K2 · Screens: `Home` (shell, nav rail, dance cards with a stage thumbnail)
   - Note: only built destinations are in the shell (Home, Dancers, Team); Shows, search and Settings join with their plans
