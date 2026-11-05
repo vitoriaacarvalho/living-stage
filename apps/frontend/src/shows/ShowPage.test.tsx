@@ -415,7 +415,7 @@ describe('running time', () => {
   test('lists each act and the interval in the legend', async () => {
     vi.mocked(fetchShow).mockResolvedValue(timed);
     renderPage();
-    expect(await total()).toHaveTextContent('Act 1 3:40Act 2 · Classics 0:00Interval 15:00');
+    expect(await total()).toHaveTextContent('Act 1 3:40Interval 15:00Act 2 · Classics 0:00');
   });
 
   test('says how many dances have no time yet', async () => {

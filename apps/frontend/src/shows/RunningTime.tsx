@@ -8,11 +8,11 @@ import { Fragment } from 'react';
 import { actLabel } from './act-label.ts';
 import styles from './ShowPage.module.css';
 
-// The design's running time: the total, a bar split into acts and intervals, and a legend.
+// The design's running time: the total, a bar split into acts and intervals, and a legend
+// in the same order as the bar.
 export function RunningTime({ show }: { show: ShowDetail }) {
   const time = runningTime(show.acts, show.intervalMs);
   const intervals = show.intervalMs > 0 ? time.intervals : 0;
-  const intervalTotal = intervals * show.intervalMs;
   return (
     <section className={styles.total} aria-label="Total running time">
       <span className={styles.totalLabel}>Total running time</span>
@@ -34,15 +34,17 @@ export function RunningTime({ show }: { show: ShowDetail }) {
       )}
       <ul className={styles.legend}>
         {show.acts.map((act, index) => (
-          <li key={act.id}>
-            {actLabel(act, index)} <b>{formatDuration(time.acts[index]!)}</b>
-          </li>
+          <Fragment key={act.id}>
+            {index > 0 && intervals > 0 && (
+              <li>
+                Interval <b>{formatDuration(show.intervalMs)}</b>
+              </li>
+            )}
+            <li>
+              {actLabel(act, index)} <b>{formatDuration(time.acts[index]!)}</b>
+            </li>
+          </Fragment>
         ))}
-        {intervals > 0 && (
-          <li>
-            {intervals === 1 ? 'Interval' : 'Intervals'} <b>{formatDuration(intervalTotal)}</b>
-          </li>
-        )}
       </ul>
       {time.untimed > 0 && (
         <p className={styles.untimed}>
