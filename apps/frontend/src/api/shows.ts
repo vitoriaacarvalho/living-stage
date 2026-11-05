@@ -10,6 +10,7 @@ import type {
   ShowDetail,
   ShowDetailResponse,
   ShowInput,
+  ShowOrder,
   ShowResponse,
   ShowSummary,
   ShowUpdate,
@@ -106,4 +107,17 @@ export async function addActDance(ref: ActRef, input: ActDanceInput): Promise<Sh
 
 export function removeActDance(ref: ActRef, itemId: string): Promise<void> {
   return send(`${actUrl(ref)}/dances/${itemId}`, { method: 'DELETE', what: 'act dance' });
+}
+
+export async function reorderShow(
+  schoolId: string,
+  showId: string,
+  order: ShowOrder,
+): Promise<ShowDetail> {
+  const body = await send<ShowDetailResponse>(`${showUrl(schoolId, showId)}/order`, {
+    method: 'PUT',
+    body: JSON.stringify(order),
+    what: 'show order',
+  });
+  return body.show;
 }

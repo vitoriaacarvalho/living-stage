@@ -1,4 +1,4 @@
-import type { ActLayout } from '@living-stage/shared';
+import type { Act, ActLayout } from '@living-stage/shared';
 
 const actOf = (layout: ActLayout[], id: string) =>
   layout.findIndex((act) => act.id === id || act.danceIds.includes(id));
@@ -40,4 +40,22 @@ export function moveDance(layout: ActLayout[], danceId: string, overId: string):
     danceIds.splice(place, 0, danceId);
     return { ...act, danceIds };
   });
+}
+
+export function layoutOf(acts: Act[]): ActLayout[] {
+  return acts.map(({ id, dances }) => ({ id, danceIds: dances.map((dance) => dance.id) }));
+}
+
+// The acts and dances put in the layout's order; anything the layout doesn't know stays out.
+export function arrange(acts: Act[], layout: ActLayout[]): Act[] {
+  const dances = new Map(acts.flatMap((act) => act.dances).map((dance) => [dance.id, dance]));
+  return layout.flatMap(({ id, danceIds }) => {
+    const act = acts.find((each) => each.id === id);
+    if (!act) return [];
+    return [{ ...act, dances: danceIds.flatMap((danceId) => dances.get(danceId) ?? []) }];
+  });
+}
+
+export function sameLayout(a: ActLayout[], b: ActLayout[]): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
 }

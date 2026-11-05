@@ -1,5 +1,13 @@
-import type { Act, ActUpdate, ShowDance, ShowDetail, ShowUpdate } from '@living-stage/shared';
+import type {
+  Act,
+  ActLayout,
+  ActUpdate,
+  ShowDance,
+  ShowDetail,
+  ShowUpdate,
+} from '@living-stage/shared';
 import { useEffect, useState } from 'react';
+import { arrange } from './show-order.ts';
 import {
   addAct,
   addActDance,
@@ -7,6 +15,7 @@ import {
   deleteShow,
   fetchShow,
   removeActDance,
+  reorderShow,
   updateAct,
   updateShow,
 } from '../api/shows.ts';
@@ -22,6 +31,7 @@ export type ShowActions = {
   removeAct: (actId: string) => Promise<void>;
   addDance: (actId: string, danceId: string) => Promise<void>;
   removeDance: (actId: string, itemId: string) => Promise<void>;
+  reorder: (layout: ActLayout[]) => Promise<void>;
 };
 
 export function useShow(schoolId: string, showId: string): { state: ShowState } & ShowActions {
@@ -73,6 +83,17 @@ export function useShow(schoolId: string, showId: string): { state: ShowState } 
     async addDance(actId, danceId) {
       const dance = await addActDance({ schoolId, showId, actId }, { danceId });
       changeDances(actId, (dances) => [...dances, dance]);
+    },
+    // Shown right away; put back if saving fails.
+    async reorder(layout) {
+      const before = state.status === 'ready' ? state.show.acts : [];
+      changeActs((acts) => arrange(acts, layout));
+      try {
+        await reorderShow(schoolId, showId, { acts: layout });
+      } catch (error) {
+        changeActs(() => before);
+        throw error;
+      }
     },
     async removeDance(actId, itemId) {
       await removeActDance({ schoolId, showId, actId }, itemId);

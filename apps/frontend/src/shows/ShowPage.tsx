@@ -1,11 +1,10 @@
-import type { DanceSummary, ShowDetail } from '@living-stage/shared';
+import type { ShowDetail } from '@living-stage/shared';
 import { useState } from 'react';
 import { useDances } from '../dances/useDances.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { Icon } from '../ui/Icon.tsx';
-import { ActCard } from './ActCard.tsx';
-import { actLabel } from './act-label.ts';
+import { RunningOrder } from './RunningOrder.tsx';
 import { showWhen } from './show-when.ts';
 import { ShowForm } from './ShowForm.tsx';
 import styles from './ShowPage.module.css';
@@ -31,7 +30,7 @@ export function ShowPage({ schoolId, showId, onBack }: ShowPageProps) {
       {state.status === 'ready' && (
         <>
           <ShowHero show={state.show} actions={actions} onDeleted={onBack} />
-          <Acts
+          <RunningOrder
             show={state.show}
             actions={actions}
             dances={dances.status === 'ready' ? dances.dances : []}
@@ -120,55 +119,5 @@ function DeleteShow({ show, actions, onDeleted }: ShowHeroProps) {
         </p>
       )}
     </div>
-  );
-}
-
-type ActsProps = { show: ShowDetail; actions: ShowActions; dances: DanceSummary[] };
-
-function Acts({ show, actions, dances }: ActsProps) {
-  const [failed, setFailed] = useState(false);
-  const onlyAct = show.acts.length === 1;
-  const inShow = new Set(show.acts.flatMap((act) => act.dances.map(({ danceId }) => danceId)));
-  const addable = dances.filter(({ id }) => !inShow.has(id));
-
-  async function addAct() {
-    setFailed(false);
-    try {
-      await actions.addAct();
-    } catch {
-      setFailed(true);
-    }
-  }
-
-  return (
-    <>
-      <ol className={styles.acts} aria-label="Acts">
-        {show.acts.map((act, index) => (
-          <li key={act.id}>
-            <ActCard
-              act={act}
-              label={actLabel(act, index)}
-              actions={{
-                saveAct: actions.saveAct,
-                remove: onlyAct ? null : () => actions.removeAct(act.id),
-                addDance: (danceId) => actions.addDance(act.id, danceId),
-                removeDance: (dance) => actions.removeDance(act.id, dance.id),
-                addable,
-              }}
-            />
-          </li>
-        ))}
-      </ol>
-      <div>
-        <Button variant="secondary" icon="plus" onClick={addAct}>
-          New act
-        </Button>
-        {failed && (
-          <p role="alert" className={formStyles.error}>
-            Could not add the act. Try again.
-          </p>
-        )}
-      </div>
-    </>
   );
 }
