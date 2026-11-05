@@ -11,8 +11,8 @@ vi.mock('../api/figures.ts', () => ({
   reorderFigures: vi.fn(),
 }));
 
-const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
-const finale = { id: 'figure-2', order: 1, name: 'Finale', positions: [] };
+const entrance = { id: 'figure-1', order: 0, name: 'Entrance', transitionMs: 4000, positions: [] };
+const finale = { id: 'figure-2', order: 1, name: 'Finale', transitionMs: 4000, positions: [] };
 
 beforeEach(() => {
   vi.mocked(fetchCast).mockReset().mockResolvedValue([]);

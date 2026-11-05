@@ -6,6 +6,10 @@ import {
   parseFigureName,
   parseFigureOrder,
   parseFigureUpdate,
+  parseTransitionMs,
+  TRANSITION_MAX_MS,
+  TRANSITION_MIN_MS,
+  TRANSITION_STEP_MS,
   WING_SPOTS,
 } from './figure.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
@@ -109,8 +113,61 @@ describe('parseFigureUpdate', () => {
     expect(parseFigureUpdate({ name: '' })).toEqual({ name: null });
   });
 
-  test('rejects a body with no name', () => {
+  test('rejects an empty body', () => {
     expect(parseFigureUpdate({})).toBeNull();
+  });
+
+  test('accepts a new time to arrive', () => {
+    expect(parseFigureUpdate({ transitionMs: 6000 })).toEqual({ transitionMs: 6000 });
+  });
+
+  test('accepts a name and a time together', () => {
+    expect(parseFigureUpdate({ name: 'Entrance', transitionMs: 6000 })).toEqual({
+      name: 'Entrance',
+      transitionMs: 6000,
+    });
+  });
+
+  test('rejects a bad time even with a good name', () => {
+    expect(parseFigureUpdate({ name: 'Entrance', transitionMs: 0 })).toBeNull();
+  });
+
+  test('rejects a bad name even with a good time', () => {
+    expect(parseFigureUpdate({ name: 'a'.repeat(41), transitionMs: 6000 })).toBeNull();
+  });
+});
+
+describe('parseTransitionMs', () => {
+  test('accepts the shortest time', () => {
+    expect(parseTransitionMs(TRANSITION_MIN_MS)).toBe(TRANSITION_MIN_MS);
+  });
+
+  test('accepts the longest time', () => {
+    expect(parseTransitionMs(TRANSITION_MAX_MS)).toBe(TRANSITION_MAX_MS);
+  });
+
+  test('accepts a half second', () => {
+    expect(parseTransitionMs(4500)).toBe(4500);
+  });
+
+  test('rejects a time under the shortest', () => {
+    expect(parseTransitionMs(TRANSITION_MIN_MS - TRANSITION_STEP_MS)).toBeNull();
+  });
+
+  test('rejects a time over the longest', () => {
+    expect(parseTransitionMs(TRANSITION_MAX_MS + TRANSITION_STEP_MS)).toBeNull();
+  });
+
+  test('rejects a time between half seconds', () => {
+    expect(parseTransitionMs(4250)).toBeNull();
+  });
+
+  test('rejects a fraction of a millisecond', () => {
+    expect(parseTransitionMs(4000.5)).toBeNull();
+  });
+
+  test('rejects a time sent as text', () => {
+    expect(parseTransitionMs('4000')).toBeNull();
   });
 });
 

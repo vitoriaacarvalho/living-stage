@@ -142,7 +142,8 @@ schoolFiguresRouter.delete('/dances/:danceId/figures/:figureId', async (req, res
   res.status(204).end();
 });
 
-// The copy keeps every position but not the name, so it shows as "Figure N" until renamed.
+// The copy keeps every position and the time to arrive but not the name, so it shows as
+// "Figure N" until renamed.
 function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
   return prisma.$transaction(async (tx) => {
     const source = await tx.figure.findFirst({
@@ -157,7 +158,12 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
     if (order <= last) await shiftOrders(tx, danceId, { from: order, last, by: 1 });
 
     return tx.figure.create({
-      data: { danceId, order, positions: { create: source.positions } },
+      data: {
+        danceId,
+        order,
+        transitionMs: source.transitionMs,
+        positions: { create: source.positions },
+      },
       include: { positions: positionFields },
     });
   });
@@ -253,6 +259,6 @@ function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
 }
 
-function toFigure({ id, order, name, positions }: Figure): Figure {
-  return { id, order, name, positions };
+function toFigure({ id, order, name, transitionMs, positions }: Figure): Figure {
+  return { id, order, name, transitionMs, positions };
 }

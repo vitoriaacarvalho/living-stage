@@ -6,7 +6,14 @@ export type Position = StagePoint & { castMemberId: string };
 
 export type FigurePosition = Position & { figureId: string };
 
-export type Figure = { id: string; order: number; name: string | null; positions: Position[] };
+// transitionMs is the time to arrive from the figure before; the first figure's is unused.
+export type Figure = {
+  id: string;
+  order: number;
+  name: string | null;
+  transitionMs: number;
+  positions: Position[];
+};
 
 export type ListFiguresResponse = { figures: Figure[] };
 
@@ -26,7 +33,12 @@ export function parseFigureCopy(value: unknown): FigureCopy | null {
 
 export const FIGURE_NAME_MAX_LENGTH = 40;
 
-export type FigureUpdate = { name: string | null };
+export const TRANSITION_MIN_MS = 1000;
+export const TRANSITION_MAX_MS = 30_000;
+export const TRANSITION_STEP_MS = 500;
+
+// At least one of the two is set.
+export type FigureUpdate = { name?: string | null; transitionMs?: number };
 
 // Every figure of the dance, each once, in the new order.
 export type FigureOrder = { figureIds: string[] };
@@ -56,10 +68,27 @@ export function parseFigureName(value: unknown): string | null | undefined {
   return name.length === 0 ? null : name;
 }
 
+export function parseTransitionMs(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isInteger(value)) return null;
+  if (value < TRANSITION_MIN_MS || value > TRANSITION_MAX_MS) return null;
+  return value % TRANSITION_STEP_MS === 0 ? value : null;
+}
+
 export function parseFigureUpdate(value: unknown): FigureUpdate | null {
   if (typeof value !== 'object' || value === null) return null;
-  const name = parseFigureName((value as Record<string, unknown>).name);
-  return name === undefined ? null : { name };
+  const body = value as Record<string, unknown>;
+  const update: FigureUpdate = {};
+  if (body.name !== undefined) {
+    const name = parseFigureName(body.name);
+    if (name === undefined) return null;
+    update.name = name;
+  }
+  if (body.transitionMs !== undefined) {
+    const transitionMs = parseTransitionMs(body.transitionMs);
+    if (transitionMs === null) return null;
+    update.transitionMs = transitionMs;
+  }
+  return Object.keys(update).length > 0 ? update : null;
 }
 
 export function parseFigureOrder(value: unknown): FigureOrder | null {

@@ -44,6 +44,7 @@ const firstFigure = {
   danceId: 'dance-1',
   order: 0,
   name: null,
+  transitionMs: 4000,
   positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
 };
 
@@ -97,6 +98,7 @@ test('lists the figures of the dance with their positions', async () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
       },
     ],
@@ -143,6 +145,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
         id: 'figure-new',
         order: 3,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
       },
     });
@@ -162,6 +165,15 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
     } as never);
     await copy({ copyOf: 'figure-1', placement: 'end' });
     expect(createdData()).not.toHaveProperty('name');
+  });
+
+  test('keeps the time to arrive of the figure it copies', async () => {
+    vi.mocked(prisma.figure.findFirst).mockResolvedValue({
+      ...firstFigure,
+      transitionMs: 6500,
+    } as never);
+    await copy({ copyOf: 'figure-1', placement: 'end' });
+    expect(createdData()).toMatchObject({ transitionMs: 6500 });
   });
 
   test('adds a new figure after the last one', async () => {
@@ -254,6 +266,7 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =>
         id: 'figure-1',
         order: 0,
         name: 'Entrance',
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
       },
     });
@@ -283,6 +296,30 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =>
   test('responds 400 for a name over the maximum length', async () => {
     const res = await rename({ name: 'a'.repeat(41) });
     expect(res.status).toBe(400);
+  });
+
+  test('sets the time to arrive', async () => {
+    await rename({ transitionMs: 6500 });
+    expect(prisma.figure.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { transitionMs: 6500 } }),
+    );
+  });
+
+  test('sets the name and the time to arrive together', async () => {
+    await rename({ name: 'Entrance', transitionMs: 6500 });
+    expect(prisma.figure.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { name: 'Entrance', transitionMs: 6500 } }),
+    );
+  });
+
+  test('responds 400 for a time to arrive over 30 seconds', async () => {
+    const res = await rename({ transitionMs: 30_500 });
+    expect(res.status).toBe(400);
+  });
+
+  test('changes nothing for a time to arrive between half seconds', async () => {
+    await rename({ transitionMs: 4250 });
+    expect(prisma.figure.updateMany).not.toHaveBeenCalled();
   });
 });
 
@@ -385,7 +422,7 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/positions
   test('responds with the figure and its new positions', async () => {
     const res = await move({ positions: moved });
     expect(await res.json()).toEqual({
-      figure: { id: 'figure-1', order: 0, name: null, positions: moved },
+      figure: { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: moved },
     });
   });
 

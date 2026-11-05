@@ -51,6 +51,7 @@ beforeEach(() => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
     ]);
@@ -229,9 +230,10 @@ describe('figures', () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
-      { id: 'figure-2', order: 1, name: 'Entrance', positions: [] },
+      { id: 'figure-2', order: 1, name: 'Entrance', transitionMs: 4000, positions: [] },
     ]);
   });
 
@@ -293,6 +295,7 @@ describe('figure tools', () => {
     id: 'figure-2',
     order: 1,
     name: null,
+    transitionMs: 4000,
     positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
   };
 
@@ -348,8 +351,8 @@ describe('figure tools', () => {
 
   test('puts a duplicate between the figure and the ones after it', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, positions: [] },
-      { id: 'figure-3', order: 1, name: 'Finale', positions: [] },
+      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [] },
+      { id: 'figure-3', order: 1, name: 'Finale', transitionMs: 4000, positions: [] },
     ]);
     await openKitri();
     await tap('Duplicate');
@@ -361,9 +364,13 @@ describe('figure tools', () => {
 
 describe('figure panel', () => {
   beforeEach(() => {
-    vi.mocked(updateFigure)
-      .mockReset()
-      .mockResolvedValue({ id: 'figure-1', order: 0, name: 'Entrance', positions: [] });
+    vi.mocked(updateFigure).mockReset().mockResolvedValue({
+      id: 'figure-1',
+      order: 0,
+      name: 'Entrance',
+      transitionMs: 4000,
+      positions: [],
+    });
   });
 
   async function openFigurePanel() {
@@ -408,9 +415,15 @@ describe('figure panel', () => {
 });
 
 describe('deleting figures', () => {
-  const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
-  const middle = { id: 'figure-2', order: 1, name: 'Middle', positions: [] };
-  const finale = { id: 'figure-3', order: 2, name: 'Finale', positions: [] };
+  const entrance = {
+    id: 'figure-1',
+    order: 0,
+    name: 'Entrance',
+    transitionMs: 4000,
+    positions: [],
+  };
+  const middle = { id: 'figure-2', order: 1, name: 'Middle', transitionMs: 4000, positions: [] };
+  const finale = { id: 'figure-3', order: 2, name: 'Finale', transitionMs: 4000, positions: [] };
 
   beforeEach(() => {
     vi.mocked(fetchFigures).mockResolvedValue([entrance, middle, finale]);
@@ -483,12 +496,14 @@ describe('dragging on the 2D plan', () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
       {
         id: 'figure-2',
         order: 1,
         name: 'Entrance',
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.25 }],
       },
     ]);
@@ -569,6 +584,7 @@ describe('dragging on the 2D plan', () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [
           { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
           { castMemberId: 'cast-2', x: 0.25, y: 0.5 },
@@ -597,6 +613,7 @@ describe('dragging on the 2D plan', () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [
           { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
           { castMemberId: 'cast-2', x: 0.25, y: 0.5 },
@@ -627,12 +644,14 @@ describe('playback', () => {
         id: 'figure-1',
         order: 0,
         name: null,
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
       {
         id: 'figure-2',
         order: 1,
         name: 'Entrance',
+        transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
       },
     ]);
@@ -708,6 +727,7 @@ describe('playback', () => {
       id: 'figure-3',
       order: 2,
       name: null,
+      transitionMs: 4000,
       positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
     });
     const user = await play();
@@ -754,7 +774,7 @@ describe('playback', () => {
 
   test('cannot play a dance with a single figure', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, positions: [] },
+      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [] },
     ]);
     await openKitri();
     expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();

@@ -43,7 +43,7 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
 | Languages | English only in the MVP; Portuguese (pt-BR) added after it with i18n |
 | Stage | Standard rectangular stage with wings; no custom proportions |
-| Music | Uploaded audio files, after the MVP; no Spotify (its API no longer supports this use). Until then playback runs on a default time per transition, and a dance's duration is typed by hand |
+| Music | Uploaded audio files, after the MVP; no Spotify (its API no longer supports this use). Until then playback runs on a time per move that the teacher sets (4 s by default), and a dance's duration is typed by hand |
 | Offline | Not required |
 | Props and set pieces | Not included |
 | Export | Printable PDF of formations, after the MVP |
@@ -164,6 +164,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
 - ✅ **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
 - ✅ **D5.** Playback can run without music too, with a default duration per transition.
+- **D6.** Until music pins figures to the song (E4), the teacher sets how long each move takes: 1 to 30 seconds in half seconds, 4 by default.
 
 ### Part E — Music timeline *(after the MVP, except E9)*
 
@@ -236,7 +237,7 @@ Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dance
 
 Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
-Figure        id, danceId, order, name?, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3)
+Figure        id, danceId, order, name?, transitionMs, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs or count once music ships)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, segments[]  (route arriving into this figure)
 
@@ -371,7 +372,7 @@ First milestone to show real teachers.
   - Requirements: C8, C9 · Screens: `Stage`
 - 🟨 **2.7 Straight-line playback** · after 2.3
   - Done when: 40 dancers animate smoothly between figures without music on an iPad
-  - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage`
+  - Requirements: D1, D4, D5, D6, E9 · Screens: `Timeline`, `Stage`, figure panel
   - Note: the 40-dancer cap is enforced here, on the cast route (409 `cast_full`) and in the cast picker
 
 #### MVP 4 — Show details

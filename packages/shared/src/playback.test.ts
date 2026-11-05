@@ -13,6 +13,7 @@ const figure = (order: number, positions: Position[]): Figure => ({
   id: `f${order}`,
   order,
   name: null,
+  transitionMs: TRANSITION_MS,
   positions,
 });
 

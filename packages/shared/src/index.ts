@@ -42,12 +42,16 @@ export {
 } from './dancer.ts';
 export {
   FIGURE_NAME_MAX_LENGTH,
+  TRANSITION_MAX_MS,
+  TRANSITION_MIN_MS,
+  TRANSITION_STEP_MS,
   WING_SPOTS,
   nextWingSpot,
   parseFigureCopy,
   parseFigureName,
   parseFigureOrder,
   parseFigureUpdate,
+  parseTransitionMs,
   type Figure,
   type FigureCopy,
   type FigureOrder,

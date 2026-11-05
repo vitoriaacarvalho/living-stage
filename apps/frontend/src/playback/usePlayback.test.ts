@@ -3,7 +3,13 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { usePlayback } from './usePlayback.ts';
 
-const figure = (order: number): Figure => ({ id: `f${order}`, order, name: null, positions: [] });
+const figure = (order: number): Figure => ({
+  id: `f${order}`,
+  order,
+  name: null,
+  transitionMs: TRANSITION_MS,
+  positions: [],
+});
 
 const three = [figure(0), figure(1), figure(2)];
 

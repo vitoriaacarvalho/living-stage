@@ -159,12 +159,13 @@ model CastMember {
 }
 
 model Figure {
-  id        String     @id @default(cuid())
-  danceId   String
-  dance     Dance      @relation(fields: [danceId], references: [id], onDelete: Cascade)
-  order     Int
-  name      String?
-  positions Position[]
+  id           String     @id @default(cuid())
+  danceId      String
+  dance        Dance      @relation(fields: [danceId], references: [id], onDelete: Cascade)
+  order        Int
+  name         String?
+  transitionMs Int        @default(4000)
+  positions    Position[]
 
   @@unique([danceId, order])
   @@map("figure")

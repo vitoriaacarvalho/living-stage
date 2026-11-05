@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { FigurePanel, type FigureActions } from './FigurePanel.tsx';
 
-const entrance = { id: 'figure-1', order: 0, name: 'Entrance', positions: [] };
-const finale = { id: 'figure-2', order: 1, name: 'Finale', positions: [] };
+const entrance = { id: 'figure-1', order: 0, name: 'Entrance', transitionMs: 4000, positions: [] };
+const finale = { id: 'figure-2', order: 1, name: 'Finale', transitionMs: 4000, positions: [] };
 const failing = () => vi.fn().mockRejectedValue(new Error('figure request answered 500'));
 
 function renderPanel(changes: Partial<FigureActions> = {}) {
