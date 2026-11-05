@@ -2,10 +2,11 @@ import {
   ARROW_LARGE_STEP_M,
   ARROW_STEP_M,
   PATH_HANDLE_MIN_M,
+  PATH_STRAIGHT_M,
   arrowStep,
   clampToPlan,
-  isNearlyStraight,
   moveLengthM,
+  offLineM,
   pathPointAt,
   pathPointSpot,
   type PathPoint,
@@ -89,7 +90,8 @@ export function usePathHandle({ paths, dancers, edit, planRef }: HandleSetup) {
     },
     onPointerUp(event) {
       if (!bending || event.pointerId !== bending.pointerId) return;
-      if (bending.moved) save(bending.point, isNearlyStraight(from, dancer, bending.point));
+      if (bending.moved)
+        save(bending.point, offLineM(from, dancer, [bending.point], 0) < PATH_STRAIGHT_M);
       setBending(null);
     },
     onPointerCancel(event) {

@@ -16,11 +16,11 @@ export type PathUpdate = { points: PathPoint[] };
 
 export type CubicSegment = { start: StagePoint; c1: StagePoint; c2: StagePoint; end: StagePoint };
 
-export const PATH_POINTS_MAX = 1;
+export const PATH_POINTS_MAX = 5;
 export const PATH_ALONG_MIN = 0.05;
 export const PATH_ALONG_MAX = 0.95;
 export const PATH_SIDE_MAX = 2;
-// Letting go of a handle this close to the straight line straightens the path.
+// Letting go of a point this close to the straight line between its neighbours removes it.
 export const PATH_STRAIGHT_M = 0.3;
 // A shorter move shows no handle, so it never covers the dancer's own drag area.
 export const PATH_HANDLE_MIN_M = 1.5;
@@ -65,16 +65,52 @@ export function pathPointAt(start: StagePoint, end: StagePoint, spot: StagePoint
   };
 }
 
-export function isNearlyStraight(start: StagePoint, end: StagePoint, point: PathPoint): boolean {
-  return Math.abs(point.side) * moveLengthM(start, end) < PATH_STRAIGHT_M;
+// Start, every point and end, in order along the path.
+function throughSpots(start: StagePoint, end: StagePoint, points: PathPoint[]): StagePoint[] {
+  return [start, ...points.map((point) => pathPointSpot(start, end, point)), end];
+}
+
+// How far the point at index sits from the straight line between its neighbours: the
+// points either side of it, or the start and end.
+export function offLineM(
+  start: StagePoint,
+  end: StagePoint,
+  points: PathPoint[],
+  index: number,
+): number {
+  const [before, at, after] = throughSpots(start, end, points)
+    .slice(index, index + 3)
+    .map(toMetres) as [Vector, Vector, Vector];
+  const line = minus(after, before);
+  const share = clamp(dot(minus(at, before), line) / (dot(line, line) || 1), 0, 1);
+  return length(minus(at, plus(before, times(line, share))));
+}
+
+// The points with a new one at spot, placed between the points it was tapped between so
+// they stay in order along the path.
+export function withPointAt(
+  start: StagePoint,
+  end: StagePoint,
+  points: PathPoint[],
+  spot: StagePoint,
+): PathPoint[] {
+  const target = toMetres(spot);
+  const nearest = pathCurve(start, end, points)
+    .map((segment, index) => {
+      const steps = Array.from({ length: SAMPLES_PER_SEGMENT + 1 }, (_, step) =>
+        length(minus(toMetres(bezier(segment, step / SAMPLES_PER_SEGMENT)), target)),
+      );
+      return { index, distance: Math.min(...steps) };
+    })
+    .reduce((best, each) => (each.distance < best.distance ? each : best));
+  const point = pathPointAt(start, end, spot);
+  return [...points.slice(0, nearest.index), point, ...points.slice(nearest.index)];
 }
 
 // A centripetal Catmull-Rom spline through start, the points and end, as cubic Bézier
 // segments. Centripetal keeps it from looping or overshooting near close points.
 export function pathCurve(start: StagePoint, end: StagePoint, points: PathPoint[]): CubicSegment[] {
-  const through = [start, ...points.map((point) => pathPointSpot(start, end, point)), end].map(
-    toMetres,
-  );
+  const through = throughSpots(start, end, points).map(toMetres);
   const last = through.length - 1;
   const before = minus(times(through[0]!, 2), through[1]!);
   const after = minus(times(through[last]!, 2), through[last - 1]!);

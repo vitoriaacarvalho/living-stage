@@ -3,9 +3,10 @@ import type { StagePoint } from './figure.ts';
 import {
   PATH_ALONG_MAX,
   PATH_ALONG_MIN,
+  PATH_POINTS_MAX,
   PATH_SIDE_MAX,
-  isNearlyStraight,
   moveLengthM,
+  offLineM,
   parsePathPoints,
   parsePathUpdate,
   pathCurve,
@@ -13,6 +14,7 @@ import {
   pathPointSpot,
   spotAlong,
   spotsAlong,
+  withPointAt,
 } from './path.ts';
 
 // Stage left to right across the middle: 7.2 m on the 12 m floor.
@@ -80,17 +82,38 @@ describe('pathPointAt', () => {
   });
 });
 
-describe('isNearlyStraight', () => {
-  test('is straight just inside 30 cm of the line', () => {
-    expect(isNearlyStraight(start, end, { along: 0.5, side: 0.29 / moveM })).toBe(true);
+describe('offLineM', () => {
+  test('measures a single point from the straight line from start to end', () => {
+    expect(offLineM(start, end, [{ along: 0.5, side: 0.29 / moveM }], 0)).toBeCloseTo(0.29);
   });
 
-  test('is bent just past 30 cm from the line', () => {
-    expect(isNearlyStraight(start, end, { along: 0.5, side: 0.31 / moveM })).toBe(false);
+  test('measures a point to the right of the line the same way', () => {
+    expect(offLineM(start, end, [{ along: 0.5, side: -0.31 / moveM }], 0)).toBeCloseTo(0.31);
   });
 
-  test('measures a bend to the right the same way', () => {
-    expect(isNearlyStraight(start, end, { along: 0.5, side: -0.31 / moveM })).toBe(false);
+  test('measures a point from the line between the points either side of it', () => {
+    const points = [
+      { along: 0.25, side: 0.25 },
+      { along: 0.5, side: 0.25 },
+      { along: 0.75, side: 0.25 },
+    ];
+    expect(offLineM(start, end, points, 1)).toBeCloseTo(0);
+  });
+
+  test('measures the first point from the start and the next point', () => {
+    const points = [
+      { along: 0.25, side: 0 },
+      { along: 0.5, side: 0.5 },
+    ];
+    expect(offLineM(start, end, points, 0)).toBeGreaterThan(0.3);
+  });
+
+  test('measures the last point from the point before it and the end', () => {
+    const points = [
+      { along: 0.5, side: 0.5 },
+      { along: 0.75, side: 0.25 },
+    ];
+    expect(offLineM(start, end, points, 1)).toBeCloseTo(0);
   });
 });
 
@@ -121,6 +144,32 @@ describe('pathCurve', () => {
     const into = { x: first!.end.x - first!.c2.x, y: first!.end.y - first!.c2.y };
     const out = { x: second!.c1.x - second!.start.x, y: second!.c1.y - second!.start.y };
     expect(into.x * out.y - into.y * out.x).toBeCloseTo(0, 9);
+  });
+});
+
+describe('withPointAt', () => {
+  const first = { along: 0.3, side: 0.2 };
+  const second = { along: 0.7, side: -0.2 };
+
+  test('adds the first point of a straight path where it was tapped', () => {
+    const [point] = withPointAt(start, end, [], { x: 0.5, y: 0.5 });
+    expect([point!.along, point!.side]).toEqual([expect.closeTo(0.5), expect.closeTo(0)]);
+  });
+
+  test('puts a point tapped before the first point ahead of it', () => {
+    const spot = spotAlong(pathCurve(start, end, [first, second]), 0.1);
+    expect(withPointAt(start, end, [first, second], spot)[1]).toEqual(first);
+  });
+
+  test('puts a point tapped between two points between them', () => {
+    const spot = spotAlong(pathCurve(start, end, [first, second]), 0.5);
+    const points = withPointAt(start, end, [first, second], spot);
+    expect([points[0], points[2]]).toEqual([first, second]);
+  });
+
+  test('puts a point tapped after the last point at the end', () => {
+    const spot = spotAlong(pathCurve(start, end, [first, second]), 0.9);
+    expect(withPointAt(start, end, [first, second], spot).slice(0, 2)).toEqual([first, second]);
   });
 });
 
@@ -184,13 +233,20 @@ describe('parsePathPoints', () => {
     expect(parsePathPoints([])).toBeNull();
   });
 
+  test('accepts as many points as a path holds', () => {
+    const points = Array.from({ length: PATH_POINTS_MAX }, (_, index) => ({
+      along: 0.1 + index * 0.1,
+      side: 0,
+    }));
+    expect(parsePathPoints(points)).toEqual(points);
+  });
+
   test('refuses more points than a path holds', () => {
-    expect(
-      parsePathPoints([
-        { along: 0.3, side: 0 },
-        { along: 0.6, side: 0 },
-      ]),
-    ).toBeNull();
+    const points = Array.from({ length: PATH_POINTS_MAX + 1 }, (_, index) => ({
+      along: 0.1 + index * 0.1,
+      side: 0,
+    }));
+    expect(parsePathPoints(points)).toBeNull();
   });
 
   test('refuses a point too close to the start', () => {
