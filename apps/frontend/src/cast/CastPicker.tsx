@@ -5,9 +5,11 @@ import {
   type Dancer,
 } from '@living-stage/shared';
 import { useState } from 'react';
+import { matchesName } from '../dancers/match-name.ts';
 import { useDancers } from '../dancers/useDancers.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
+import { TextField } from '../ui/TextField.tsx';
 import styles from './CastList.module.css';
 
 type CastPickerProps = {
@@ -79,6 +81,7 @@ type RosterPickerProps = {
 function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerProps) {
   const { state } = useDancers(schoolId);
   const [failed, setFailed] = useState<Dancer | null>(null);
+  const [query, setQuery] = useState('');
   const castIds = new Set(cast.map((member) => member.dancer?.id));
 
   async function pick(dancer: Dancer) {
@@ -104,8 +107,20 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
         </p>
       )}
       {state.status === 'ready' && (
+        <div className={styles.search}>
+          <TextField
+            label="Search by name"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            autoComplete="off"
+          />
+        </div>
+      )}
+      {state.status === 'ready' && (
         <Uncast
           dancers={state.dancers.filter(({ id }) => !castIds.has(id))}
+          query={query}
           pickLabel={copy.pick}
           onPick={pick}
         />
@@ -125,15 +140,24 @@ function PickerHead({ copy, onClose }: { copy: PickerCopy; onClose: () => void }
   );
 }
 
-type UncastProps = { dancers: Dancer[]; pickLabel: string; onPick: (dancer: Dancer) => void };
+type UncastProps = {
+  dancers: Dancer[];
+  query: string;
+  pickLabel: string;
+  onPick: (dancer: Dancer) => void;
+};
 
-function Uncast({ dancers, pickLabel, onPick }: UncastProps) {
+function Uncast({ dancers, query, pickLabel, onPick }: UncastProps) {
   if (dancers.length === 0) {
     return <p className={styles.empty}>Every dancer in the roster is in this dance.</p>;
   }
+  const found = dancers.filter((dancer) => matchesName(dancer.name, query));
+  if (found.length === 0) {
+    return <p className={styles.empty}>No dancers match “{query.trim()}”.</p>;
+  }
   return (
     <ul className={styles.list} aria-label="Dancers not in this dance">
-      {dancers.map((dancer) => (
+      {found.map((dancer) => (
         <li key={dancer.id}>
           <button type="button" className={styles.pick} onClick={() => onPick(dancer)}>
             <span className={styles.name}>{dancer.name}</span>

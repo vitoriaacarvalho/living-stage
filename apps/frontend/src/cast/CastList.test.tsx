@@ -19,6 +19,7 @@ vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
 
 const clara = { id: 'dancer-1', name: 'Clara Souza', color: 3 };
 const bia = { id: 'dancer-2', name: 'Bia Lima', color: null };
+const julia = { id: 'dancer-3', name: 'Júlia Rocha', color: 5 };
 const claraAsKitri = { id: 'cast-1', dancer: clara, role: 'Kitri' };
 
 beforeEach(() => {
@@ -141,6 +142,26 @@ test('says when every roster dancer is already cast', async () => {
   renderCast();
   await openPicker();
   expect(await screen.findByText(/Every dancer in the roster/)).toBeInTheDocument();
+});
+
+test('narrows the dancers to pick by name, ignoring accents', async () => {
+  vi.mocked(fetchDancers).mockResolvedValue([bia, clara, julia]);
+  renderCast();
+  const user = await openPicker();
+  await user.type(await screen.findByLabelText('Search by name'), 'julia');
+  const list = screen.getByRole('list', { name: 'Dancers not in this dance' });
+  expect(
+    within(list)
+      .getAllByRole('button')
+      .map((button) => button.textContent),
+  ).toEqual(['Júlia RochaAdd']);
+});
+
+test('says when no dancer to pick matches the search', async () => {
+  renderCast();
+  const user = await openPicker();
+  await user.type(await screen.findByLabelText('Search by name'), ' Zoe ');
+  expect(screen.getByText('No dancers match “Zoe”.')).toBeInTheDocument();
 });
 
 test('says when a dancer cannot be added', async () => {
