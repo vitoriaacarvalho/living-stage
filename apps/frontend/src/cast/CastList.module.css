@@ -41,6 +41,13 @@
   color: var(--ink-muted);
 }
 
+.note {
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-2);
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
 .list {
   flex: 1;
   min-height: 0;

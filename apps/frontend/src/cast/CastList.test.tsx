@@ -1,4 +1,4 @@
-import type { ColorMode } from '@living-stage/shared';
+import { CAST_MAX_SIZE, type ColorMode } from '@living-stage/shared';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -149,6 +149,40 @@ test('says when a dancer cannot be added', async () => {
   const user = await openPicker();
   await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not add Bia Lima');
+});
+
+function castOf(size: number) {
+  return Array.from({ length: size }, (_, index) => ({
+    id: `cast-${index + 10}`,
+    dancer: { id: `dancer-${index + 10}`, name: `Dancer ${index + 1}`, color: null },
+    role: null,
+  }));
+}
+
+test('cannot add to a full cast', async () => {
+  vi.mocked(fetchCast).mockResolvedValue(castOf(CAST_MAX_SIZE));
+  renderCast();
+  expect(await screen.findByRole('button', { name: 'Add' })).toBeDisabled();
+});
+
+test('says why a full cast cannot take more dancers', async () => {
+  vi.mocked(fetchCast).mockResolvedValue(castOf(CAST_MAX_SIZE));
+  renderCast();
+  expect(await screen.findByText(/holds up to 40 dancers/)).toBeInTheDocument();
+});
+
+test('can add to a cast one short of full', async () => {
+  vi.mocked(fetchCast).mockResolvedValue(castOf(CAST_MAX_SIZE - 1));
+  renderCast();
+  expect(await screen.findByRole('button', { name: 'Add' })).toBeEnabled();
+});
+
+test('stops offering dancers once the cast fills up in the picker', async () => {
+  vi.mocked(fetchCast).mockResolvedValue(castOf(CAST_MAX_SIZE - 1));
+  renderCast();
+  const user = await openPicker();
+  await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
+  expect(await screen.findByText(/holds up to 40 dancers/)).toBeInTheDocument();
 });
 
 async function editClara() {

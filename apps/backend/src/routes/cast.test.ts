@@ -1,6 +1,6 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { CastMemberCreatedResponse } from '@living-stage/shared';
+import { CAST_MAX_SIZE, type CastMemberCreatedResponse } from '@living-stage/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import { auth } from '../auth/auth.ts';
@@ -20,6 +20,7 @@ vi.mock('../db.ts', () => ({
     $transaction: vi.fn(),
     castMember: {
       findMany: vi.fn(),
+      count: vi.fn(),
       create: vi.fn(),
       updateManyAndReturn: vi.fn(),
       deleteMany: vi.fn(),
@@ -98,6 +99,7 @@ beforeEach(() => {
   vi.mocked(prisma.figure.findMany)
     .mockReset()
     .mockResolvedValue([{ ...firstFigure, positions: [] }] as never);
+  vi.mocked(prisma.castMember.count).mockResolvedValue(0);
   vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
     run(prisma)) as never);
 });
@@ -259,6 +261,31 @@ describe('POST /api/schools/:schoolId/dances/:danceId/cast', () => {
     vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
     const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
     expect(res.status).toBe(404);
+  });
+
+  test('casts the last dancer the dance can hold', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(CAST_MAX_SIZE - 1);
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(res.status).toBe(201);
+  });
+
+  test('responds 409 once the dance holds the most dancers it can', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(CAST_MAX_SIZE);
+    const res = await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(await res.json()).toEqual({ error: 'cast_full' });
+  });
+
+  test('casts nobody once the dance is full', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(CAST_MAX_SIZE);
+    await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(prisma.castMember.create).not.toHaveBeenCalled();
+  });
+
+  test('counts only the cast of this dance', async () => {
+    vi.mocked(prisma.castMember.create).mockResolvedValue(kitri as never);
+    await fetch(url(), send('POST', { dancerId: 'dancer-1' }));
+    expect(prisma.castMember.count).toHaveBeenCalledWith({ where: { danceId: 'dance-1' } });
   });
 
   test('responds 409 when the dancer is already in the cast', async () => {

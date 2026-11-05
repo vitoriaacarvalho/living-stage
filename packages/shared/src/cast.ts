@@ -3,6 +3,9 @@ import type { FigurePosition } from './figure.ts';
 
 export const CAST_ROLE_MAX_LENGTH = 40;
 
+// E9: the most dancers a dance holds, which playback must keep smooth on an iPad.
+export const CAST_MAX_SIZE = 40;
+
 // dancer is null once she is removed from the roster: her spot stays as a placeholder (B5).
 export type CastMember = { id: string; dancer: Dancer | null; role: string | null };
 

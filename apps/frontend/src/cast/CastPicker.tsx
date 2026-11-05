@@ -1,4 +1,9 @@
-import type { CastMember, CastMemberInput, Dancer } from '@living-stage/shared';
+import {
+  CAST_MAX_SIZE,
+  type CastMember,
+  type CastMemberInput,
+  type Dancer,
+} from '@living-stage/shared';
 import { useState } from 'react';
 import { useDancers } from '../dancers/useDancers.ts';
 import { Button } from '../ui/Button.tsx';
@@ -12,12 +17,25 @@ type CastPickerProps = {
   onDone: () => void;
 };
 
+export const CAST_FULL_NOTE = `A dance holds up to ${CAST_MAX_SIZE} dancers. Remove one to add another.`;
+
+const addCopy = { title: 'Add to cast', close: 'Done', pick: 'Add', failed: 'Could not add' };
+
+// The picker stays open while dancers are added, so it is where the cast fills up.
 export function CastPicker({ schoolId, cast, onAdd, onDone }: CastPickerProps) {
+  if (cast.length >= CAST_MAX_SIZE) {
+    return (
+      <>
+        <PickerHead copy={addCopy} onClose={onDone} />
+        <p className={styles.empty}>{CAST_FULL_NOTE}</p>
+      </>
+    );
+  }
   return (
     <RosterPicker
       schoolId={schoolId}
       cast={cast}
-      copy={{ title: 'Add to cast', close: 'Done', pick: 'Add', failed: 'Could not add' }}
+      copy={addCopy}
       onPick={(dancer) => onAdd({ dancerId: dancer.id, role: null })}
       onClose={onDone}
     />
@@ -74,12 +92,7 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
 
   return (
     <>
-      <header className={styles.head}>
-        <h2 className={styles.title}>{copy.title}</h2>
-        <Button variant="secondary" className={styles.add} onClick={onClose}>
-          {copy.close}
-        </Button>
-      </header>
+      <PickerHead copy={copy} onClose={onClose} />
       {failed && (
         <p role="alert" className={formStyles.error}>
           {copy.failed} {failed.name}. Try again.
@@ -98,6 +111,17 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
         />
       )}
     </>
+  );
+}
+
+function PickerHead({ copy, onClose }: { copy: PickerCopy; onClose: () => void }) {
+  return (
+    <header className={styles.head}>
+      <h2 className={styles.title}>{copy.title}</h2>
+      <Button variant="secondary" className={styles.add} onClick={onClose}>
+        {copy.close}
+      </Button>
+    </header>
   );
 }
 

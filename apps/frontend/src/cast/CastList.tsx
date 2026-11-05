@@ -1,4 +1,5 @@
 import {
+  CAST_MAX_SIZE,
   roleColors,
   type CastMember,
   type ColorMode,
@@ -11,7 +12,7 @@ import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { castMemberColor } from './cast-color.ts';
 import { CastMemberForm } from './CastMemberForm.tsx';
-import { CastPicker, SpotPicker } from './CastPicker.tsx';
+import { CAST_FULL_NOTE, CastPicker, SpotPicker } from './CastPicker.tsx';
 import { RoleLegend } from './RoleLegend.tsx';
 import styles from './CastList.module.css';
 import type { CastActions, CastState } from './useCast.ts';
@@ -32,6 +33,7 @@ type CastListProps = {
 export function CastList({ schoolId, state, actions, colorMode }: CastListProps) {
   const [panel, setPanel] = useState<Panel>({ view: 'list' });
   const showList = () => setPanel({ view: 'list' });
+  const full = state.status === 'ready' && state.cast.length >= CAST_MAX_SIZE;
 
   if (panel.view === 'picking' && state.status === 'ready') {
     return (
@@ -78,12 +80,13 @@ export function CastList({ schoolId, state, actions, colorMode }: CastListProps)
           variant="soft"
           icon="plus"
           className={styles.add}
-          disabled={state.status !== 'ready'}
+          disabled={state.status !== 'ready' || full}
           onClick={() => setPanel({ view: 'picking' })}
         >
           Add
         </Button>
       </header>
+      {full && <p className={styles.note}>{CAST_FULL_NOTE}</p>}
       {state.status === 'ready' && colorMode === 'role' && <RoleLegend cast={state.cast} />}
       {state.status === 'failed' && (
         <p role="alert" className={formStyles.error}>

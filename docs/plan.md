@@ -235,7 +235,7 @@ Invite        id, schoolId, code, expiresAt, createdById   (one active code per 
 Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
 
 Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
-CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance; a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
+CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
 Figure        id, danceId, order, name?, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, segments[]  (route arriving into this figure)
@@ -372,6 +372,7 @@ First milestone to show real teachers.
 - ⬜ **2.7 Straight-line playback** · after 2.3
   - Done when: 40 dancers animate smoothly between figures without music on an iPad
   - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage`
+  - Note: the 40-dancer cap is enforced here, on the cast route (409 `cast_full`) and in the cast picker
 
 #### MVP 4 — Show details
 

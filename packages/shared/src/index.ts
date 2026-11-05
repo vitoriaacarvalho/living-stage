@@ -1,6 +1,7 @@
 export const APP_NAME = 'Living Stage';
 
 export {
+  CAST_MAX_SIZE,
   CAST_ROLE_MAX_LENGTH,
   parseCastMemberInput,
   parseCastMemberUpdate,

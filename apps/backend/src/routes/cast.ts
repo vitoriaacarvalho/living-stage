@@ -1,4 +1,5 @@
 import {
+  CAST_MAX_SIZE,
   nextWingSpot,
   parseCastMemberInput,
   parseCastMemberUpdate,
@@ -47,6 +48,10 @@ schoolCastRouter.post('/dances/:danceId/cast', async (req, res) => {
 
   try {
     const created = await castIntoEveryFigure(req.params.danceId, input);
+    if (!created) {
+      res.status(409).json({ error: 'cast_full' });
+      return;
+    }
     res.status(201).json(created satisfies CastMemberCreatedResponse);
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;
@@ -98,8 +103,10 @@ schoolCastRouter.delete('/dances/:danceId/cast/:castMemberId', async (req, res) 
   res.status(204).end();
 });
 
+// Gives null when the dance already holds CAST_MAX_SIZE dancers.
 function castIntoEveryFigure(danceId: string, input: CastMemberInput) {
   return prisma.$transaction(async (tx) => {
+    if ((await tx.castMember.count({ where: { danceId } })) >= CAST_MAX_SIZE) return null;
     const figures = await tx.figure.findMany({
       where: { danceId },
       orderBy: { order: 'asc' },
