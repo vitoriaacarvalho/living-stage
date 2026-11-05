@@ -240,7 +240,7 @@ Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, 
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
 Figure        id, danceId, order, name?, transitionMs, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs or count once music ships)
 Position      figureId, castMemberId, x, y
-Path          figureId, castMemberId, segments[]  (route arriving into this figure)
+Path          figureId, castMemberId, points[]  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before)
 
 AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
 CostumePhoto  id, danceId, url, caption?
@@ -256,7 +256,7 @@ EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 
 **Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The plan maps 0–1 onto a 12 × 8 m floor; guides, snapping and keyboard moves work in those metres.
 
-**Paths.** A path is a list of cubic Bézier segments (start, two control points, end). A straight line is a segment with its controls on the line; waypoints and circles are several segments joined.
+**Paths.** A path is saved as the points it passes through, each relative to the straight line from the dancer's spot in the figure before to her spot now (how far along it, how far to the side), so a bend keeps its shape when either end moves. A dancer with no `Path` row walks the straight line. The curve through start, points and end is a centripetal Catmull-Rom spline turned into cubic Bézier segments; waypoints (3.2) are more points, and circles (3.3) are several segments joined.
 
 **Animation.** A dancer's position at time *t* is a pure function of the two figures around *t*, her path and an easing curve. It lives in `packages/shared` and is unit tested.
 
@@ -398,9 +398,10 @@ First milestone to show real teachers.
 
 #### MVP 5 — Movement and rehearsal
 
-- ⬜ **3.1 Curved paths** · after 2.7
+- 🟨 **3.1 Curved paths** · after 2.7
   - Done when: Drag handles to bend a path; playback follows it
   - Requirements: D2 (curves) · Screens: `Stage`
+  - Note: a selected dancer shows her path from her faint spot in the figure before; the handle sits on the curve, the bend follows when either end moves, and letting go near the straight line straightens it
 - ⬜ **3.2 Waypoints** · after 3.1
   - Done when: Add and move waypoints on a path
   - Requirements: D2 (waypoints) · Screens: `Stage`
