@@ -20,6 +20,7 @@ const kitri = {
   createdAt: '2026-10-20T12:00:00.000Z',
   castCount: 0,
   preview: [],
+  showTitles: [],
 };
 const waltz = {
   id: 'dance-2',
@@ -30,6 +31,7 @@ const waltz = {
   createdAt: '2026-10-27T12:00:00.000Z',
   castCount: 0,
   preview: [],
+  showTitles: [],
 };
 
 beforeEach(() => {

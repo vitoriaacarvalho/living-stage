@@ -105,6 +105,7 @@ describe('GET /api/schools/:schoolId/dances', () => {
         ],
       },
     ],
+    showItems: [{ show: { title: 'Winter gala' } }, { show: { title: 'Spring show' } }],
   };
 
   async function listedDance() {
@@ -128,9 +129,13 @@ describe('GET /api/schools/:schoolId/dances', () => {
     ]);
   });
 
+  test('names the shows each dance is in', async () => {
+    expect((await listedDance()).showTitles).toEqual(['Winter gala', 'Spring show']);
+  });
+
   test('previews a dance with no cast as an empty stage', async () => {
     vi.mocked(prisma.dance.findMany).mockResolvedValue([
-      { ...kitri, cast: [], figures: [{ positions: [] }] },
+      { ...kitri, cast: [], figures: [{ positions: [] }], showItems: [] },
     ] as never);
     const { dances } = (await (await fetch(url())).json()) as ListDancesResponse;
     expect(dances[0]!.preview).toEqual([]);

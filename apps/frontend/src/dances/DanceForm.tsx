@@ -1,4 +1,4 @@
-import { DANCE_TITLE_MAX_LENGTH, parseDanceTitle, type Dance } from '@living-stage/shared';
+import { DANCE_TITLE_MAX_LENGTH, parseDanceTitle, type DanceSummary } from '@living-stage/shared';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
@@ -11,7 +11,16 @@ const createError = 'Could not create the dance. Try again.';
 const renameError = 'Could not rename the dance. Try again.';
 const deleteError = 'Could not delete the dance. Try again.';
 
-type DanceFormProps = { dance: Dance | null; actions: DanceActions; onClose: () => void };
+const titles = new Intl.ListFormat('en-GB', { type: 'conjunction' });
+
+export function deleteWarning({ title, showTitles }: DanceSummary): string {
+  const them = showTitles.length === 1 ? 'it' : 'them';
+  const shows =
+    showTitles.length === 0 ? '' : ` It is in ${titles.format(showTitles)} and will leave ${them}.`;
+  return `Delete ${title}?${shows} This can't be undone.`;
+}
+
+type DanceFormProps = { dance: DanceSummary | null; actions: DanceActions; onClose: () => void };
 
 export function DanceForm({ dance, actions, onClose }: DanceFormProps) {
   const [confirming, setConfirming] = useState(false);
@@ -64,7 +73,7 @@ export function DanceForm({ dance, actions, onClose }: DanceFormProps) {
       <div className={styles.actions}>
         {confirming && dance ? (
           <>
-            <p className={styles.confirm}>Delete {dance.title}? This can't be undone.</p>
+            <p className={styles.confirm}>{deleteWarning(dance)}</p>
             <span className={styles.spacer} />
             <Button variant="secondary" onClick={() => setConfirming(false)} disabled={pending}>
               Keep

@@ -23,6 +23,7 @@ schoolDancesRouter.get('/dances', async (_req, res) => {
         where: { order: 0 },
         select: { positions: { select: { castMemberId: true, x: true, y: true } } },
       },
+      showItems: { select: { show: { select: { title: true } } } },
     },
   });
 
@@ -79,15 +80,17 @@ type DanceRow = Omit<Dance, 'createdAt'> & { createdAt: Date };
 type SummaryRow = DanceRow & {
   cast: Parameters<typeof toCastMember>[0][];
   figures: { positions: { castMemberId: string; x: number; y: number }[] }[];
+  showItems: { show: { title: string } }[];
 };
 
-function toDanceSummary({ cast: rows, figures, ...dance }: SummaryRow): DanceSummary {
+function toDanceSummary({ cast: rows, figures, showItems, ...dance }: SummaryRow): DanceSummary {
   const cast = rows.map(toCastMember);
   const positions = figures[0]?.positions ?? [];
   return {
     ...toDance(dance),
     castCount: cast.length,
     preview: dancePreview(cast, positions, dance.colorMode),
+    showTitles: showItems.map(({ show }) => show.title),
   };
 }
 

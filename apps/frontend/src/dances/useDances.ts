@@ -33,7 +33,7 @@ export function useDances(schoolId: string): { state: DancesState } & DanceActio
 
   async function add(input: DanceInput) {
     const dance = await createDance(schoolId, input);
-    change((dances) => [{ ...dance, castCount: 0, preview: [] }, ...dances]);
+    change((dances) => [{ ...dance, castCount: 0, preview: [], showTitles: [] }, ...dances]);
   }
 
   async function rename(dance: Dance) {

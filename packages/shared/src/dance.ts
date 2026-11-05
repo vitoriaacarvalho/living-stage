@@ -36,7 +36,12 @@ function isOneOf<T extends string>(values: readonly T[], value: unknown): value 
 // One spot of the first figure, colored by the dance's color mode, for the card thumbnail.
 export type DancePreviewSpot = StagePoint & { color: DancerColor | null; open: boolean };
 
-export type DanceSummary = Dance & { castCount: number; preview: DancePreviewSpot[] };
+// showTitles names the shows the dance is in, for the warning before deleting it.
+export type DanceSummary = Dance & {
+  castCount: number;
+  preview: DancePreviewSpot[];
+  showTitles: string[];
+};
 
 export type ListDancesResponse = { dances: DanceSummary[] };
 
