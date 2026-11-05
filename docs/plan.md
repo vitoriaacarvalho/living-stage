@@ -337,7 +337,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
   - Requirements: A2, A3 (code and link), A4, A5, A6 · Screens: `Access` (create or join a school), school picker and switcher
 - ⬜ **1.6 Responsive app shell** · after 1.6a
   - Done when: Navigation and layout work on iPhone, iPad and desktop
-  - Requirements: K1, K2 · Screens: `Home` (shell, nav rail)
+  - Requirements: K1, K2 · Screens: `Home` (shell, nav rail, dance cards with a stage thumbnail)
+  - Note: only built destinations are in the shell (Home, Dancers, Team); Shows, search and Settings join with their plans
 - ✅ **1.7 Dancer roster** · after 1.3
   - Done when: Add, edit, remove, search and sort dancers
   - Requirements: B1, B2, B3, B4 · Screens: `DancerRoster`

@@ -1,4 +1,3 @@
-import { APP_NAME } from '@living-stage/shared';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -10,9 +9,6 @@ import { authClient } from './auth/client.ts';
 vi.mock('./auth/client.ts', () => ({
   authClient: { useSession: vi.fn(), signOut: vi.fn() },
 }));
-vi.mock('./api/health.ts', () => ({
-  fetchHealth: () => new Promise(() => {}),
-}));
 vi.mock('./api/schools.ts', () => ({ fetchSchools: vi.fn(), createSchool: vi.fn() }));
 vi.mock('./api/invites.ts', () => ({
   fetchInvite: vi.fn(),
@@ -23,6 +19,13 @@ vi.mock('./api/invites.ts', () => ({
 
 const school = { id: 'school-1', name: 'Escola Ana', createdAt: '2026-10-15T12:00:00.000Z' };
 const other = { id: 'school-2', name: 'Escola Bia', createdAt: '2026-10-16T12:00:00.000Z' };
+
+const greetingOfAna = /^Good (morning|afternoon|evening), Ana$/;
+
+async function switchSchool(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /^Account/ }));
+  await user.click(screen.getByRole('button', { name: 'Switch school' }));
+}
 
 function mockSession(state: { data: object | null; isPending: boolean }) {
   vi.mocked(authClient.useSession).mockReturnValue(state as never);
@@ -93,10 +96,40 @@ describe('signed in', () => {
     expect(await screen.findByText('Escola Ana')).toBeInTheDocument();
   });
 
-  test('shows the app heading inside the school', async () => {
+  test('greets the user inside the school', async () => {
     vi.mocked(fetchSchools).mockResolvedValue([school]);
     render(<App />);
-    expect(await screen.findByRole('heading', { name: APP_NAME })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: greetingOfAna })).toBeInTheDocument();
+  });
+
+  test('shows the main navigation inside the school', async () => {
+    vi.mocked(fetchSchools).mockResolvedValue([school]);
+    render(<App />);
+    expect(await screen.findByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+  });
+
+  test('opens the dancers from the navigation', async () => {
+    vi.mocked(fetchSchools).mockResolvedValue([school]);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Dancers' }));
+    expect(screen.getByRole('heading', { name: 'Dancers' })).toBeInTheDocument();
+  });
+
+  test('marks the open section in the navigation', async () => {
+    vi.mocked(fetchSchools).mockResolvedValue([school]);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Dancers' }));
+    expect(screen.getByRole('button', { name: 'Dancers' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  test('lets the user sign out from inside the school', async () => {
+    vi.mocked(fetchSchools).mockResolvedValue([school]);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: /^Account/ }));
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeInTheDocument();
   });
 
   test('shows the signed-in user inside the school', async () => {
@@ -124,7 +157,7 @@ describe('signed in', () => {
     vi.mocked(fetchInvite).mockResolvedValue(null);
     const user = userEvent.setup();
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Invite teachers' }));
+    await user.click(await screen.findByRole('button', { name: 'Team' }));
     expect(screen.getByRole('heading', { name: 'Invite your team' })).toBeInTheDocument();
   });
 });
@@ -144,7 +177,7 @@ describe('with several schools', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Escola Bia' }));
-    expect(screen.getByRole('heading', { name: APP_NAME })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: greetingOfAna })).toBeInTheDocument();
   });
 
   test('goes back into the picked school after a reload', async () => {
@@ -160,7 +193,7 @@ describe('with several schools', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Escola Ana' }));
-    await user.click(screen.getByRole('button', { name: 'Your schools' }));
+    await switchSchool(user);
     await user.click(screen.getByRole('button', { name: 'Escola Bia' }));
     expect(screen.getByText('Escola Bia')).toBeInTheDocument();
   });
@@ -180,7 +213,7 @@ describe('adding another school', () => {
   async function openAddSchool() {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Your schools' }));
+    await switchSchool(user);
     await user.click(screen.getByRole('button', { name: 'Add a school' }));
     return user;
   }
@@ -203,7 +236,7 @@ describe('adding another school', () => {
     const user = await openAddSchool();
     await user.type(screen.getByLabelText('School name'), 'Escola Bia');
     await user.click(screen.getByRole('button', { name: 'Create school' }));
-    await user.click(await screen.findByRole('button', { name: 'Your schools' }));
+    await switchSchool(user);
     expect(screen.getByRole('button', { name: 'Escola Ana' })).toBeInTheDocument();
   });
 
@@ -233,7 +266,7 @@ describe('arriving from a join link', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Join school' }));
-    expect(await screen.findByRole('heading', { name: APP_NAME })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: greetingOfAna })).toBeInTheDocument();
   });
 
   test('leaves the join link once joined', async () => {

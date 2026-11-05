@@ -1,0 +1,31 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 1200px;
+  padding: var(--space-5) var(--space-4);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+}
+
+.today {
+  color: var(--ink-muted);
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+}
+
+.greeting {
+  margin: 0;
+  font: var(--text-title-1);
+}
+
+@media (min-width: 600px) {
+  .page {
+    padding: var(--space-6);
+  }
+}

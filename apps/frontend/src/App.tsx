@@ -1,25 +1,23 @@
-import { APP_NAME, type Dance, type HealthResponse, type School } from '@living-stage/shared';
-import { useEffect, useState } from 'react';
-import { fetchHealth } from './api/health.ts';
+import type { Dance, School } from '@living-stage/shared';
+import { useState } from 'react';
 import { authClient } from './auth/client.ts';
 import { Access } from './auth/Access.tsx';
 import { SignOutButton } from './auth/SignOutButton.tsx';
 import { DancerRoster } from './dancers/DancerRoster.tsx';
 import { DanceEditor } from './dances/DanceEditor.tsx';
-import { DanceList } from './dances/DanceList.tsx';
+import { HomePage } from './home/HomePage.tsx';
 import { AddSchool } from './schools/AddSchool.tsx';
-import { InviteTeachers } from './schools/InviteTeachers.tsx';
 import { readJoinCode } from './schools/join-link.ts';
 import { JoinFromLink } from './schools/JoinFromLink.tsx';
 import { NoSchool } from './schools/NoSchool.tsx';
 import { SchoolPicker } from './schools/SchoolPicker.tsx';
+import { TeamPage } from './schools/TeamPage.tsx';
 import { findChosenSchool, useChosenSchoolId } from './schools/useChosenSchool.ts';
 import { useSchools } from './schools/useSchools.ts';
+import { AppShell, type Section } from './shell/AppShell.tsx';
 import { Button } from './ui/Button.tsx';
 import { CardPage } from './ui/CardPage.tsx';
 import formStyles from './ui/Form.module.css';
-
-type ApiStatus = HealthResponse | 'loading' | 'unreachable';
 
 export function App() {
   const { data: session, isPending } = authClient.useSession();
@@ -101,61 +99,22 @@ function SchoolsUnavailable() {
 type HomeProps = { userName: string; school: School; onSwitch: () => void };
 
 function Home({ userName, school, onSwitch }: HomeProps) {
-  const apiStatus = useApiStatus();
-  const [view, setView] = useState<'home' | 'inviting' | 'dancers'>('home');
+  const [section, setSection] = useState<Section>('home');
   const [openDance, setOpenDance] = useState<Dance | null>(null);
 
   if (openDance) {
     return <DanceEditor schoolId={school.id} dance={openDance} onBack={() => setOpenDance(null)} />;
   }
-
-  if (view === 'inviting') {
-    return (
-      <CardPage watermark="page">
-        <InviteTeachers schoolId={school.id} onDone={() => setView('home')} />
-      </CardPage>
-    );
-  }
-  if (view === 'dancers') return <DancerRoster school={school} onDone={() => setView('home')} />;
   return (
-    <main>
-      <h1>{APP_NAME}</h1>
-      <p>{school.name}</p>
-      <p>{userName}</p>
-      <Button variant="secondary" onClick={() => setView('dancers')}>
-        Dancers
-      </Button>
-      <Button variant="secondary" onClick={() => setView('inviting')}>
-        Invite teachers
-      </Button>
-      <Button variant="secondary" onClick={onSwitch}>
-        Your schools
-      </Button>
-      <SignOutButton />
-      <DanceList schoolId={school.id} onOpen={setOpenDance} />
-      <p>{describe(apiStatus)}</p>
-    </main>
+    <AppShell
+      nav={{ current: section, onGo: setSection }}
+      account={{ userName, schoolName: school.name, onSwitch }}
+    >
+      {section === 'home' && (
+        <HomePage userName={userName} schoolId={school.id} onOpen={setOpenDance} />
+      )}
+      {section === 'dancers' && <DancerRoster school={school} />}
+      {section === 'team' && <TeamPage schoolId={school.id} onDone={() => setSection('home')} />}
+    </AppShell>
   );
-}
-
-function useApiStatus(): ApiStatus {
-  const [status, setStatus] = useState<ApiStatus>('loading');
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchHealth(controller.signal)
-      .then(setStatus)
-      .catch(() => {
-        if (!controller.signal.aborted) setStatus('unreachable');
-      });
-    return () => controller.abort();
-  }, []);
-
-  return status;
-}
-
-function describe(status: ApiStatus): string {
-  if (status === 'loading') return 'Checking API…';
-  if (status === 'unreachable') return 'API: unreachable';
-  return `API: ok · database: ${status.database}`;
 }

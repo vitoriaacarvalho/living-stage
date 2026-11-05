@@ -22,9 +22,8 @@ beforeEach(() => {
   vi.mocked(deleteDancer).mockReset();
 });
 
-function renderRoster(onDone = vi.fn()) {
-  render(<DancerRoster school={school} onDone={onDone} />);
-  return onDone;
+function renderRoster() {
+  render(<DancerRoster school={school} />);
 }
 
 async function names() {
@@ -56,13 +55,6 @@ describe('listing', () => {
     vi.mocked(fetchDancers).mockRejectedValue(new Error('GET dancers answered 500'));
     renderRoster();
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the dancers.');
-  });
-
-  test('goes back', async () => {
-    const user = userEvent.setup();
-    const onDone = renderRoster();
-    await user.click(screen.getByRole('button', { name: 'Back' }));
-    expect(onDone).toHaveBeenCalled();
   });
 });
 

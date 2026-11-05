@@ -3,7 +3,6 @@ import { useState, type CSSProperties } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { TextField } from '../ui/TextField.tsx';
-import { Watermark } from '../ui/Watermark.tsx';
 import { dancerColorName, dancerColorVar, initials } from './dancer-colors.ts';
 import { DancerForm } from './DancerForm.tsx';
 import styles from './DancerRoster.module.css';
@@ -14,30 +13,22 @@ const loadError = 'Could not load the dancers. Go back and try again.';
 
 type Editing = { dancer: Dancer | null } | null;
 
-type DancerRosterProps = { school: School; onDone: () => void };
-
-export function DancerRoster({ school, onDone }: DancerRosterProps) {
+export function DancerRoster({ school }: { school: School }) {
   const { state, ...actions } = useDancers(school.id);
   const [editing, setEditing] = useState<Editing>(null);
   const [query, setQuery] = useState('');
 
   return (
-    <main className={editing ? `${styles.page} ${styles.editing}` : styles.page}>
-      <Watermark layout="quiet" />
+    <div className={editing ? `${styles.page} ${styles.editing}` : styles.page}>
       <div className={styles.main}>
         <header className={styles.head}>
           <div className={styles.heading}>
             <span className={styles.school}>{school.name}</span>
             <h1 className={styles.title}>Dancers</h1>
           </div>
-          <div className={styles.headActions}>
-            <Button variant="secondary" onClick={onDone}>
-              Back
-            </Button>
-            <Button variant="primary" icon="plus" onClick={() => setEditing({ dancer: null })}>
-              Add dancer
-            </Button>
-          </div>
+          <Button variant="primary" icon="plus" onClick={() => setEditing({ dancer: null })}>
+            Add dancer
+          </Button>
         </header>
         {state.status === 'failed' && (
           <p role="alert" className={formStyles.error}>
@@ -74,7 +65,7 @@ export function DancerRoster({ school, onDone }: DancerRosterProps) {
           />
         </aside>
       )}
-    </main>
+    </div>
   );
 }
 

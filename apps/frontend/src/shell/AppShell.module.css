@@ -1,0 +1,269 @@
+/* iPhone first: a slim top bar, the page, and the destinations as a bottom tab bar. */
+.shell {
+  --tab-bar: 64px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.topBar,
+.rail,
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
+}
+
+.brand {
+  font: var(--text-title-1);
+  white-space: nowrap;
+}
+
+.railBrand {
+  display: none;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: calc(var(--tab-bar) + env(safe-area-inset-bottom));
+}
+
+.rail {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  padding: 0 var(--space-2) env(safe-area-inset-bottom);
+  border-top: 1px solid var(--hairline);
+  background: var(--surface);
+}
+
+.items {
+  display: flex;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items > li {
+  display: flex;
+  flex: 1;
+}
+
+.item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--tab-bar);
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.item[aria-current='page'] {
+  color: var(--primary-strong);
+  font-weight: 600;
+}
+
+.account {
+  position: relative;
+  display: flex;
+}
+
+.accountButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-width: var(--tab-bar);
+  min-height: var(--tab-bar);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+/* On iPhone only the initials show; the name stays as the button's accessible name. */
+.who {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.userName {
+  display: block;
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.schoolName {
+  display: block;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-2));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 200px;
+  padding: var(--space-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Touch screens keep a tapped item hovered, so only a real pointer gets the fill. */
+@media (hover: hover) {
+  .item:hover,
+  .accountButton:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+.menuWho {
+  padding: 0 var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* iPad and desktop: the destinations become a rail on the left. */
+@media (min-width: 768px) {
+  .shell {
+    flex-direction: row;
+  }
+
+  .topBar {
+    display: none;
+  }
+
+  .content {
+    padding-bottom: 0;
+  }
+
+  .rail {
+    position: sticky;
+    top: 0;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 232px;
+    height: 100dvh;
+    padding: var(--space-5) var(--space-3) var(--space-3);
+    border-top: 0;
+    border-right: 1px solid var(--hairline);
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+  }
+
+  .railBrand {
+    display: block;
+    padding: var(--space-1) var(--space-3) var(--space-5);
+  }
+
+  .items {
+    flex: none;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    min-height: var(--touch-min);
+    padding: 0 var(--space-3);
+    color: var(--ink);
+    font: var(--text-label);
+  }
+
+  .item svg {
+    color: var(--ink-muted);
+  }
+
+  .item[aria-current='page'] {
+    background: var(--primary-soft);
+    font-weight: 500;
+  }
+
+  .item[aria-current='page'] svg {
+    color: var(--primary-strong);
+  }
+
+  .account {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--hairline);
+  }
+
+  .accountButton {
+    flex: 1;
+    justify-content: flex-start;
+    min-height: 52px;
+  }
+
+  .who {
+    position: static;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .menu {
+    right: auto;
+    left: 0;
+  }
+}
