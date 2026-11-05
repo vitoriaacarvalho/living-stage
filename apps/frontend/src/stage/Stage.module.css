@@ -107,9 +107,19 @@
   cursor: grabbing;
 }
 
+/* The button is a larger invisible hit area, so the ring goes around the dot it stands for,
+   just outside the selected ring, and the label steps down to clear it. */
 .hit:focus-visible {
+  outline: none;
+}
+
+.hit:focus-visible ~ .dot {
   outline: 2px solid var(--stage-accent);
-  outline-offset: 2px;
+  outline-offset: 9px;
+}
+
+.hit:focus-visible ~ .label {
+  margin-top: 10px;
 }
 
 .box {
