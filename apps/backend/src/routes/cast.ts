@@ -151,6 +151,6 @@ type CastMemberRow = {
   dancer: { id: string; name: string; color: number | null } | null;
 };
 
-function toCastMember({ id, role, dancer }: CastMemberRow): CastMember {
+export function toCastMember({ id, role, dancer }: CastMemberRow): CastMember {
   return { id, role, dancer: dancer && toDancer(dancer) };
 }

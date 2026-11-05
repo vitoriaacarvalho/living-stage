@@ -1,4 +1,5 @@
 import type { CastMember } from './cast.ts';
+import type { ColorMode } from './dance.ts';
 import { DANCER_COLOR_COUNT, type DancerColor } from './dancer.ts';
 
 // The last dancer color (stone) is kept for dancers with no role; roles cycle through the others.
@@ -21,4 +22,14 @@ export function roleColors(cast: CastMember[]): RoleColor[] {
 export function roleColor(colors: RoleColor[], role: string | null): DancerColor {
   if (role === null) return NO_ROLE_COLOR;
   return colors.find((known) => sameRole(known.role, role))?.color ?? NO_ROLE_COLOR;
+}
+
+// An open spot has no color in either mode; it is drawn as a dashed ring.
+export function castMemberColor(
+  { dancer, role }: CastMember,
+  colorMode: ColorMode,
+  colors: RoleColor[],
+): DancerColor | null {
+  if (!dancer) return null;
+  return colorMode === 'role' ? roleColor(colors, role) : dancer.color;
 }

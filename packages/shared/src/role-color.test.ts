@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { CastMember } from './cast.ts';
-import { NO_ROLE_COLOR, roleColor, roleColors } from './role-color.ts';
+import { NO_ROLE_COLOR, castMemberColor, roleColor, roleColors } from './role-color.ts';
 
 function castWithRoles(...roles: (string | null)[]): CastMember[] {
   return roles.map((role, index) => ({ id: `cast-${index}`, dancer: null, role }));
@@ -54,5 +54,30 @@ describe('roleColor', () => {
 
   test('gives stone to a role it does not know', () => {
     expect(roleColor(colors, 'Basilio')).toBe(NO_ROLE_COLOR);
+  });
+});
+
+describe('castMemberColor', () => {
+  const clara: CastMember = {
+    id: 'cast-1',
+    dancer: { id: 'dancer-1', name: 'Clara', color: 3 },
+    role: 'Kitri',
+  };
+  const colors = [{ role: 'Kitri', color: 1 }];
+
+  test('gives a dancer her own color when coloring by dancer', () => {
+    expect(castMemberColor(clara, 'dancer', colors)).toBe(3);
+  });
+
+  test('gives a dancer her role color when coloring by role', () => {
+    expect(castMemberColor(clara, 'role', colors)).toBe(1);
+  });
+
+  test('gives a dancer with no role stone when coloring by role', () => {
+    expect(castMemberColor({ ...clara, role: null }, 'role', colors)).toBe(12);
+  });
+
+  test('gives an open spot no color when coloring by role', () => {
+    expect(castMemberColor({ ...clara, dancer: null }, 'role', colors)).toBeNull();
   });
 });

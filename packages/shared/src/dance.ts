@@ -1,3 +1,6 @@
+import type { DancerColor } from './dancer.ts';
+import type { StagePoint } from './figure.ts';
+
 export const DANCE_TITLE_MAX_LENGTH = 100;
 
 const LABEL_MODES = ['name', 'role', 'both'] as const;
@@ -30,7 +33,12 @@ function isOneOf<T extends string>(values: readonly T[], value: unknown): value 
   return values.includes(value as T);
 }
 
-export type ListDancesResponse = { dances: Dance[] };
+// One spot of the first figure, colored by the dance's color mode, for the card thumbnail.
+export type DancePreviewSpot = StagePoint & { color: DancerColor | null; open: boolean };
+
+export type DanceSummary = Dance & { castCount: number; preview: DancePreviewSpot[] };
+
+export type ListDancesResponse = { dances: DanceSummary[] };
 
 export type DanceResponse = { dance: Dance };
 

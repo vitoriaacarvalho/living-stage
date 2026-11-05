@@ -1,5 +1,6 @@
 import {
   CAST_MAX_SIZE,
+  castMemberColor,
   roleColors,
   type CastMember,
   type ColorMode,
@@ -10,8 +11,8 @@ import { useState, type CSSProperties } from 'react';
 import { dancerColorVar, initials, initialsInk } from '../dancers/dancer-colors.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
-import { castMemberColor } from './cast-color.ts';
 import { CastMemberForm } from './CastMemberForm.tsx';
+import { dancerCount } from './dancer-count.ts';
 import { CAST_FULL_NOTE, CastPicker, SpotPicker } from './CastPicker.tsx';
 import { RoleLegend } from './RoleLegend.tsx';
 import styles from './CastList.module.css';
@@ -148,8 +149,4 @@ function CastSwatch({ member, color }: CastSwatchProps) {
       {member.dancer ? initials(member.dancer.name) : ''}
     </span>
   );
-}
-
-function dancerCount(count: number) {
-  return count === 1 ? '1 dancer' : `${count} dancers`;
 }

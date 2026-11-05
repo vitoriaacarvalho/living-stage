@@ -1,12 +1,15 @@
 import {
+  dancePreview,
   parseDanceInput,
   parseDanceUpdate,
   type Dance,
   type DanceResponse,
+  type DanceSummary,
   type ListDancesResponse,
 } from '@living-stage/shared';
 import { Router } from 'express';
 import { prisma } from '../db.ts';
+import { toCastMember } from './cast.ts';
 
 export const schoolDancesRouter = Router();
 
@@ -14,9 +17,16 @@ schoolDancesRouter.get('/dances', async (_req, res) => {
   const dances = await prisma.dance.findMany({
     where: { schoolId: res.locals.schoolId },
     orderBy: { createdAt: 'desc' },
+    include: {
+      cast: { include: { dancer: true }, orderBy: { createdAt: 'asc' } },
+      figures: {
+        where: { order: 0 },
+        select: { positions: { select: { castMemberId: true, x: true, y: true } } },
+      },
+    },
   });
 
-  res.json({ dances: dances.map(toDance) } satisfies ListDancesResponse);
+  res.json({ dances: dances.map(toDanceSummary) } satisfies ListDancesResponse);
 });
 
 schoolDancesRouter.post('/dances', async (req, res) => {
@@ -65,6 +75,21 @@ schoolDancesRouter.delete('/dances/:danceId', async (req, res) => {
 });
 
 type DanceRow = Omit<Dance, 'createdAt'> & { createdAt: Date };
+
+type SummaryRow = DanceRow & {
+  cast: Parameters<typeof toCastMember>[0][];
+  figures: { positions: { castMemberId: string; x: number; y: number }[] }[];
+};
+
+function toDanceSummary({ cast: rows, figures, ...dance }: SummaryRow): DanceSummary {
+  const cast = rows.map(toCastMember);
+  const positions = figures[0]?.positions ?? [];
+  return {
+    ...toDance(dance),
+    castCount: cast.length,
+    preview: dancePreview(cast, positions, dance.colorMode),
+  };
+}
 
 function toDance(dance: DanceRow): Dance {
   const { id, title, showGuides, labelMode, colorMode, createdAt } = dance;

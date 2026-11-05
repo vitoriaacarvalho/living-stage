@@ -27,6 +27,9 @@ const planHeight = STAGE_DEPTH_M + upstageWing;
 
 export const STAGE_PLAN_ASPECT = planWidth / planHeight;
 
+// The plan's SVG box in metres: the floor starts at 0, the wings lie before it.
+export const PLAN_VIEW_BOX = `${-sideWing} ${-upstageWing} ${planWidth} ${planHeight}`;
+
 // Stage units stretch differently on each axis (12 m across, 8 m deep), so the
 // plan is drawn in metres to keep the floor's proportions.
 const geometry = {
@@ -68,10 +71,7 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
         className={edit ? `${styles.plan} ${styles.editable}` : styles.plan}
         {...(edit && floor)}
       >
-        <svg
-          className={styles.svg}
-          viewBox={`${-sideWing} ${-upstageWing} ${planWidth} ${planHeight}`}
-        >
+        <svg className={styles.svg} viewBox={PLAN_VIEW_BOX}>
           <rect className={styles.floor} width={STAGE_WIDTH_M} height={STAGE_DEPTH_M} />
           {showGuides && <Guides />}
           <line

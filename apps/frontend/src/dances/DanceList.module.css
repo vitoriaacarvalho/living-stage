@@ -71,7 +71,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-4);
   margin: 0;
   padding: 0;
@@ -91,13 +91,25 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
   min-width: 0;
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  overflow: hidden;
   border: 1px solid var(--hairline);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-card);
+}
+
+.art {
+  aspect-ratio: 2 / 1;
+  padding: var(--space-1) 0;
+  background: var(--stage-wing);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
 .cardHead {
@@ -140,8 +152,16 @@
 }
 
 .meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   font: var(--text-caption);
   color: var(--ink-muted);
+}
+
+.meta svg {
+  width: 15px;
+  height: 15px;
 }
 
 @media (min-width: 600px) {

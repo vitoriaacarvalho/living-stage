@@ -1,7 +1,10 @@
-import type { Dance } from '@living-stage/shared';
+import type { Dance, DanceSummary } from '@living-stage/shared';
 import { useState } from 'react';
+import { dancerCount } from '../cast/dancer-count.ts';
+import { StageThumbnail } from '../stage/StageThumbnail.tsx';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
+import { Icon } from '../ui/Icon.tsx';
 import { DanceForm } from './DanceForm.tsx';
 import styles from './DanceList.module.css';
 import { useDances } from './useDances.ts';
@@ -68,25 +71,34 @@ export function DanceList({ schoolId, onOpen }: DanceListProps) {
   );
 }
 
-type DanceCardProps = { dance: Dance; onOpen: () => void; onRename: () => void };
+type DanceCardProps = { dance: DanceSummary; onOpen: () => void; onRename: () => void };
 
 function DanceCard({ dance, onOpen, onRename }: DanceCardProps) {
   return (
     <article className={styles.card}>
-      <div className={styles.cardHead}>
-        <h3 className={styles.danceTitle}>
-          <button type="button" className={styles.open} onClick={onOpen}>
-            {dance.title}
-          </button>
-        </h3>
-        <Button
-          variant="ghost"
-          icon="pencil"
-          aria-label={`Rename ${dance.title}`}
-          onClick={onRename}
-        />
+      <div className={styles.art}>
+        <StageThumbnail spots={dance.preview} />
       </div>
-      <span className={styles.meta}>Added {addedOn.format(new Date(dance.createdAt))}</span>
+      <div className={styles.body}>
+        <div className={styles.cardHead}>
+          <h3 className={styles.danceTitle}>
+            <button type="button" className={styles.open} onClick={onOpen}>
+              {dance.title}
+            </button>
+          </h3>
+          <Button
+            variant="ghost"
+            icon="pencil"
+            aria-label={`Rename ${dance.title}`}
+            onClick={onRename}
+          />
+        </div>
+        <span className={styles.meta}>
+          <Icon name="users" />
+          {dancerCount(dance.castCount)}
+        </span>
+        <span className={styles.meta}>Added {addedOn.format(new Date(dance.createdAt))}</span>
+      </div>
     </article>
   );
 }

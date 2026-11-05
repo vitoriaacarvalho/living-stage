@@ -1,5 +1,6 @@
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { ListDancesResponse } from '@living-stage/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../app.ts';
 import { auth } from '../auth/auth.ts';
@@ -89,18 +90,65 @@ describe('GET /api/schools/:schoolId/dances', () => {
     expect(res.status).toBe(404);
   });
 
+  const clara = { id: 'dancer-1', schoolId: 'school-1', name: 'Clara', color: 3 };
+  const listed = {
+    ...kitri,
+    cast: [
+      { id: 'cast-1', role: 'Kitri', dancer: clara },
+      { id: 'cast-2', role: null, dancer: null },
+    ],
+    figures: [
+      {
+        positions: [
+          { castMemberId: 'cast-1', x: 0.25, y: 0.5 },
+          { castMemberId: 'cast-2', x: -0.0625, y: 0.05 },
+        ],
+      },
+    ],
+  };
+
+  async function listedDance() {
+    vi.mocked(prisma.dance.findMany).mockResolvedValue([listed] as never);
+    const { dances } = (await (await fetch(url())).json()) as ListDancesResponse;
+    return dances[0]!;
+  }
+
   test('lists the dances of the school', async () => {
-    vi.mocked(prisma.dance.findMany).mockResolvedValue([kitri]);
-    const res = await fetch(url());
-    expect(await res.json()).toEqual({ dances: [kitriJson] });
+    expect(await listedDance()).toMatchObject(kitriJson);
+  });
+
+  test('counts the cast of each dance', async () => {
+    expect((await listedDance()).castCount).toBe(2);
+  });
+
+  test("previews each dance's first figure with its colors", async () => {
+    expect((await listedDance()).preview).toEqual([
+      { x: 0.25, y: 0.5, color: 3, open: false },
+      { x: -0.0625, y: 0.05, color: null, open: true },
+    ]);
+  });
+
+  test('previews a dance with no cast as an empty stage', async () => {
+    vi.mocked(prisma.dance.findMany).mockResolvedValue([
+      { ...kitri, cast: [], figures: [{ positions: [] }] },
+    ] as never);
+    const { dances } = (await (await fetch(url())).json()) as ListDancesResponse;
+    expect(dances[0]!.preview).toEqual([]);
   });
 
   test('reads only the dances of this school, newest first', async () => {
     vi.mocked(prisma.dance.findMany).mockResolvedValue([]);
     await fetch(url());
-    expect(prisma.dance.findMany).toHaveBeenCalledWith({
-      where: { schoolId: 'school-1' },
-      orderBy: { createdAt: 'desc' },
+    expect(prisma.dance.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { schoolId: 'school-1' }, orderBy: { createdAt: 'desc' } }),
+    );
+  });
+
+  test('reads only the first figure for the preview', async () => {
+    vi.mocked(prisma.dance.findMany).mockResolvedValue([]);
+    await fetch(url());
+    expect(vi.mocked(prisma.dance.findMany).mock.calls[0]![0]).toMatchObject({
+      include: { figures: { where: { order: 0 } } },
     });
   });
 });

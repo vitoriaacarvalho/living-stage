@@ -1,9 +1,9 @@
-import type { Dance, DanceInput } from '@living-stage/shared';
+import type { Dance, DanceInput, DanceSummary } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { createDance, deleteDance, fetchDances, updateDance } from '../api/dances.ts';
 
 export type DancesState =
-  { status: 'loading' } | { status: 'failed' } | { status: 'ready'; dances: Dance[] };
+  { status: 'loading' } | { status: 'failed' } | { status: 'ready'; dances: DanceSummary[] };
 
 export type DanceActions = {
   add: (input: DanceInput) => Promise<void>;
@@ -24,7 +24,7 @@ export function useDances(schoolId: string): { state: DancesState } & DanceActio
     return () => controller.abort();
   }, [schoolId]);
 
-  function change(update: (dances: Dance[]) => Dance[]) {
+  function change(update: (dances: DanceSummary[]) => DanceSummary[]) {
     setState((current) => ({
       status: 'ready',
       dances: update(current.status === 'ready' ? current.dances : []),
@@ -33,12 +33,12 @@ export function useDances(schoolId: string): { state: DancesState } & DanceActio
 
   async function add(input: DanceInput) {
     const dance = await createDance(schoolId, input);
-    change((dances) => [dance, ...dances]);
+    change((dances) => [{ ...dance, castCount: 0, preview: [] }, ...dances]);
   }
 
   async function rename(dance: Dance) {
     const saved = await updateDance(schoolId, dance.id, { title: dance.title });
-    change((dances) => dances.map((each) => (each.id === saved.id ? saved : each)));
+    change((dances) => dances.map((each) => (each.id === saved.id ? { ...each, ...saved } : each)));
   }
 
   async function remove(danceId: string) {

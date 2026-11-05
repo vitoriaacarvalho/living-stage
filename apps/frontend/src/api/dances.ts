@@ -2,11 +2,12 @@ import type {
   Dance,
   DanceInput,
   DanceResponse,
+  DanceSummary,
   DanceUpdate,
   ListDancesResponse,
 } from '@living-stage/shared';
 
-export async function fetchDances(schoolId: string, signal: AbortSignal): Promise<Dance[]> {
+export async function fetchDances(schoolId: string, signal: AbortSignal): Promise<DanceSummary[]> {
   const res = await fetch(`/api/schools/${schoolId}/dances`, { signal });
   if (!res.ok) throw new Error(`GET dances answered ${res.status}`);
   const body: ListDancesResponse = await res.json();

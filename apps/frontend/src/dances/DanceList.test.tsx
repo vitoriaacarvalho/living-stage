@@ -18,6 +18,8 @@ const kitri = {
   labelMode: 'name' as const,
   colorMode: 'dancer' as const,
   createdAt: '2026-10-20T12:00:00.000Z',
+  castCount: 0,
+  preview: [],
 };
 const waltz = {
   id: 'dance-2',
@@ -26,6 +28,8 @@ const waltz = {
   labelMode: 'name' as const,
   colorMode: 'dancer' as const,
   createdAt: '2026-10-27T12:00:00.000Z',
+  castCount: 0,
+  preview: [],
 };
 
 beforeEach(() => {
@@ -53,7 +57,34 @@ describe('listing', () => {
   test('shows each dance with the day it was added', async () => {
     render(<DanceList schoolId="school-1" onOpen={() => {}} />);
     const list = await screen.findByRole('list', { name: 'Dances' });
-    expect(list).toHaveTextContent('Kitri variationAdded 20 Oct 2026');
+    expect(list).toHaveTextContent('Added 20 Oct 2026');
+  });
+
+  test('shows how many dancers each dance has', async () => {
+    vi.mocked(fetchDances).mockResolvedValue([{ ...kitri, castCount: 16 }]);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
+    expect(await screen.findByText('16 dancers')).toBeInTheDocument();
+  });
+
+  test("draws each dancer of the first figure on the card's stage", async () => {
+    vi.mocked(fetchDances).mockResolvedValue([
+      {
+        ...kitri,
+        castCount: 2,
+        preview: [
+          { x: 0.25, y: 0.5, color: 3, open: false },
+          { x: 0.75, y: 0.5, color: null, open: true },
+        ],
+      },
+    ]);
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
+    expect(await screen.findAllByTestId('thumbnail-dot')).toHaveLength(2);
+  });
+
+  test('draws an empty stage for a dance with no cast', async () => {
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
+    await screen.findByRole('list', { name: 'Dances' });
+    expect(screen.queryByTestId('thumbnail-dot')).not.toBeInTheDocument();
   });
 
   test('loads the dances of this school', async () => {

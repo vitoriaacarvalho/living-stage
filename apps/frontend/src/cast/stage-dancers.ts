@@ -1,4 +1,5 @@
 import {
+  castMemberColor,
   roleColors,
   type CastMember,
   type Dance,
@@ -6,7 +7,6 @@ import {
   type Position,
 } from '@living-stage/shared';
 import type { StageDancer } from '../stage/Stage.tsx';
-import { castMemberColor } from './cast-color.ts';
 
 export type StageView = Pick<Dance, 'labelMode' | 'colorMode'>;
 

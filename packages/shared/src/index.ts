@@ -22,12 +22,21 @@ export {
   type ColorMode,
   type Dance,
   type DanceInput,
+  type DancePreviewSpot,
+  type DanceSummary,
   type DanceUpdate,
   type LabelMode,
   type DanceResponse,
   type ListDancesResponse,
 } from './dance.ts';
-export { NO_ROLE_COLOR, roleColor, roleColors, type RoleColor } from './role-color.ts';
+export { dancePreview } from './dance-preview.ts';
+export {
+  NO_ROLE_COLOR,
+  castMemberColor,
+  roleColor,
+  roleColors,
+  type RoleColor,
+} from './role-color.ts';
 export {
   DANCER_COLOR_COUNT,
   DANCER_NAME_MAX_LENGTH,
