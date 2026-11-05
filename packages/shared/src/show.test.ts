@@ -9,6 +9,7 @@ import {
   parseActUpdate,
   parseShowDate,
   parseShowInput,
+  parseShowOrder,
   parseShowTime,
   parseShowUpdate,
 } from './show.ts';
@@ -226,5 +227,58 @@ describe('inShowOrder', () => {
 
   test('gives nothing for no shows', () => {
     expect(inShowOrder([], today)).toEqual([]);
+  });
+});
+
+describe('parseShowOrder', () => {
+  const order = {
+    acts: [
+      { id: 'act-1', danceIds: ['item-1', 'item-2'] },
+      { id: 'act-2', danceIds: [] },
+    ],
+  };
+
+  test('accepts every act with its dances in order', () => {
+    expect(parseShowOrder(order)).toEqual(order);
+  });
+
+  test('accepts an act with no dances', () => {
+    expect(parseShowOrder({ acts: [{ id: 'act-1', danceIds: [] }] })).toEqual({
+      acts: [{ id: 'act-1', danceIds: [] }],
+    });
+  });
+
+  test('rejects a show with no acts', () => {
+    expect(parseShowOrder({ acts: [] })).toBeNull();
+  });
+
+  test('rejects an act listed twice', () => {
+    expect(
+      parseShowOrder({
+        acts: [
+          { id: 'act-1', danceIds: [] },
+          { id: 'act-1', danceIds: [] },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  test('rejects a dance in two acts', () => {
+    expect(
+      parseShowOrder({
+        acts: [
+          { id: 'act-1', danceIds: ['item-1'] },
+          { id: 'act-2', danceIds: ['item-1'] },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  test('rejects an act with no dance list', () => {
+    expect(parseShowOrder({ acts: [{ id: 'act-1' }] })).toBeNull();
+  });
+
+  test('rejects an empty dance id', () => {
+    expect(parseShowOrder({ acts: [{ id: 'act-1', danceIds: [''] }] })).toBeNull();
   });
 });

@@ -42,6 +42,10 @@ export type ActUpdate = { name: string | null };
 
 export type ActDanceInput = { danceId: string };
 
+// The whole running order: every act in order, each with its dances' places (ShowDance.id).
+export type ActLayout = { id: string; danceIds: string[] };
+export type ShowOrder = { acts: ActLayout[] };
+
 export type ListShowsResponse = { shows: ShowSummary[] };
 export type ShowResponse = { show: Show };
 export type ShowDetailResponse = { show: ShowDetail };
@@ -148,4 +152,24 @@ export function inShowOrder<T extends Pick<Show, 'date' | 'time'>>(shows: T[], t
   upcoming.sort((a, b) => when(a).localeCompare(when(b)));
   past.sort((a, b) => when(b).localeCompare(when(a)));
   return [...upcoming, ...past];
+}
+
+const isId = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
+
+// Whether the ids are exactly the show's own is the route's check.
+export function parseShowOrder(value: unknown): ShowOrder | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { acts } = value as Record<string, unknown>;
+  if (!Array.isArray(acts) || acts.length === 0) return null;
+  const parsed: ActLayout[] = [];
+  for (const act of acts) {
+    if (typeof act !== 'object' || act === null) return null;
+    const { id, danceIds } = act as Record<string, unknown>;
+    if (!isId(id) || !Array.isArray(danceIds) || !danceIds.every(isId)) return null;
+    parsed.push({ id, danceIds });
+  }
+  const danceIds = parsed.flatMap((act) => act.danceIds);
+  if (new Set(parsed.map(({ id }) => id)).size !== parsed.length) return null;
+  if (new Set(danceIds).size !== danceIds.length) return null;
+  return { acts: parsed };
 }
