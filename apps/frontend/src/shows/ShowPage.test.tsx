@@ -2,11 +2,24 @@ import type { ShowDetail } from '@living-stage/shared';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { addAct, deleteAct, deleteShow, fetchShow, updateAct, updateShow } from '../api/shows.ts';
+import { fetchDances } from '../api/dances.ts';
+import {
+  addAct,
+  addActDance,
+  deleteAct,
+  deleteShow,
+  fetchShow,
+  removeActDance,
+  updateAct,
+  updateShow,
+} from '../api/shows.ts';
 import { ShowPage } from './ShowPage.tsx';
 
+vi.mock('../api/dances.ts', () => ({ fetchDances: vi.fn() }));
 vi.mock('../api/shows.ts', () => ({
   fetchShow: vi.fn(),
+  addActDance: vi.fn(),
+  removeActDance: vi.fn(),
   updateShow: vi.fn(),
   deleteShow: vi.fn(),
   addAct: vi.fn(),
@@ -32,9 +45,33 @@ const gala: ShowDetail = {
   ],
 };
 
+function summary(id: string, title: string, castCount = 16) {
+  return {
+    id,
+    title,
+    showGuides: true,
+    labelMode: 'name' as const,
+    colorMode: 'dancer' as const,
+    createdAt: '2026-10-20T12:00:00.000Z',
+    castCount,
+    preview: [],
+  };
+}
+
 beforeEach(() => {
   vi.mocked(fetchShow).mockReset().mockResolvedValue(gala);
-  for (const call of [updateShow, deleteShow, addAct, updateAct, deleteAct]) {
+  vi.mocked(fetchDances)
+    .mockReset()
+    .mockResolvedValue([summary('dance-1', 'Kitri variation'), summary('dance-2', 'Waltz', 22)]);
+  for (const call of [
+    updateShow,
+    deleteShow,
+    addAct,
+    updateAct,
+    deleteAct,
+    addActDance,
+    removeActDance,
+  ]) {
     vi.mocked(call).mockReset();
   }
 });
@@ -210,5 +247,93 @@ describe('acts', () => {
     const { user } = renderPage();
     await user.click(await screen.findByRole('button', { name: 'Rename Act 1' }));
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+});
+
+describe('dances in an act', () => {
+  async function openPicker(actName = 'Act 2 · Classics') {
+    const panel = renderPage();
+    await panel.user.click(await screen.findByRole('button', { name: `Add dance to ${actName}` }));
+    return panel;
+  }
+
+  const waltz = { id: 'item-2', danceId: 'dance-2', title: 'Waltz', castCount: 22 };
+
+  test('offers only the dances not yet in the show', async () => {
+    await openPicker();
+    const picker = screen.getByRole('group', { name: 'Add to Act 2 · Classics' });
+    expect(await within(picker).findAllByRole('button', { name: /Add$/ })).toHaveLength(1);
+  });
+
+  test('offers a dance with its dancer count', async () => {
+    await openPicker();
+    expect(await screen.findByRole('button', { name: /Waltz/ })).toHaveTextContent(
+      'Waltz22 dancersAdd',
+    );
+  });
+
+  test('adds the picked dance to the act', async () => {
+    vi.mocked(addActDance).mockResolvedValue(waltz);
+    const { user } = await openPicker();
+    await user.click(await screen.findByRole('button', { name: /Waltz/ }));
+    expect(screen.getByRole('region', { name: 'Act 2 · Classics' })).toHaveTextContent(
+      '01Waltz22 dancers',
+    );
+  });
+
+  test('sends the picked dance', async () => {
+    vi.mocked(addActDance).mockResolvedValue(waltz);
+    const { user } = await openPicker();
+    await user.click(await screen.findByRole('button', { name: /Waltz/ }));
+    expect(addActDance).toHaveBeenCalledWith(
+      { schoolId: 'school-1', showId: 'show-1', actId: 'act-2' },
+      { danceId: 'dance-2' },
+    );
+  });
+
+  test('stops offering a dance once it is in the show', async () => {
+    vi.mocked(addActDance).mockResolvedValue(waltz);
+    const { user } = await openPicker();
+    await user.click(await screen.findByRole('button', { name: /Waltz/ }));
+    expect(
+      await screen.findByText('Every dance of the school is in this show.'),
+    ).toBeInTheDocument();
+  });
+
+  test('says when a dance cannot be added', async () => {
+    vi.mocked(addActDance).mockRejectedValue(new Error('POST act dance answered 500'));
+    const { user } = await openPicker();
+    await user.click(await screen.findByRole('button', { name: /Waltz/ }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not add Waltz');
+  });
+
+  test('closes the picker', async () => {
+    const { user } = await openPicker();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(
+      screen.queryByRole('group', { name: 'Add to Act 2 · Classics' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('takes a dance out of the act', async () => {
+    vi.mocked(removeActDance).mockResolvedValue();
+    const { user } = renderPage();
+    await user.click(
+      await screen.findByRole('button', { name: 'Take Kitri variation out of Act 1' }),
+    );
+    expect(screen.getByRole('region', { name: 'Act 1' })).toHaveTextContent(
+      'No dances in this act yet.',
+    );
+  });
+
+  test('says when a dance cannot be taken out', async () => {
+    vi.mocked(removeActDance).mockRejectedValue(new Error('DELETE act dance answered 500'));
+    const { user } = renderPage();
+    await user.click(
+      await screen.findByRole('button', { name: 'Take Kitri variation out of Act 1' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not take Kitri variation out',
+    );
   });
 });

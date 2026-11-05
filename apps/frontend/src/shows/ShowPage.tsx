@@ -1,5 +1,6 @@
-import type { ShowDetail } from '@living-stage/shared';
+import type { DanceSummary, ShowDetail } from '@living-stage/shared';
 import { useState } from 'react';
+import { useDances } from '../dances/useDances.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { Icon } from '../ui/Icon.tsx';
@@ -14,6 +15,7 @@ type ShowPageProps = { schoolId: string; showId: string; onBack: () => void };
 
 export function ShowPage({ schoolId, showId, onBack }: ShowPageProps) {
   const { state, ...actions } = useShow(schoolId, showId);
+  const { state: dances } = useDances(schoolId);
   return (
     <div className={styles.page}>
       <div className={styles.crumb}>
@@ -29,7 +31,11 @@ export function ShowPage({ schoolId, showId, onBack }: ShowPageProps) {
       {state.status === 'ready' && (
         <>
           <ShowHero show={state.show} actions={actions} onDeleted={onBack} />
-          <Acts show={state.show} actions={actions} />
+          <Acts
+            show={state.show}
+            actions={actions}
+            dances={dances.status === 'ready' ? dances.dances : []}
+          />
         </>
       )}
     </div>
@@ -117,9 +123,13 @@ function DeleteShow({ show, actions, onDeleted }: ShowHeroProps) {
   );
 }
 
-function Acts({ show, actions }: { show: ShowDetail; actions: ShowActions }) {
+type ActsProps = { show: ShowDetail; actions: ShowActions; dances: DanceSummary[] };
+
+function Acts({ show, actions, dances }: ActsProps) {
   const [failed, setFailed] = useState(false);
   const onlyAct = show.acts.length === 1;
+  const inShow = new Set(show.acts.flatMap((act) => act.dances.map(({ danceId }) => danceId)));
+  const addable = dances.filter(({ id }) => !inShow.has(id));
 
   async function addAct() {
     setFailed(false);
@@ -141,6 +151,9 @@ function Acts({ show, actions }: { show: ShowDetail; actions: ShowActions }) {
               actions={{
                 saveAct: actions.saveAct,
                 remove: onlyAct ? null : () => actions.removeAct(act.id),
+                addDance: (danceId) => actions.addDance(act.id, danceId),
+                removeDance: (dance) => actions.removeDance(act.id, dance.id),
+                addable,
               }}
             />
           </li>

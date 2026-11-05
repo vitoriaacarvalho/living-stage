@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vit
 import { createApp } from '../app.ts';
 import { auth } from '../auth/auth.ts';
 import { prisma } from '../db.ts';
+import { Prisma } from '../generated/prisma/client.ts';
 
 vi.mock('../auth/auth.ts', () => ({
   auth: { handler: vi.fn(), api: { getSession: vi.fn() } },
@@ -30,6 +31,16 @@ vi.mock('../db.ts', () => ({
       updateMany: vi.fn(),
       delete: vi.fn(),
     },
+    actItem: {
+      aggregate: vi.fn(),
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+    },
+    dance: { findFirst: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -93,6 +104,8 @@ afterAll(() => {
 beforeEach(() => {
   for (const mock of Object.values(prisma.show)) vi.mocked(mock).mockReset();
   for (const mock of Object.values(prisma.act)) vi.mocked(mock).mockReset();
+  for (const mock of Object.values(prisma.actItem)) vi.mocked(mock).mockReset();
+  vi.mocked(prisma.dance.findFirst).mockReset();
   vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
     run(prisma)) as never);
   vi.mocked(auth.api.getSession).mockResolvedValue({
@@ -450,6 +463,126 @@ describe('DELETE /shows/:showId/acts/:actId', () => {
 
   test('responds 404 for an act of another show or school', async () => {
     vi.mocked(prisma.act.findFirst).mockResolvedValue(null);
+    expect((await remove()).status).toBe(404);
+  });
+});
+
+describe('POST /shows/:showId/acts/:actId/dances', () => {
+  const post = (body: unknown) =>
+    fetch(`${baseUrl}/shows/show-1/acts/act-1/dances`, send('POST', body));
+
+  beforeEach(() => {
+    vi.mocked(prisma.act.findFirst).mockResolvedValue(actRow('act-1', 0) as never);
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue({ id: 'dance-1' } as never);
+    vi.mocked(prisma.actItem.aggregate).mockResolvedValue({ _max: { order: 2 } } as never);
+    vi.mocked(prisma.actItem.create).mockResolvedValue({
+      id: 'item-4',
+      danceId: 'dance-1',
+      dance: { title: 'Kitri variation', _count: { cast: 16 } },
+    } as never);
+  });
+
+  test('responds 201 with the dance in the act', async () => {
+    const res = await post({ danceId: 'dance-1' });
+    expect(await res.json()).toEqual({
+      dance: { id: 'item-4', danceId: 'dance-1', title: 'Kitri variation', castCount: 16 },
+    });
+  });
+
+  test('puts the dance at the end of the act', async () => {
+    await post({ danceId: 'dance-1' });
+    expect(vi.mocked(prisma.actItem.create).mock.calls[0]![0].data).toEqual({
+      showId: 'show-1',
+      actId: 'act-1',
+      danceId: 'dance-1',
+      order: 3,
+    });
+  });
+
+  test('puts the first dance of an empty act first', async () => {
+    vi.mocked(prisma.actItem.aggregate).mockResolvedValue({ _max: { order: null } } as never);
+    await post({ danceId: 'dance-1' });
+    expect(vi.mocked(prisma.actItem.create).mock.calls[0]![0].data.order).toBe(0);
+  });
+
+  test('looks the dance up in this school', async () => {
+    await post({ danceId: 'dance-1' });
+    expect(prisma.dance.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'dance-1', schoolId: 'school-1' } }),
+    );
+  });
+
+  test('responds 400 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    expect((await post({ danceId: 'dance-9' })).status).toBe(400);
+  });
+
+  test('responds 400 for a body with no dance', async () => {
+    expect((await post({})).status).toBe(400);
+  });
+
+  test('responds 404 for an act of another show or school', async () => {
+    vi.mocked(prisma.act.findFirst).mockResolvedValue(null);
+    expect((await post({ danceId: 'dance-1' })).status).toBe(404);
+  });
+
+  test('responds 409 for a dance already in the show', async () => {
+    vi.mocked(prisma.actItem.create).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+    const res = await post({ danceId: 'dance-1' });
+    expect(await res.json()).toEqual({ error: 'already_in_show' });
+  });
+});
+
+describe('DELETE /shows/:showId/acts/:actId/dances/:itemId', () => {
+  const remove = () =>
+    fetch(`${baseUrl}/shows/show-1/acts/act-1/dances/item-1`, { method: 'DELETE' });
+
+  beforeEach(() => {
+    vi.mocked(prisma.actItem.findFirst).mockResolvedValue({
+      id: 'item-1',
+      actId: 'act-1',
+    } as never);
+    vi.mocked(prisma.actItem.findMany).mockResolvedValue([
+      { id: 'item-2' },
+      { id: 'item-3' },
+    ] as never);
+  });
+
+  test('responds 204 once the dance leaves the act', async () => {
+    expect((await remove()).status).toBe(204);
+  });
+
+  test('takes the dance out of the act', async () => {
+    await remove();
+    expect(prisma.actItem.delete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+  });
+
+  test('numbers the remaining dances from the start', async () => {
+    await remove();
+    expect(vi.mocked(prisma.actItem.update).mock.calls.map(([call]) => call)).toEqual([
+      { where: { id: 'item-2' }, data: { order: 0 } },
+      { where: { id: 'item-3' }, data: { order: 1 } },
+    ]);
+  });
+
+  test('looks the dance up in this act, show and school', async () => {
+    await remove();
+    expect(prisma.actItem.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'item-1',
+        actId: 'act-1',
+        act: { id: 'act-1', showId: 'show-1', show: { schoolId: 'school-1' } },
+      },
+    });
+  });
+
+  test('responds 404 for a dance of another act, show or school', async () => {
+    vi.mocked(prisma.actItem.findFirst).mockResolvedValue(null);
     expect((await remove()).status).toBe(404);
   });
 });

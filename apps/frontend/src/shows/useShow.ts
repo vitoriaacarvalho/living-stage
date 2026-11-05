@@ -1,6 +1,15 @@
-import type { Act, ActUpdate, ShowDetail, ShowUpdate } from '@living-stage/shared';
+import type { Act, ActUpdate, ShowDance, ShowDetail, ShowUpdate } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
-import { addAct, deleteAct, deleteShow, fetchShow, updateAct, updateShow } from '../api/shows.ts';
+import {
+  addAct,
+  addActDance,
+  deleteAct,
+  deleteShow,
+  fetchShow,
+  removeActDance,
+  updateAct,
+  updateShow,
+} from '../api/shows.ts';
 
 export type ShowState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; show: ShowDetail };
@@ -11,6 +20,8 @@ export type ShowActions = {
   addAct: () => Promise<void>;
   saveAct: (actId: string, update: ActUpdate) => Promise<void>;
   removeAct: (actId: string) => Promise<void>;
+  addDance: (actId: string, danceId: string) => Promise<void>;
+  removeDance: (actId: string, itemId: string) => Promise<void>;
 };
 
 export function useShow(schoolId: string, showId: string): { state: ShowState } & ShowActions {
@@ -35,6 +46,11 @@ export function useShow(schoolId: string, showId: string): { state: ShowState } 
   const changeActs = (update: (acts: Act[]) => Act[]) =>
     change((show) => ({ ...show, acts: update(show.acts) }));
 
+  const changeDances = (actId: string, update: (dances: ShowDance[]) => ShowDance[]) =>
+    changeActs((acts) =>
+      acts.map((act) => (act.id === actId ? { ...act, dances: update(act.dances) } : act)),
+    );
+
   return {
     state,
     async save(update) {
@@ -53,6 +69,14 @@ export function useShow(schoolId: string, showId: string): { state: ShowState } 
     async removeAct(actId) {
       await deleteAct({ schoolId, showId, actId });
       changeActs((acts) => acts.filter(({ id }) => id !== actId));
+    },
+    async addDance(actId, danceId) {
+      const dance = await addActDance({ schoolId, showId, actId }, { danceId });
+      changeDances(actId, (dances) => [...dances, dance]);
+    },
+    async removeDance(actId, itemId) {
+      await removeActDance({ schoolId, showId, actId }, itemId);
+      changeDances(actId, (dances) => dances.filter(({ id }) => id !== itemId));
     },
   };
 }

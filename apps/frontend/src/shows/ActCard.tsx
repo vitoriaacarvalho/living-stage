@@ -1,4 +1,10 @@
-import { ACT_NAME_MAX_LENGTH, parseActUpdate, type Act } from '@living-stage/shared';
+import {
+  ACT_NAME_MAX_LENGTH,
+  parseActUpdate,
+  type Act,
+  type DanceSummary,
+  type ShowDance,
+} from '@living-stage/shared';
 import { useState, type FormEvent } from 'react';
 import { dancerCount } from '../cast/dancer-count.ts';
 import { Button } from '../ui/Button.tsx';
@@ -8,15 +14,30 @@ import { TextField } from '../ui/TextField.tsx';
 import styles from './ShowPage.module.css';
 import type { ShowActions } from './useShow.ts';
 
-type ActCardProps = {
-  act: Act;
-  label: string;
-  // Null for the only act, which can't be deleted.
-  actions: Pick<ShowActions, 'saveAct'> & { remove: (() => Promise<void>) | null };
+// addable is the school's dances not yet in the show; remove is null for the only act.
+export type ActTools = Pick<ShowActions, 'saveAct'> & {
+  remove: (() => Promise<void>) | null;
+  addDance: (danceId: string) => Promise<void>;
+  removeDance: (dance: ShowDance) => Promise<void>;
+  addable: Pick<DanceSummary, 'id' | 'title' | 'castCount'>[];
 };
+
+type ActCardProps = { act: Act; label: string; actions: ActTools };
 
 export function ActCard({ act, label, actions }: ActCardProps) {
   const [renaming, setRenaming] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function attempt(action: () => Promise<void>, failure: string) {
+    setError(null);
+    try {
+      await action();
+    } catch {
+      setError(failure);
+    }
+  }
+
   return (
     <section className={styles.act} aria-label={label}>
       {renaming ? (
@@ -44,11 +65,76 @@ export function ActCard({ act, label, actions }: ActCardProps) {
                 <Icon name="users" />
                 {dancerCount(dance.castCount)}
               </span>
+              <Button
+                variant="ghost"
+                icon="x"
+                aria-label={`Take ${dance.title} out of ${label}`}
+                onClick={() =>
+                  attempt(
+                    () => actions.removeDance(dance),
+                    `Could not take ${dance.title} out. Try again.`,
+                  )
+                }
+              />
             </li>
           ))}
         </ol>
       )}
+      {error && (
+        <p role="alert" className={formStyles.error}>
+          {error}
+        </p>
+      )}
+      {picking ? (
+        <DancePicker
+          label={label}
+          addable={actions.addable}
+          onPick={(dance) =>
+            attempt(() => actions.addDance(dance.id), `Could not add ${dance.title}. Try again.`)
+          }
+          onDone={() => setPicking(false)}
+        />
+      ) : (
+        <Button variant="ghost" icon="plus" className={styles.add} onClick={() => setPicking(true)}>
+          Add dance to {label}
+        </Button>
+      )}
     </section>
+  );
+}
+
+type DancePickerProps = {
+  label: string;
+  addable: ActTools['addable'];
+  onPick: (dance: ActTools['addable'][number]) => void;
+  onDone: () => void;
+};
+
+function DancePicker({ label, addable, onPick, onDone }: DancePickerProps) {
+  return (
+    <div className={styles.picker} role="group" aria-label={`Add to ${label}`}>
+      <div className={styles.pickerHead}>
+        <h3 className={styles.pickerTitle}>Add to {label}</h3>
+        <Button variant="secondary" size="small" onClick={onDone}>
+          Done
+        </Button>
+      </div>
+      {addable.length === 0 ? (
+        <p className={styles.empty}>Every dance of the school is in this show.</p>
+      ) : (
+        <ul className={styles.pickList}>
+          {addable.map((dance) => (
+            <li key={dance.id}>
+              <button type="button" className={styles.pick} onClick={() => onPick(dance)}>
+                <span className={styles.danceTitle}>{dance.title}</span>
+                <span className={styles.cast}>{dancerCount(dance.castCount)}</span>
+                <span className={styles.pickHint}>Add</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

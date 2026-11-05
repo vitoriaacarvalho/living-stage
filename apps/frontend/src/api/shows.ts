@@ -1,9 +1,12 @@
 import type {
   Act,
+  ActDanceInput,
+  ActDanceResponse,
   ActResponse,
   ActUpdate,
   ListShowsResponse,
   Show,
+  ShowDance,
   ShowDetail,
   ShowDetailResponse,
   ShowInput,
@@ -90,4 +93,17 @@ export async function updateAct(ref: ActRef, update: ActUpdate): Promise<Act> {
 
 export function deleteAct(ref: ActRef): Promise<void> {
   return send(actUrl(ref), { method: 'DELETE', what: 'act' });
+}
+
+export async function addActDance(ref: ActRef, input: ActDanceInput): Promise<ShowDance> {
+  const body = await send<ActDanceResponse>(`${actUrl(ref)}/dances`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+    what: 'act dance',
+  });
+  return body.dance;
+}
+
+export function removeActDance(ref: ActRef, itemId: string): Promise<void> {
+  return send(`${actUrl(ref)}/dances/${itemId}`, { method: 'DELETE', what: 'act dance' });
 }

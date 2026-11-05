@@ -1,13 +1,16 @@
 import {
   dancePreview,
+  parseActDanceInput,
   parseActUpdate,
   parseShowInput,
   parseShowUpdate,
   type Act,
+  type ActDanceResponse,
   type ActResponse,
   type ListShowsResponse,
   type Show,
   type ShowDetail,
+  type ShowDance,
   type ShowDetailResponse,
   type ShowResponse,
   type ShowSummary,
@@ -15,7 +18,7 @@ import {
 } from '@living-stage/shared';
 import { Router } from 'express';
 import { prisma } from '../db.ts';
-import type { Prisma } from '../generated/prisma/client.ts';
+import { Prisma } from '../generated/prisma/client.ts';
 import { toCastMember } from './cast.ts';
 
 export const schoolShowsRouter = Router();
@@ -160,6 +163,43 @@ schoolShowsRouter.delete('/shows/:showId/acts/:actId', async (req, res) => {
   res.status(204).end();
 });
 
+schoolShowsRouter.post('/shows/:showId/acts/:actId/dances', async (req, res) => {
+  const input = parseActDanceInput(req.body);
+  if (!input) {
+    res.status(400).json({ error: 'invalid_act_dance' });
+    return;
+  }
+
+  let result;
+  try {
+    result = await addDance(req.params, { schoolId: res.locals.schoolId, ...input });
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+      throw error;
+    }
+    res.status(409).json({ error: 'already_in_show' });
+    return;
+  }
+  if (result === 'not_found') {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  if (result === 'unknown_dance') {
+    res.status(400).json({ error: 'invalid_act_dance' });
+    return;
+  }
+  res.status(201).json({ dance: toShowDance(result) } satisfies ActDanceResponse);
+});
+
+schoolShowsRouter.delete('/shows/:showId/acts/:actId/dances/:itemId', async (req, res) => {
+  const removed = await removeDance(req.params, res.locals.schoolId);
+  if (!removed) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  res.status(204).end();
+});
+
 type ActParams = { showId: string; actId: string };
 
 function actOfSchool({ showId, actId }: ActParams, schoolId: string) {
@@ -175,6 +215,55 @@ function addAct(showId: string, schoolId: string) {
       data: { showId, order: (_max.order ?? -1) + 1 },
       include: detailActs.include,
     });
+  });
+}
+
+type DanceToAdd = { schoolId: string; danceId: string };
+
+// The unique (showId, danceId) refuses a dance already in the show.
+function addDance(params: ActParams, { schoolId, danceId }: DanceToAdd) {
+  return prisma.$transaction(async (tx) => {
+    const act = await tx.act.findFirst({ where: actOfSchool(params, schoolId) });
+    if (!act) return 'not_found' as const;
+    const dance = await tx.dance.findFirst({
+      where: { id: danceId, schoolId },
+      select: { id: true },
+    });
+    if (!dance) return 'unknown_dance' as const;
+    const { _max } = await tx.actItem.aggregate({
+      where: { actId: act.id },
+      _max: { order: true },
+    });
+    return tx.actItem.create({
+      data: { showId: act.showId, actId: act.id, danceId, order: (_max.order ?? -1) + 1 },
+      include: detailActs.include.items.include,
+    });
+  });
+}
+
+type ItemParams = ActParams & { itemId: string };
+
+// The dances after it close the gap, moving past every current order first.
+function removeDance({ itemId, ...params }: ItemParams, schoolId: string) {
+  return prisma.$transaction(async (tx) => {
+    const item = await tx.actItem.findFirst({
+      where: { id: itemId, actId: params.actId, act: actOfSchool(params, schoolId) },
+    });
+    if (!item) return false;
+    await tx.actItem.delete({ where: { id: item.id } });
+    const rest = await tx.actItem.findMany({
+      where: { actId: item.actId },
+      orderBy: { order: 'asc' },
+      select: { id: true },
+    });
+    await tx.actItem.updateMany({
+      where: { actId: item.actId },
+      data: { order: { increment: rest.length + 1 } },
+    });
+    for (const [order, { id }] of rest.entries()) {
+      await tx.actItem.update({ where: { id }, data: { order } });
+    }
+    return true;
   });
 }
 
@@ -241,18 +330,14 @@ function toShowSummary({ acts, ...show }: SummaryRow): ShowSummary {
 
 type DetailRow = ShowRow & Prisma.ShowGetPayload<{ include: { acts: typeof detailActs } }>;
 
+type ItemRow = DetailRow['acts'][number]['items'][number];
+
+function toShowDance({ id, danceId, dance }: ItemRow): ShowDance {
+  return { id, danceId, title: dance.title, castCount: dance._count.cast };
+}
+
 function toAct({ id, order, name, items }: DetailRow['acts'][number]): Act {
-  return {
-    id,
-    order,
-    name,
-    dances: items.map((item) => ({
-      id: item.id,
-      danceId: item.danceId,
-      title: item.dance.title,
-      castCount: item.dance._count.cast,
-    })),
-  };
+  return { id, order, name, dances: items.map(toShowDance) };
 }
 
 function toShowDetail({ acts, ...show }: DetailRow): ShowDetail {
