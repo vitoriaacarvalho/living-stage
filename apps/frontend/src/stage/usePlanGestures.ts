@@ -1,5 +1,8 @@
 import {
+  ARROW_LARGE_STEP_M,
+  ARROW_STEP_M,
   PLAN_BOUNDS,
+  arrowStep,
   moveGroup,
   snapToGuides,
   type Position,
@@ -103,6 +106,16 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
     );
   }
 
+  // Moving a dancer who isn't selected selects only her first, by pointer or by key.
+  function grab(editing: StageEditing, dancerId: string): Position[] {
+    const selected = editing.selectedIds.includes(dancerId);
+    const ids = selected ? editing.selectedIds : [dancerId];
+    if (!selected) editing.onSelect(ids);
+    return dancers
+      .filter(({ id }) => ids.includes(id))
+      .map(({ id, x, y }) => ({ castMemberId: id, x, y }));
+  }
+
   function pressDancer(dancer: StageDancer, event: PointerEvent<HTMLElement>) {
     event.stopPropagation();
     if (!edit || gesture) return;
@@ -110,25 +123,35 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
       toggle(dancer.id);
       return;
     }
-    const selected = edit.selectedIds.includes(dancer.id);
-    const ids = selected ? edit.selectedIds : [dancer.id];
-    if (!selected) edit.onSelect(ids);
     setGesture({
       ...start(event),
       kind: 'drag',
       dancerId: dancer.id,
-      origins: dancers
-        .filter(({ id }) => ids.includes(id))
-        .map(({ id, x, y }) => ({ castMemberId: id, x, y })),
+      origins: grab(edit, dancer.id),
       delta: { x: 0, y: 0 },
     });
   }
 
   function pressKey(dancer: StageDancer, event: KeyboardEvent<HTMLElement>) {
-    if (!edit || (event.key !== 'Enter' && event.key !== ' ')) return;
-    event.preventDefault();
-    if (event.shiftKey) toggle(dancer.id);
-    else edit.onSelect([dancer.id]);
+    if (!edit || gesture) return;
+    const step = arrowStep(event.key, event.shiftKey ? ARROW_LARGE_STEP_M : ARROW_STEP_M);
+    if (step) {
+      event.preventDefault();
+      nudge(edit, dancer.id, step);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (event.shiftKey) toggle(dancer.id);
+      else edit.onSelect([dancer.id]);
+    }
+  }
+
+  // A group already against the edge doesn't move, so there is nothing to save.
+  function nudge(editing: StageEditing, dancerId: string, step: StagePoint) {
+    const origins = grab(editing, dancerId);
+    const moved = moveGroup(origins, step);
+    if (moved.some((spot, index) => spot.x !== origins[index]!.x || spot.y !== origins[index]!.y)) {
+      editing.onMove(moved);
+    }
   }
 
   function pressFloor(event: PointerEvent<HTMLElement>) {

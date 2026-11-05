@@ -536,6 +536,14 @@ describe('dragging on the 2D plan', () => {
     });
   });
 
+  test('saves a dancer moved with an arrow key in the figure shown', async () => {
+    await openPlan();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'ArrowRight' });
+    expect(moveFigurePositions).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-1', {
+      positions: [{ castMemberId: 'cast-1', x: expect.closeTo(0.5 + 0.25 / 12), y: 0.5 }],
+    });
+  });
+
   test('clears the selection on Escape', async () => {
     const user = await openPlan();
     tapClara();

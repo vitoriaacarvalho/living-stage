@@ -1,4 +1,4 @@
-import { PLAN_BOUNDS, type StagePoint } from '@living-stage/shared';
+import { PLAN_BOUNDS, STAGE_DEPTH_M, STAGE_WIDTH_M, type StagePoint } from '@living-stage/shared';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Stage } from './Stage.tsx';
@@ -223,6 +223,85 @@ describe('editing', () => {
     render(<Stage showGuides dancers={[clara]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'a' });
     expect(edit.onSelect).not.toHaveBeenCalled();
+  });
+
+  function press(label: string, keys: { key: string; shiftKey?: boolean }) {
+    fireEvent.keyDown(screen.getByRole('button', { name: label }), keys);
+  }
+
+  test('moves the dancer 0.25 m to the right with the right arrow', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    press('Clara', { key: 'ArrowRight' });
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: 0.5 + 0.25 / STAGE_WIDTH_M, y: 0.5 },
+    ]);
+  });
+
+  test('moves the dancer 1 m with Shift and an arrow', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    press('Clara', { key: 'ArrowRight', shiftKey: true });
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: 0.5 + 1 / STAGE_WIDTH_M, y: 0.5 },
+    ]);
+  });
+
+  test('moves the dancer upstage with the up arrow', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    press('Clara', { key: 'ArrowUp' });
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: 0.5, y: 0.5 - 0.25 / STAGE_DEPTH_M },
+    ]);
+  });
+
+  test('moves the whole selection with an arrow', () => {
+    const edit = editing(['cast-1', 'cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    press('Clara', { key: 'ArrowLeft' });
+    const step = 0.25 / STAGE_WIDTH_M;
+    expect(edit.onMove).toHaveBeenCalledWith([
+      { castMemberId: 'cast-1', x: 0.5 - step, y: 0.5 },
+      { castMemberId: 'cast-2', x: 0.25 - step, y: 0.5 },
+    ]);
+  });
+
+  test('selects a dancer who is not selected when an arrow moves her', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    press('Clara', { key: 'ArrowRight' });
+    expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
+  });
+
+  test('moves only a dancer who is not selected, not the selection', () => {
+    const edit = editing(['cast-2']);
+    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    press('Clara', { key: 'ArrowRight' });
+    expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ castMemberId: 'cast-1' })]);
+  });
+
+  test('stops a dancer at the downstage edge', () => {
+    const edit = editing(['cast-1']);
+    const front = { ...clara, y: 1 - 0.1 / STAGE_DEPTH_M };
+    render(<Stage showGuides dancers={[front]} edit={edit} />);
+    press('Clara', { key: 'ArrowDown' });
+    expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.5, y: 1 }]);
+  });
+
+  test('saves nothing when the dancer is already at the edge', () => {
+    const edit = editing(['cast-1']);
+    render(<Stage showGuides dancers={[{ ...clara, y: 1 }]} edit={edit} />);
+    press('Clara', { key: 'ArrowDown' });
+    expect(edit.onMove).not.toHaveBeenCalled();
+  });
+
+  test('keeps the page from scrolling when an arrow moves a dancer', () => {
+    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    const pressed = fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
+      key: 'ArrowDown',
+    });
+    expect(pressed).toBe(false);
   });
 
   test('gives no dancer a drag area when the plan is only shown', () => {
