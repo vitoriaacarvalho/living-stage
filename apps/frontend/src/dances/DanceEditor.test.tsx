@@ -1,5 +1,5 @@
-import type { Dance } from '@living-stage/shared';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { TRANSITION_MS, type Dance } from '@living-stage/shared';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast, removeCastMember } from '../api/cast.ts';
@@ -649,7 +649,7 @@ describe('playback', () => {
     return user;
   }
 
-  function chip(name: string) {
+  function chip(name: string | RegExp) {
     return within(screen.getByRole('list', { name: 'Figures' })).getByRole('button', { name });
   }
 
@@ -713,6 +713,43 @@ describe('playback', () => {
     const user = await play();
     await user.click(screen.getByRole('button', { name: 'New figure' }));
     expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+
+  function claraLeft() {
+    return screen.getByTestId('dancer').style.left;
+  }
+
+  test('moves the dancers halfway at half the transition', async () => {
+    await play();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS / 2));
+    expect(parseFloat(claraLeft())).toBeCloseTo(40, 0);
+  });
+
+  test('holds the in-between pose while paused', async () => {
+    const user = await play();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS / 2));
+    await user.click(screen.getByRole('button', { name: 'Pause' }));
+    const paused = claraLeft();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS));
+    expect(claraLeft()).toBe(paused);
+  });
+
+  test('stops on the last figure at the end', async () => {
+    await play();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS + 100));
+    expect(screen.getByTestId('dancer-hit')).toBeInTheDocument();
+  });
+
+  test('shows the last figure at the end', async () => {
+    await play();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS + 100));
+    expect(parseFloat(claraLeft())).toBeCloseTo(30);
+  });
+
+  test('selects the last figure at the end', async () => {
+    await play();
+    act(() => vi.advanceTimersByTime(TRANSITION_MS + 100));
+    expect(chip(/Entrance/)).toHaveAttribute('aria-current', 'true');
   });
 
   test('cannot play a dance with a single figure', async () => {

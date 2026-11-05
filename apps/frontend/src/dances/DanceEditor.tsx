@@ -53,8 +53,9 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   // Editing is only on while playback is stopped at a figure.
   const stopped = playback.status === 'stopped';
   const moment = stopped ? null : stageAt(figures, playback.timeMs);
+  const positions = moment?.positions ?? figure?.positions;
   const dancers =
-    cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
+    cast.status === 'ready' && positions ? stageDancers(cast.cast, positions, dance) : [];
 
   useEffect(() => {
     if (selection.length === 0) return;
