@@ -1,4 +1,4 @@
-import type { Show } from '@living-stage/shared';
+import { formatRunningTime, type Show, type ShowSummary } from '@living-stage/shared';
 
 // The date is a plain calendar day, so it is read and written in UTC to keep the day.
 const day = new Intl.DateTimeFormat('en-GB', {
@@ -19,8 +19,15 @@ export function localDay(now: Date): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-export function showCounts({ actCount, danceCount }: { actCount: number; danceCount: number }) {
+// The running time joins in once any dance has a time.
+export function showCounts({
+  actCount,
+  danceCount,
+  totalMs,
+}: Pick<ShowSummary, 'actCount' | 'danceCount' | 'totalMs'>) {
   const acts = actCount === 1 ? '1 act' : `${actCount} acts`;
   const dances = danceCount === 1 ? '1 dance' : `${danceCount} dances`;
-  return `${acts} · ${dances}`;
+  return totalMs > 0
+    ? `${acts} · ${dances} · ${formatRunningTime(totalMs)}`
+    : `${acts} · ${dances}`;
 }

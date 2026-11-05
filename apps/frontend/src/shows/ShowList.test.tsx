@@ -67,7 +67,7 @@ test('shows the day, time and venue', async () => {
 
 test('counts the acts and dances', async () => {
   renderList();
-  expect(await card('Winter gala')).toHaveTextContent('2 acts · 10 dances');
+  expect(await card('Winter gala')).toHaveTextContent('2 acts · 10 dances · 57min');
 });
 
 test('marks a past show as performed', async () => {

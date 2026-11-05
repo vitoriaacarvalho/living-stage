@@ -22,13 +22,19 @@ test('pads single-digit months and days', () => {
 });
 
 test('counts acts and dances', () => {
-  expect(showCounts({ actCount: 2, danceCount: 10 })).toBe('2 acts · 10 dances');
+  expect(showCounts({ actCount: 2, danceCount: 10, totalMs: 0 })).toBe('2 acts · 10 dances');
 });
 
 test('counts one act and one dance', () => {
-  expect(showCounts({ actCount: 1, danceCount: 1 })).toBe('1 act · 1 dance');
+  expect(showCounts({ actCount: 1, danceCount: 1, totalMs: 0 })).toBe('1 act · 1 dance');
 });
 
 test('counts a show with no dances', () => {
-  expect(showCounts({ actCount: 1, danceCount: 0 })).toBe('1 act · 0 dances');
+  expect(showCounts({ actCount: 1, danceCount: 0, totalMs: 0 })).toBe('1 act · 0 dances');
+});
+
+test('adds the running time once there is one', () => {
+  expect(showCounts({ actCount: 2, danceCount: 10, totalMs: 57 * 60_000 })).toBe(
+    '2 acts · 10 dances · 57min',
+  );
 });
