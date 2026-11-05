@@ -11,6 +11,7 @@ import { healthRouter } from './routes/health.ts';
 import { invitesRouter, schoolInviteRouter } from './routes/invites.ts';
 import { meRouter } from './routes/me.ts';
 import { schoolsRouter } from './routes/schools.ts';
+import { schoolShowsRouter } from './routes/shows.ts';
 
 export function createApp() {
   const app = express();
@@ -31,6 +32,7 @@ export function createApp() {
     schoolDancesRouter,
     schoolCastRouter,
     schoolFiguresRouter,
+    schoolShowsRouter,
   );
   return app;
 }
