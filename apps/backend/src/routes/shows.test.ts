@@ -17,6 +17,7 @@ vi.mock('../db.ts', () => ({
     show: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       create: vi.fn(),
       updateManyAndReturn: vi.fn(),
       deleteMany: vi.fn(),
@@ -584,5 +585,119 @@ describe('DELETE /shows/:showId/acts/:actId/dances/:itemId', () => {
   test('responds 404 for a dance of another act, show or school', async () => {
     vi.mocked(prisma.actItem.findFirst).mockResolvedValue(null);
     expect((await remove()).status).toBe(404);
+  });
+});
+
+describe('PUT /shows/:showId/order', () => {
+  const put = (body: unknown) => fetch(`${baseUrl}/shows/show-1/order`, send('PUT', body));
+  const order = {
+    acts: [
+      { id: 'act-2', danceIds: ['item-3', 'item-1'] },
+      { id: 'act-1', danceIds: ['item-2'] },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue({
+      acts: [{ id: 'act-1' }, { id: 'act-2' }],
+      items: [
+        { id: 'item-1', order: 0 },
+        { id: 'item-2', order: 4 },
+        { id: 'item-3', order: 0 },
+      ],
+    } as never);
+    vi.mocked(prisma.show.findUniqueOrThrow).mockResolvedValue({ ...gala, acts: [] } as never);
+  });
+
+  test('answers with the show in its new order', async () => {
+    const res = await put(order);
+    expect(await res.json()).toEqual({ show: { ...galaJson, acts: [] } });
+  });
+
+  test('moves every act and dance past the orders in use first', async () => {
+    await put(order);
+    expect(vi.mocked(prisma.actItem.updateMany).mock.calls[0]![0]).toEqual({
+      where: { showId: 'show-1' },
+      data: { order: { increment: 6 } },
+    });
+  });
+
+  test('numbers the acts in their new order', async () => {
+    await put(order);
+    expect(vi.mocked(prisma.act.update).mock.calls.map(([call]) => call)).toEqual([
+      { where: { id: 'act-2' }, data: { order: 0 } },
+      { where: { id: 'act-1' }, data: { order: 1 } },
+    ]);
+  });
+
+  test('puts each dance in its act at its place', async () => {
+    await put(order);
+    expect(vi.mocked(prisma.actItem.update).mock.calls.map(([call]) => call)).toEqual([
+      { where: { id: 'item-3' }, data: { actId: 'act-2', order: 0 } },
+      { where: { id: 'item-1' }, data: { actId: 'act-2', order: 1 } },
+      { where: { id: 'item-2' }, data: { actId: 'act-1', order: 0 } },
+    ]);
+  });
+
+  test('moves everything clear of every new place when the dances gather in one act', async () => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue({
+      acts: [{ id: 'act-1' }, { id: 'act-2' }],
+      items: [
+        { id: 'item-1', order: 0 },
+        { id: 'item-2', order: 0 },
+        { id: 'item-3', order: 1 },
+      ],
+    } as never);
+    await put({
+      acts: [
+        { id: 'act-1', danceIds: ['item-1', 'item-2', 'item-3'] },
+        { id: 'act-2', danceIds: [] },
+      ],
+    });
+    expect(vi.mocked(prisma.actItem.updateMany).mock.calls[0]![0].data).toEqual({
+      order: { increment: 4 },
+    });
+  });
+
+  test('responds 400 when an act of the show is left out', async () => {
+    const res = await put({ acts: [{ id: 'act-2', danceIds: ['item-1', 'item-2', 'item-3'] }] });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 when a dance of the show is left out', async () => {
+    const res = await put({
+      acts: [
+        { id: 'act-2', danceIds: ['item-3'] },
+        { id: 'act-1', danceIds: ['item-2'] },
+      ],
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test('responds 400 for a dance of another show', async () => {
+    const res = await put({
+      acts: [
+        { id: 'act-2', danceIds: ['item-3', 'item-9'] },
+        { id: 'act-1', danceIds: ['item-2'] },
+      ],
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test('changes nothing for a wrong order', async () => {
+    await put({ acts: [{ id: 'act-1', danceIds: [] }] });
+    expect(prisma.act.updateMany).not.toHaveBeenCalled();
+  });
+
+  test('looks the show up in this school', async () => {
+    await put(order);
+    expect(vi.mocked(prisma.show.findFirst).mock.calls[0]![0]).toMatchObject({
+      where: { id: 'show-1', schoolId: 'school-1' },
+    });
+  });
+
+  test('responds 404 for a show of another school', async () => {
+    vi.mocked(prisma.show.findFirst).mockResolvedValue(null);
+    expect((await put(order)).status).toBe(404);
   });
 });

@@ -3,6 +3,7 @@ import {
   parseActDanceInput,
   parseActUpdate,
   parseShowInput,
+  parseShowOrder,
   parseShowUpdate,
   type Act,
   type ActDanceResponse,
@@ -11,6 +12,7 @@ import {
   type Show,
   type ShowDetail,
   type ShowDance,
+  type ShowOrder,
   type ShowDetailResponse,
   type ShowResponse,
   type ShowSummary,
@@ -121,6 +123,28 @@ schoolShowsRouter.delete('/shows/:showId', async (req, res) => {
   res.status(204).end();
 });
 
+schoolShowsRouter.put('/shows/:showId/order', async (req, res) => {
+  const order = parseShowOrder(req.body);
+  if (!order) {
+    res.status(400).json({ error: 'invalid_show_order' });
+    return;
+  }
+
+  const result = await reorderShow(
+    { showId: req.params.showId, schoolId: res.locals.schoolId },
+    order,
+  );
+  if (result === 'not_found') {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  if (result === 'mismatch') {
+    res.status(400).json({ error: 'invalid_show_order' });
+    return;
+  }
+  res.json({ show: toShowDetail(result) } satisfies ShowDetailResponse);
+});
+
 schoolShowsRouter.post('/shows/:showId/acts', async (req, res) => {
   const act = await addAct(req.params.showId, res.locals.schoolId);
   if (!act) {
@@ -199,6 +223,48 @@ schoolShowsRouter.delete('/shows/:showId/acts/:actId/dances/:itemId', async (req
   }
   res.status(204).end();
 });
+
+type ShowRef = { showId: string; schoolId: string };
+
+const sameIds = (a: string[], b: string[]) =>
+  a.length === b.length && new Set([...a, ...b]).size === a.length;
+
+// Every act and dance first moves past any order in use, so no new order collides with one
+// not yet rewritten; then each takes its place, dances in the act they were dropped in.
+function reorderShow({ showId, schoolId }: ShowRef, { acts }: ShowOrder) {
+  return prisma.$transaction(async (tx) => {
+    const show = await tx.show.findFirst({
+      where: { id: showId, schoolId },
+      select: { acts: { select: { id: true } }, items: { select: { id: true, order: true } } },
+    });
+    if (!show) return 'not_found' as const;
+    const danceIds = acts.flatMap((act) => act.danceIds);
+    if (
+      !sameIds(
+        show.acts.map(({ id }) => id),
+        acts.map(({ id }) => id),
+      ) ||
+      !sameIds(
+        show.items.map(({ id }) => id),
+        danceIds,
+      )
+    ) {
+      return 'mismatch' as const;
+    }
+
+    const orders = show.items.map(({ order }) => order + 1);
+    const away = Math.max(acts.length, danceIds.length, ...orders) + 1;
+    await tx.act.updateMany({ where: { showId }, data: { order: { increment: away } } });
+    await tx.actItem.updateMany({ where: { showId }, data: { order: { increment: away } } });
+    for (const [order, act] of acts.entries()) {
+      await tx.act.update({ where: { id: act.id }, data: { order } });
+      for (const [place, id] of act.danceIds.entries()) {
+        await tx.actItem.update({ where: { id }, data: { actId: act.id, order: place } });
+      }
+    }
+    return tx.show.findUniqueOrThrow({ where: { id: showId }, include: { acts: detailActs } });
+  });
+}
 
 type ActParams = { showId: string; actId: string };
 
