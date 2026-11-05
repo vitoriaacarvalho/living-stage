@@ -289,3 +289,149 @@
   border-color: var(--primary);
   box-shadow: var(--shadow-sheet);
 }
+
+.actTotal {
+  flex: none;
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.duration {
+  flex: none;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+@media (hover: hover) {
+  .duration:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+.durationForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.durationInput {
+  width: 5.5rem;
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.durationError {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--primary-strong);
+  font: var(--text-caption);
+  text-align: end;
+}
+
+.interval {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-md);
+  color: var(--ink-muted);
+  font: var(--text-label);
+}
+
+.intervalTime {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.total {
+  display: flex;
+  flex: 0 1 330px;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 240px;
+}
+
+.totalLabel {
+  color: var(--ink-muted);
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+}
+
+.totalTime {
+  margin: 0;
+  font: var(--text-display);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+  margin: var(--space-2) 0 var(--space-1);
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.bar > i {
+  display: block;
+  flex-basis: 0;
+  min-width: 2px;
+}
+
+.barAct {
+  background: var(--primary);
+}
+
+.barActAlt {
+  background: var(--primary-strong);
+}
+
+.barInterval {
+  background: var(--border-control);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+  list-style: none;
+}
+
+.legend b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.untimed {
+  margin: 0;
+  color: var(--ink-muted);
+  font: var(--text-caption);
+}

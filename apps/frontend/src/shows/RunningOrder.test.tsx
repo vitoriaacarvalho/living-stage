@@ -64,6 +64,7 @@ function renderOrder(reorder: ShowActions['reorder'] = vi.fn().mockResolvedValue
     addDance: vi.fn(),
     removeDance: vi.fn(),
     reorder,
+    setDuration: vi.fn(),
   };
   render(<RunningOrder show={gala} actions={actions} dances={[]} />);
   return { reorder, user: userEvent.setup() };

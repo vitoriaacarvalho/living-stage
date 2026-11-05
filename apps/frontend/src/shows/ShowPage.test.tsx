@@ -2,7 +2,7 @@ import type { ShowDetail } from '@living-stage/shared';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchDances } from '../api/dances.ts';
+import { fetchDances, updateDance } from '../api/dances.ts';
 import {
   addAct,
   addActDance,
@@ -15,7 +15,7 @@ import {
 } from '../api/shows.ts';
 import { ShowPage } from './ShowPage.tsx';
 
-vi.mock('../api/dances.ts', () => ({ fetchDances: vi.fn() }));
+vi.mock('../api/dances.ts', () => ({ fetchDances: vi.fn(), updateDance: vi.fn() }));
 vi.mock('../api/shows.ts', () => ({
   fetchShow: vi.fn(),
   addActDance: vi.fn(),
@@ -74,6 +74,7 @@ beforeEach(() => {
   vi.mocked(fetchDances)
     .mockReset()
     .mockResolvedValue([summary('dance-1', 'Kitri variation'), summary('dance-2', 'Waltz', 22)]);
+  vi.mocked(updateDance).mockReset();
   for (const call of [
     updateShow,
     deleteShow,
@@ -373,5 +374,133 @@ describe('dances in an act', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Could not take Kitri variation out',
     );
+  });
+});
+
+describe('running time', () => {
+  const timed: ShowDetail = {
+    ...gala,
+    intervalMs: 15 * 60_000,
+    acts: [
+      {
+        ...gala.acts[0]!,
+        dances: [{ ...gala.acts[0]!.dances[0]!, durationMs: 220_000 }],
+      },
+      {
+        ...gala.acts[1]!,
+        dances: [
+          {
+            id: 'item-2',
+            danceId: 'dance-2',
+            title: 'Waltz',
+            castCount: 22,
+            durationMs: null,
+            cast: [],
+          },
+        ],
+      },
+    ],
+  };
+
+  function total() {
+    return screen.findByRole('region', { name: 'Total running time' });
+  }
+
+  test('adds the dances and the interval into the total', async () => {
+    vi.mocked(fetchShow).mockResolvedValue(timed);
+    renderPage();
+    expect(await total()).toHaveTextContent('18min 40s');
+  });
+
+  test('lists each act and the interval in the legend', async () => {
+    vi.mocked(fetchShow).mockResolvedValue(timed);
+    renderPage();
+    expect(await total()).toHaveTextContent('Act 1 3:40Act 2 · Classics 0:00Interval 15:00');
+  });
+
+  test('says how many dances have no time yet', async () => {
+    vi.mocked(fetchShow).mockResolvedValue(timed);
+    renderPage();
+    expect(await total()).toHaveTextContent('1 dance has no time yet.');
+  });
+
+  test("shows each act's own total", async () => {
+    vi.mocked(fetchShow).mockResolvedValue(timed);
+    renderPage();
+    expect(await screen.findByLabelText('Act 1 runs 3:40')).toBeInTheDocument();
+  });
+
+  test('puts the interval between the acts', async () => {
+    vi.mocked(fetchShow).mockResolvedValue(timed);
+    renderPage();
+    const acts = await screen.findByRole('list', { name: 'Acts' });
+    const interval = within(acts).getByText('Interval').closest('li')!;
+    expect(interval.previousElementSibling).toHaveTextContent(/^Act 1/);
+  });
+
+  test('shows no interval row when the show has none', async () => {
+    renderPage();
+    const acts = await screen.findByRole('list', { name: 'Acts' });
+    expect(within(acts).queryByText('Interval')).not.toBeInTheDocument();
+  });
+});
+
+describe('durations', () => {
+  async function openTime() {
+    const panel = renderPage();
+    await panel.user.click(
+      await screen.findByRole('button', { name: 'Add a time for Kitri variation' }),
+    );
+    return panel;
+  }
+
+  test('shows a dash for a dance with no time', async () => {
+    renderPage();
+    expect(
+      await screen.findByRole('button', { name: 'Add a time for Kitri variation' }),
+    ).toHaveTextContent('–:––');
+  });
+
+  test('saves the typed time on the dance', async () => {
+    vi.mocked(updateDance).mockResolvedValue({} as never);
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3:40{Enter}');
+    expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { durationMs: 220_000 });
+  });
+
+  test('shows the saved time on the row', async () => {
+    vi.mocked(updateDance).mockResolvedValue({} as never);
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3:40{Enter}');
+    expect(
+      await screen.findByRole('button', { name: 'Time of Kitri variation, 3:40' }),
+    ).toBeInTheDocument();
+  });
+
+  test('says how to write a time it cannot read', async () => {
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3.40{Enter}');
+    expect(screen.getByRole('alert')).toHaveTextContent('Type the time as m:ss');
+  });
+
+  test('saves nothing it cannot read', async () => {
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3.40{Enter}');
+    expect(updateDance).not.toHaveBeenCalled();
+  });
+
+  test('closes the field with Escape', async () => {
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3{Escape}');
+    expect(
+      screen.getByRole('button', { name: 'Add a time for Kitri variation' }),
+    ).toBeInTheDocument();
+  });
+
+  test('says when the time cannot be saved', async () => {
+    vi.mocked(updateDance).mockRejectedValue(new Error('PATCH dance answered 500'));
+    const { user } = await openTime();
+    await user.type(screen.getByLabelText('Time of Kitri variation'), '3:40{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not save the time');
   });
 });

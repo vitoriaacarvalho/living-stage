@@ -7,6 +7,7 @@ import type {
   ShowUpdate,
 } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
+import { updateDance } from '../api/dances.ts';
 import { arrange } from './show-order.ts';
 import {
   addAct,
@@ -32,6 +33,7 @@ export type ShowActions = {
   addDance: (actId: string, danceId: string) => Promise<void>;
   removeDance: (actId: string, itemId: string) => Promise<void>;
   reorder: (layout: ActLayout[]) => Promise<void>;
+  setDuration: (danceId: string, durationMs: number | null) => Promise<void>;
 };
 
 export function useShow(schoolId: string, showId: string): { state: ShowState } & ShowActions {
@@ -94,6 +96,18 @@ export function useShow(schoolId: string, showId: string): { state: ShowState } 
         changeActs(() => before);
         throw error;
       }
+    },
+    // The duration is the dance's own, so it is saved on the dance.
+    async setDuration(danceId, durationMs) {
+      await updateDance(schoolId, danceId, { durationMs });
+      changeActs((acts) =>
+        acts.map((act) => ({
+          ...act,
+          dances: act.dances.map((dance) =>
+            dance.danceId === danceId ? { ...dance, durationMs } : dance,
+          ),
+        })),
+      );
     },
     async removeDance(actId, itemId) {
       await removeActDance({ schoolId, showId, actId }, itemId);

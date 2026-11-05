@@ -19,7 +19,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import type { ActLayout, DanceSummary, ShowDetail } from '@living-stage/shared';
+import {
+  formatDuration,
+  type ActLayout,
+  type DanceSummary,
+  type ShowDetail,
+} from '@living-stage/shared';
+import { Fragment } from 'react';
 import { useState } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
@@ -176,19 +182,29 @@ export function RunningOrder({ show, actions, dances }: RunningOrderProps) {
         <SortableContext items={acts.map(({ id }) => id)} strategy={verticalListSortingStrategy}>
           <ol className={styles.acts} aria-label="Acts">
             {acts.map((act, index) => (
-              <li key={act.id}>
-                <ActCard
-                  act={act}
-                  label={actLabel(act, index)}
-                  actions={{
-                    saveAct: actions.saveAct,
-                    remove: onlyAct ? null : () => actions.removeAct(act.id),
-                    addDance: (danceId) => actions.addDance(act.id, danceId),
-                    removeDance: (dance) => actions.removeDance(act.id, dance.id),
-                    addable,
-                  }}
-                />
-              </li>
+              <Fragment key={act.id}>
+                {index > 0 && show.intervalMs > 0 && (
+                  <li className={styles.interval}>
+                    <span>Interval</span>
+                    <span className={styles.intervalTime}>{formatDuration(show.intervalMs)}</span>
+                  </li>
+                )}
+                <li>
+                  <ActCard
+                    act={act}
+                    label={actLabel(act, index)}
+                    actions={{
+                      saveAct: actions.saveAct,
+                      remove: onlyAct ? null : () => actions.removeAct(act.id),
+                      addDance: (danceId) => actions.addDance(act.id, danceId),
+                      removeDance: (dance) => actions.removeDance(act.id, dance.id),
+                      setDuration: (dance, durationMs) =>
+                        actions.setDuration(dance.danceId, durationMs),
+                      addable,
+                    }}
+                  />
+                </li>
+              </Fragment>
             ))}
           </ol>
         </SortableContext>

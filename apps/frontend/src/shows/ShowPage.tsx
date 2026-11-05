@@ -5,6 +5,7 @@ import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { Icon } from '../ui/Icon.tsx';
 import { RunningOrder } from './RunningOrder.tsx';
+import { RunningTime } from './RunningTime.tsx';
 import { showWhen } from './show-when.ts';
 import { ShowForm } from './ShowForm.tsx';
 import styles from './ShowPage.module.css';
@@ -69,10 +70,13 @@ function ShowHero({ show, actions, onDeleted }: ShowHeroProps) {
             </span>
           )}
         </div>
+        <div>
+          <Button variant="secondary" icon="pencil" onClick={() => setEditing(true)}>
+            Edit
+          </Button>
+        </div>
       </div>
-      <Button variant="secondary" icon="pencil" onClick={() => setEditing(true)}>
-        Edit
-      </Button>
+      <RunningTime show={show} />
     </header>
   );
 }

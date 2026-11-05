@@ -1,13 +1,16 @@
 import {
   ACT_NAME_MAX_LENGTH,
+  formatDuration,
   parseActUpdate,
+  parseDurationText,
+  runningTime,
   type Act,
   type DanceSummary,
   type ShowDance,
 } from '@living-stage/shared';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { dancerCount } from '../cast/dancer-count.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
@@ -21,6 +24,7 @@ export type ActTools = Pick<ShowActions, 'saveAct'> & {
   remove: (() => Promise<void>) | null;
   addDance: (danceId: string) => Promise<void>;
   removeDance: (dance: ShowDance) => Promise<void>;
+  setDuration: (dance: ShowDance, durationMs: number | null) => Promise<void>;
   addable: Pick<DanceSummary, 'id' | 'title' | 'castCount'>[];
 };
 
@@ -64,6 +68,7 @@ function Grip({ label, handle, kind }: { label: string; handle: Handle; kind: Dr
 
 export function ActCard({ act, label, actions }: ActCardProps) {
   const { node, handle, isDragging } = useDragged(act.id, 'act', act.dances.length === 0);
+  const total = runningTime([act], 0).totalMs;
   const [renaming, setRenaming] = useState(false);
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +94,9 @@ export function ActCard({ act, label, actions }: ActCardProps) {
         <div className={styles.actHead}>
           <Grip label={label} handle={handle} kind="act" />
           <h2 className={styles.actTitle}>{label}</h2>
+          <span className={styles.actTotal} aria-label={`${label} runs ${formatDuration(total)}`}>
+            {formatDuration(total)}
+          </span>
           <Button
             variant="ghost"
             icon="pencil"
@@ -110,13 +118,14 @@ export function ActCard({ act, label, actions }: ActCardProps) {
                 key={dance.id}
                 dance={dance}
                 place={index + 1}
-                remove={{
-                  label: `Take ${dance.title} out of ${label}`,
-                  run: () =>
+                tools={{
+                  removeLabel: `Take ${dance.title} out of ${label}`,
+                  remove: () =>
                     attempt(
                       () => actions.removeDance(dance),
                       `Could not take ${dance.title} out. Try again.`,
                     ),
+                  saveDuration: (durationMs) => actions.setDuration(dance, durationMs),
                 }}
               />
             ))}
@@ -146,13 +155,15 @@ export function ActCard({ act, label, actions }: ActCardProps) {
   );
 }
 
-type DanceRowProps = {
-  dance: ShowDance;
-  place: number;
-  remove: { label: string; run: () => void };
+type RowTools = {
+  removeLabel: string;
+  remove: () => void;
+  saveDuration: (durationMs: number | null) => Promise<void>;
 };
 
-function DanceRow({ dance, place, remove }: DanceRowProps) {
+type DanceRowProps = { dance: ShowDance; place: number; tools: RowTools };
+
+function DanceRow({ dance, place, tools }: DanceRowProps) {
   const { node, handle, isDragging } = useDragged(dance.id, 'dance');
   return (
     <li {...node} className={isDragging ? `${styles.row} ${styles.lifted}` : styles.row}>
@@ -165,8 +176,91 @@ function DanceRow({ dance, place, remove }: DanceRowProps) {
           {dancerCount(dance.castCount)}
         </span>
       </span>
-      <Button variant="ghost" icon="x" aria-label={remove.label} onClick={remove.run} />
+      <Duration dance={dance} onSave={tools.saveDuration} />
+      <Button variant="ghost" icon="x" aria-label={tools.removeLabel} onClick={tools.remove} />
     </li>
+  );
+}
+
+const durationError = 'Type the time as m:ss, such as 3:40.';
+
+type DurationProps = {
+  dance: ShowDance;
+  onSave: (durationMs: number | null) => Promise<void>;
+};
+
+// The time at the end of a row; tapping it opens a field for m:ss.
+function Duration({ dance, onSave }: DurationProps) {
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const shown = formatDuration(dance.durationMs);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const durationMs = parseDurationText(String(new FormData(event.currentTarget).get('duration')));
+    if (durationMs === undefined) {
+      setError(durationError);
+      return;
+    }
+    setError(null);
+    setPending(true);
+    try {
+      await onSave(durationMs);
+      setEditing(false);
+    } catch {
+      setError('Could not save the time. Try again.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function cancelOnEscape(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== 'Escape') return;
+    setError(null);
+    setEditing(false);
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className={styles.duration}
+        aria-label={
+          dance.durationMs === null
+            ? `Add a time for ${dance.title}`
+            : `Time of ${dance.title}, ${shown}`
+        }
+        onClick={() => setEditing(true)}
+      >
+        {shown}
+      </button>
+    );
+  }
+  return (
+    <form className={styles.durationForm} onSubmit={handleSubmit}>
+      <input
+        name="duration"
+        className={styles.durationInput}
+        aria-label={`Time of ${dance.title}`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${dance.id}-duration-error` : undefined}
+        defaultValue={dance.durationMs === null ? '' : shown}
+        placeholder="m:ss"
+        inputMode="numeric"
+        autoComplete="off"
+        autoFocus
+        onKeyDown={cancelOnEscape}
+      />
+      <Button variant="secondary" type="submit" disabled={pending}>
+        Save
+      </Button>
+      {error && (
+        <p id={`${dance.id}-duration-error`} role="alert" className={styles.durationError}>
+          {error}
+        </p>
+      )}
+    </form>
   );
 }
 
