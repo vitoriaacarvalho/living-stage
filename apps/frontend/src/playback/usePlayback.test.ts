@@ -8,6 +8,7 @@ const figure = (order: number, transitionMs = TRANSITION_MS): Figure => ({
   order,
   name: null,
   transitionMs,
+  paths: [],
   positions: [],
 });
 

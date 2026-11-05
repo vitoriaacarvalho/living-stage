@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import type { Figure, Position } from './figure.ts';
+import type { Path } from './path.ts';
+import { pathPointSpot } from './path.ts';
 import { easeInOutCubic, figureTimeMs, playbackLengthMs, stageAt } from './playback.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
 
@@ -9,6 +11,7 @@ const figure = (order: number, transitionMs: number, positions: Position[]): Fig
   name: null,
   transitionMs,
   positions,
+  paths: [],
 });
 
 const spot = (castMemberId: string, x: number, y: number): Position => ({ castMemberId, x, y });
@@ -176,5 +179,53 @@ describe('stageAt', () => {
   test('shows a dancer who only has a spot in the next figure', () => {
     const pair = [figure(0, 4000, []), figure(1, 4000, [spot('a', 0.6, 0.2)])];
     expect(xy(stageAt(pair, 2000)?.positions)).toEqual([['a', 0.6, 0.2]]);
+  });
+
+  describe('along a bent path', () => {
+    const bend = { along: 0.5, side: 0.25 };
+    const bentInto = (paths: Path[]) => [
+      figure(0, 4000, [spot('a', 0.2, 0.5), spot('b', 0.2, 0.8)]),
+      { ...figure(1, 4000, [spot('a', 0.8, 0.5), spot('b', 0.8, 0.8)]), paths },
+    ];
+    const bent = bentInto([{ castMemberId: 'a', points: [bend] }]);
+    const dancerAt = (timeMs: number, index = 0) => stageAt(bent, timeMs)!.positions[index]!;
+
+    test('passes through the bend halfway', () => {
+      const middle = pathPointSpot({ x: 0.2, y: 0.5 }, { x: 0.8, y: 0.5 }, bend);
+      expect([dancerAt(2000).x, dancerAt(2000).y]).toEqual([
+        expect.closeTo(middle.x, 3),
+        expect.closeTo(middle.y, 3),
+      ]);
+    });
+
+    test('starts at the spot in the figure before', () => {
+      expect([dancerAt(0).x, dancerAt(0).y]).toEqual([expect.closeTo(0.2), expect.closeTo(0.5)]);
+    });
+
+    test('arrives at the spot in the figure', () => {
+      expect([dancerAt(4000).x, dancerAt(4000).y]).toEqual([
+        expect.closeTo(0.8),
+        expect.closeTo(0.5),
+      ]);
+    });
+
+    test('eases along the bend', () => {
+      expect(dancerAt(400).x).toBeLessThan(0.2 + 0.6 * 0.1);
+    });
+
+    test('keeps a dancer without a path on the straight line', () => {
+      expect(dancerAt(2000, 1).y).toBeCloseTo(0.8);
+    });
+
+    test('ignores a path for a dancer who is not in the figure before', () => {
+      const pair = [
+        figure(0, 4000, []),
+        {
+          ...figure(1, 4000, [spot('a', 0.6, 0.2)]),
+          paths: [{ castMemberId: 'a', points: [bend] }],
+        },
+      ];
+      expect(xy(stageAt(pair, 2000)?.positions)).toEqual([['a', 0.6, 0.2]]);
+    });
   });
 });

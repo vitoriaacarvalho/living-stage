@@ -43,7 +43,12 @@ export function Watermark({ layout }: { layout: WatermarkLayout }) {
           src={sketches[sketch]}
           alt=""
           decoding="async"
-          style={{ left, top, width, transform: `rotate(${turn}deg)${mirror ? ' scaleX(-1)' : ''}` }}
+          style={{
+            left,
+            top,
+            width,
+            transform: `rotate(${turn}deg)${mirror ? ' scaleX(-1)' : ''}`,
+          }}
         />
       ))}
     </div>

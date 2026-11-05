@@ -4,9 +4,9 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { FigureStrip } from './FigureStrip.tsx';
 
 const figures = [
-  { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [] },
-  { id: 'figure-2', order: 1, name: 'Entrance', transitionMs: 4000, positions: [] },
-  { id: 'figure-3', order: 2, name: 'Finale', transitionMs: 4000, positions: [] },
+  { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [], paths: [] },
+  { id: 'figure-2', order: 1, name: 'Entrance', transitionMs: 4000, positions: [], paths: [] },
+  { id: 'figure-3', order: 2, name: 'Finale', transitionMs: 4000, positions: [], paths: [] },
 ];
 
 // jsdom lays nothing out, so each chip gets a place in a row for the keyboard drag.

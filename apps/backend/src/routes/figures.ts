@@ -259,6 +259,6 @@ function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
 }
 
-function toFigure({ id, order, name, transitionMs, positions }: Figure): Figure {
-  return { id, order, name, transitionMs, positions };
+function toFigure({ id, order, name, transitionMs, positions }: Omit<Figure, 'paths'>): Figure {
+  return { id, order, name, transitionMs, positions, paths: [] };
 }

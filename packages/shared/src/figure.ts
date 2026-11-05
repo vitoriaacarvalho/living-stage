@@ -1,3 +1,4 @@
+import type { Path } from './path.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
 
 export type StagePoint = { x: number; y: number };
@@ -7,12 +8,14 @@ export type Position = StagePoint & { castMemberId: string };
 export type FigurePosition = Position & { figureId: string };
 
 // transitionMs is the time to arrive from the figure before; the first figure's is unused.
+// paths are the bent routes into this figure; a cast member without one walks straight.
 export type Figure = {
   id: string;
   order: number;
   name: string | null;
   transitionMs: number;
   positions: Position[];
+  paths: Path[];
 };
 
 export type ListFiguresResponse = { figures: Figure[] };

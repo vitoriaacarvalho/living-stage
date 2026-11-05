@@ -100,6 +100,7 @@ test('lists the figures of the dance with their positions', async () => {
         name: null,
         transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
+        paths: [],
       },
     ],
   });
@@ -147,6 +148,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
         name: null,
         transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
+        paths: [],
       },
     });
   });
@@ -268,6 +270,7 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =>
         name: 'Entrance',
         transitionMs: 4000,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
+        paths: [],
       },
     });
   });
@@ -422,7 +425,14 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/positions
   test('responds with the figure and its new positions', async () => {
     const res = await move({ positions: moved });
     expect(await res.json()).toEqual({
-      figure: { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: moved },
+      figure: {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        positions: moved,
+        paths: [],
+      },
     });
   });
 

@@ -1,4 +1,5 @@
 import type { Figure, Position } from './figure.ts';
+import { pathCurve, spotAlong } from './path.ts';
 
 // A new figure's time to arrive, until the teacher changes it or music pins figures (E4).
 export const TRANSITION_MS = 4000;
@@ -47,11 +48,11 @@ function between(from: Figure, to: Figure, eased: number): Position[] {
   const moving = from.positions.map((start) => {
     const end = to.positions.find(({ castMemberId }) => castMemberId === start.castMemberId);
     if (!end) return start;
-    return {
-      castMemberId: start.castMemberId,
-      x: start.x + (end.x - start.x) * eased,
-      y: start.y + (end.y - start.y) * eased,
-    };
+    const path = to.paths.find(({ castMemberId }) => castMemberId === start.castMemberId);
+    const spot = path
+      ? spotAlong(pathCurve(start, end, path.points), eased)
+      : { x: start.x + (end.x - start.x) * eased, y: start.y + (end.y - start.y) * eased };
+    return { castMemberId: start.castMemberId, ...spot };
   });
   const arriving = to.positions.filter(
     ({ castMemberId }) => !from.positions.some((start) => start.castMemberId === castMemberId),
