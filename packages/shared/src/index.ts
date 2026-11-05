@@ -102,6 +102,7 @@ export {
   pathPointAt,
   pathPointSpot,
   spotAlong,
+  spotsAlong,
   type CubicSegment,
   type Path,
   type PathPoint,

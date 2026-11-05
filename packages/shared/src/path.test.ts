@@ -12,6 +12,7 @@ import {
   pathPointAt,
   pathPointSpot,
   spotAlong,
+  spotsAlong,
 } from './path.ts';
 
 // Stage left to right across the middle: 7.2 m on the 12 m floor.
@@ -154,6 +155,18 @@ describe('spotAlong', () => {
 
   test('stays at the spot of a dancer who does not move', () => {
     expect(spotAlong(pathCurve(start, start, []), 0.5)).toEqual(near(start));
+  });
+});
+
+describe('spotsAlong', () => {
+  const straight = pathCurve(start, end, []);
+
+  test('gives one spot more than the steps asked for', () => {
+    expect(spotsAlong(straight, 4)).toHaveLength(5);
+  });
+
+  test('spaces the spots evenly from start to end', () => {
+    expect(spotsAlong(straight, 2)).toEqual([near(start), near({ x: 0.5, y: 0.5 }), near(end)]);
   });
 });
 

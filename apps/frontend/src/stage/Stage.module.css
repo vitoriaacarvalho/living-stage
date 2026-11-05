@@ -201,3 +201,27 @@
   width: 60px;
   border-top: 1px solid var(--stage-line);
 }
+
+/* A selected dancer's route into this figure, from her faint spot in the figure before. */
+.pathStart {
+  fill: var(--dot);
+  fill-opacity: 0.14;
+  stroke: var(--dot);
+  stroke-opacity: 0.55;
+  stroke-width: 1.5px;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.route {
+  fill: none;
+  stroke: var(--dot);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.arrow {
+  fill: var(--dot);
+}

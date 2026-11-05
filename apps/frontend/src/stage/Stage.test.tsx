@@ -520,3 +520,62 @@ describe('editing', () => {
     expect(screen.getByTestId('dancer')).toHaveStyle({ left: '50%' });
   });
 });
+
+describe('paths', () => {
+  const crossing = { ...clara, x: 0.8, y: 0.5 };
+  const fromLeft = { id: crossing.id, from: { x: 0.2, y: 0.5 }, points: [] };
+
+  function linePoints(container: HTMLElement) {
+    const points = container.querySelector('polyline')!.getAttribute('points')!;
+    return points.split(' ').map((pair) => pair.split(',').map(Number) as [number, number]);
+  }
+
+  test('draws the path of a dancer who has one', () => {
+    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    expect(screen.getAllByTestId('path')).toHaveLength(1);
+  });
+
+  test('marks where she stood in the figure before', () => {
+    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const start = screen.getByTestId('path-start');
+    expect([Number(start.getAttribute('cx')), Number(start.getAttribute('cy'))]).toEqual([
+      expect.closeTo(2.4),
+      expect.closeTo(4),
+    ]);
+  });
+
+  test('stops the line short of her circle', () => {
+    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const [x] = linePoints(container).at(-1)!;
+    expect(x).toBeLessThan(0.8 * STAGE_WIDTH_M - 0.2);
+  });
+
+  test('starts the line outside the circle where she stood', () => {
+    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const [x] = linePoints(container)[0]!;
+    expect(x).toBeGreaterThan(0.2 * STAGE_WIDTH_M + 0.2);
+  });
+
+  test('ends the line in an arrowhead', () => {
+    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    expect(container.querySelector('polygon')).toBeInTheDocument();
+  });
+
+  test('bends the line through its point', () => {
+    const bent = { ...fromLeft, points: [{ along: 0.5, side: 0.25 }] };
+    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[bent]} />);
+    const upstageMost = Math.min(...linePoints(container).map(([, y]) => y));
+    expect(upstageMost).toBeCloseTo(0.5 * STAGE_DEPTH_M - 0.25 * 7.2, 1);
+  });
+
+  test('draws no path for a dancer who stays put', () => {
+    const still = { ...fromLeft, from: { x: 0.8, y: 0.5 } };
+    render(<Stage showGuides dancers={[crossing]} paths={[still]} />);
+    expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+
+  test('draws no path for a dancer not on the plan', () => {
+    render(<Stage showGuides dancers={[]} paths={[fromLeft]} />);
+    expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+});

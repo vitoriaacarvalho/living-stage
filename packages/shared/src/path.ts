@@ -110,9 +110,10 @@ function bezier({ start, c1, c2, end }: CubicSegment, t: number): Vector {
   );
 }
 
-// The spot a share of the way along the curve, measured by distance so the dancer's
-// speed follows the easing and not the curve's parameter.
-export function spotAlong(curve: CubicSegment[], share: number): StagePoint {
+type DistanceTable = { samples: Vector[]; distances: number[] };
+
+// Points along the curve with the distance walked to reach each, in metres.
+function distanceTable(curve: CubicSegment[]): DistanceTable {
   const samples = curve.flatMap((segment, index) =>
     Array.from({ length: SAMPLES_PER_SEGMENT + (index === curve.length - 1 ? 1 : 0) }, (_, step) =>
       bezier(segment, step / SAMPLES_PER_SEGMENT),
@@ -123,6 +124,10 @@ export function spotAlong(curve: CubicSegment[], share: number): StagePoint {
     const step = length(minus(toMetres(samples[index]!), toMetres(samples[index - 1]!)));
     distances.push(distances[index - 1]! + step);
   }
+  return { samples, distances };
+}
+
+function spotIn({ samples, distances }: DistanceTable, share: number): StagePoint {
   const total = distances[distances.length - 1]!;
   if (total === 0) return samples[0]!;
   const target = clamp(share, 0, 1) * total;
@@ -134,6 +139,18 @@ export function spotAlong(curve: CubicSegment[], share: number): StagePoint {
   const part = span === 0 ? 0 : (target - distances[index - 1]!) / span;
   const from = samples[index - 1]!;
   return plus(from, times(minus(samples[index]!, from), part));
+}
+
+// The spot a share of the way along the curve, measured by distance so the dancer's
+// speed follows the easing and not the curve's parameter.
+export function spotAlong(curve: CubicSegment[], share: number): StagePoint {
+  return spotIn(distanceTable(curve), share);
+}
+
+// count + 1 spots evenly spaced along the curve, from its start to its end.
+export function spotsAlong(curve: CubicSegment[], count: number): StagePoint[] {
+  const table = distanceTable(curve);
+  return Array.from({ length: count + 1 }, (_, index) => spotIn(table, index / count));
 }
 
 export function parsePathPoints(value: unknown): PathPoint[] | null {

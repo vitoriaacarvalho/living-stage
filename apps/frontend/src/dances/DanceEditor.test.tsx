@@ -617,6 +617,25 @@ describe('dragging on the 2D plan', () => {
     expect(claraDot()).toHaveClass(/selected/);
   });
 
+  test("shows a selected dancer's path into the figure shown", async () => {
+    const user = await openPlan();
+    tapClara();
+    await user.click(screen.getByRole('button', { name: 'Entrance' }));
+    expect(screen.getByTestId('path')).toBeInTheDocument();
+  });
+
+  test('shows no path into the first figure', async () => {
+    await openPlan();
+    tapClara();
+    expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+
+  test('shows no path for a dancer who is not selected', async () => {
+    const user = await openPlan();
+    await user.click(screen.getByRole('button', { name: 'Entrance' }));
+    expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+
   test('keeps the selection when another dancer leaves the cast', async () => {
     vi.mocked(removeCastMember).mockResolvedValue();
     vi.mocked(fetchCast).mockResolvedValue([

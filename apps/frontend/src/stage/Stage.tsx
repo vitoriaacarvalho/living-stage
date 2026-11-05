@@ -10,7 +10,9 @@ import {
 } from '@living-stage/shared';
 import { type CSSProperties, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
+import { PathLayer, type StagePath } from './PathLayer.tsx';
 import styles from './Stage.module.css';
+import { usePlanScale } from './usePlanScale.ts';
 import {
   type DancerHandlers,
   type SelectionBox,
@@ -18,6 +20,7 @@ import {
   usePlanGestures,
 } from './usePlanGestures.ts';
 
+export type { StagePath } from './PathLayer.tsx';
 export type { StageEditing } from './usePlanGestures.ts';
 
 const sideWing = SIDE_WING_DEPTH * STAGE_WIDTH_M;
@@ -52,10 +55,17 @@ export type StageDancer = {
 };
 
 // Without edit the plan is only shown, as in print and thumbnails.
-export type StageProps = { showGuides: boolean; dancers?: StageDancer[]; edit?: StageEditing };
+export type StageProps = {
+  showGuides: boolean;
+  dancers?: StageDancer[];
+  paths?: StagePath[];
+  edit?: StageEditing;
+};
 
-export function Stage({ showGuides, dancers = [], edit }: StageProps) {
+export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const scale = usePlanScale(svgRef, planWidth);
   const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, edit, planRef });
 
   return (
@@ -71,7 +81,7 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
         className={edit ? `${styles.plan} ${styles.editable}` : styles.plan}
         {...(edit && floor)}
       >
-        <svg className={styles.svg} viewBox={PLAN_VIEW_BOX}>
+        <svg ref={svgRef} className={styles.svg} viewBox={PLAN_VIEW_BOX}>
           <rect className={styles.floor} width={STAGE_WIDTH_M} height={STAGE_DEPTH_M} />
           {showGuides && <Guides />}
           <line
@@ -81,6 +91,7 @@ export function Stage({ showGuides, dancers = [], edit }: StageProps) {
             x2={STAGE_WIDTH_M}
             y2={STAGE_DEPTH_M}
           />
+          <PathLayer paths={paths} dancers={shown} scale={scale} />
         </svg>
         <span className={`${styles.zone} ${styles.upstage}`}>Upstage</span>
         <span className={`${styles.zone} ${styles.leftWing}`}>Wing</span>

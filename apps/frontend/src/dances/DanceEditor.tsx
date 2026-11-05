@@ -10,6 +10,7 @@ import { FigureToolbar } from '../figures/FigureToolbar.tsx';
 import { Transport } from '../playback/Transport.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
+import { selectedPaths } from '../stage/selected-paths.ts';
 import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import styles from './DanceEditor.module.css';
@@ -56,6 +57,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const positions = moment?.positions ?? figure?.positions;
   const dancers =
     cast.status === 'ready' && positions ? stageDancers(cast.cast, positions, dance) : [];
+  const paths = stopped && figure ? selectedPaths(figures, figure, selection) : [];
 
   useEffect(() => {
     if (selection.length === 0) return;
@@ -162,6 +164,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               <Stage
                 showGuides={dance.showGuides}
                 dancers={dancers}
+                paths={paths}
                 edit={
                   stopped
                     ? {
