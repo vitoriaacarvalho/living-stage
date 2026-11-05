@@ -402,9 +402,10 @@ First milestone to show real teachers.
   - Done when: Drag handles to bend a path; playback follows it
   - Requirements: D2 (curves) · Screens: `Stage`
   - Note: a selected dancer shows her path from her faint spot in the figure before; the handle sits on the curve, the bend follows when either end moves, and letting go near the straight line straightens it
-- ⬜ **3.2 Waypoints** · after 3.1
+- 🟨 **3.2 Waypoints** · after 3.1
   - Done when: Add and move waypoints on a path
   - Requirements: D2 (waypoints) · Screens: `Stage`
+  - Note: tap the selected path's line to add a point, up to 5; drag a point back near the line between its neighbours to remove it
 - ⬜ **3.3 Circles and arcs** · after 3.1
   - Done when: A dancer circles another dancer
   - Requirements: D3 · Screens: `Stage`
