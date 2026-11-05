@@ -164,7 +164,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
 - ✅ **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
 - ✅ **D5.** Playback can run without music too, with a default duration per transition.
-- **D6.** Until music pins figures to the song (E4), the teacher sets how long each move takes: 1 to 30 seconds in half seconds, 4 by default.
+- ✅ **D6.** Until music pins figures to the song (E4), the teacher sets how long each move takes: 1 to 30 seconds in half seconds, 4 by default.
 
 ### Part E — Music timeline *(after the MVP, except E9)*
 

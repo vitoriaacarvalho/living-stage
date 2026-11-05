@@ -399,6 +399,28 @@ describe('figure panel', () => {
     });
   });
 
+  test('plays a move at its saved time to arrive', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [] },
+      { id: 'figure-2', order: 1, name: 'Finale', transitionMs: 4000, positions: [] },
+    ]);
+    vi.mocked(updateFigure).mockResolvedValue({
+      id: 'figure-2',
+      order: 1,
+      name: 'Finale',
+      transitionMs: 9500,
+      positions: [],
+    });
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Finale' }));
+    await user.click(screen.getByRole('button', { name: /Finale/ }));
+    await user.clear(screen.getByLabelText('Time to arrive'));
+    await user.type(screen.getByLabelText('Time to arrive'), '9.5');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('/ 00:09')).toBeInTheDocument();
+  });
+
   test('shows the new name on the figure once saved', async () => {
     const user = await openFigurePanel();
     await user.type(screen.getByLabelText('Name'), 'Entrance');

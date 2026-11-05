@@ -4,6 +4,7 @@ import type {
   CastMemberUpdate,
   Figure,
   FigureCopy,
+  FigureUpdate,
   Position,
 } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
@@ -30,7 +31,7 @@ export type CastActions = {
   give: (castMemberId: string, dancerId: string) => Promise<void>;
   remove: (castMemberId: string) => Promise<void>;
   copyFigure: (copy: FigureCopy) => Promise<Figure>;
-  renameFigure: (figureId: string, name: string | null) => Promise<void>;
+  saveFigure: (figureId: string, update: FigureUpdate) => Promise<void>;
   reorderFigures: (figureIds: string[]) => Promise<void>;
   deleteFigure: (figureId: string) => Promise<void>;
   movePositions: (figureId: string, positions: Position[]) => Promise<void>;
@@ -103,8 +104,8 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     return figure;
   }
 
-  async function renameFigure(figureId: string, name: string | null) {
-    const saved = await updateFigure(schoolId, danceId, figureId, { name });
+  async function saveFigure(figureId: string, update: FigureUpdate) {
+    const saved = await updateFigure(schoolId, danceId, figureId, update);
     change(({ cast, figures }) => ({
       cast,
       figures: figures.map((each) => (each.id === saved.id ? saved : each)),
@@ -156,7 +157,7 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     give,
     remove,
     copyFigure,
-    renameFigure,
+    saveFigure,
     reorderFigures,
     deleteFigure,
     movePositions,

@@ -193,7 +193,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             figure={figure}
             figures={figures}
             actions={{
-              rename: (name) => castActions.renameFigure(figure.id, name),
+              save: (update) => castActions.saveFigure(figure.id, update),
               remove: () => deleteFigure(figure.id),
             }}
             onClose={() => setFigurePanelOpen(false)}
