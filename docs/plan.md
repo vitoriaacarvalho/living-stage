@@ -398,7 +398,7 @@ First milestone to show real teachers.
 
 #### MVP 5 — Movement and rehearsal
 
-- 🟨 **3.1 Curved paths** · after 2.7
+- ✅ **3.1 Curved paths** · after 2.7
   - Done when: Drag handles to bend a path; playback follows it
   - Requirements: D2 (curves) · Screens: `Stage`
   - Note: a selected dancer shows her path from her faint spot in the figure before; the handle sits on the curve, the bend follows when either end moves, and letting go near the straight line straightens it
