@@ -88,6 +88,27 @@ export {
 } from './invite.ts';
 export type { MeResponse } from './me.ts';
 export {
+  PATH_ALONG_MAX,
+  PATH_ALONG_MIN,
+  PATH_HANDLE_MIN_M,
+  PATH_POINTS_MAX,
+  PATH_SIDE_MAX,
+  PATH_STRAIGHT_M,
+  isNearlyStraight,
+  moveLengthM,
+  parsePathPoints,
+  parsePathUpdate,
+  pathCurve,
+  pathPointAt,
+  pathPointSpot,
+  spotAlong,
+  type CubicSegment,
+  type Path,
+  type PathPoint,
+  type PathResponse,
+  type PathUpdate,
+} from './path.ts';
+export {
   ARROW_LARGE_STEP_M,
   ARROW_STEP_M,
   PLAN_BOUNDS,
