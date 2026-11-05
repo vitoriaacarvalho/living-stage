@@ -194,8 +194,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part H — Show manager
 
-- **H1.** A member can create a show with a name, date and optional venue.
-- **H2.** A show contains ordered acts; each act contains ordered dances.
+- ✅ **H1.** A member can create a show with a name, date and optional venue.
+- ✅ **H2.** A show contains ordered acts; each act contains ordered dances.
 - **H3.** Acts and dances can be reordered by dragging.
 - **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song and costume photos are added after the MVP.
 - **H5.** A member can upload costume photos to a dance. *(after the MVP)*
@@ -348,7 +348,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 - ✅ **2.0 Dances** · after 1.3
   - Done when: Create, rename and delete dances; Home lists them
   - Requirements: C13 · Screens: `Home` (dance list)
-- ⬜ **6.1 Shows and acts** · after 2.0
+- ✅ **6.1 Shows and acts** · after 2.0
   - Done when: Create a show with acts holding dances
   - Requirements: H1, H2 · Screens: `ShowManager`, `ShowCard`, `DanceRow`
   - Note: shows have an optional time; the only status is "Performed", from the date

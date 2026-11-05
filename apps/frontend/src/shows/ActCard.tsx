@@ -115,7 +115,7 @@ function DancePicker({ label, addable, onPick, onDone }: DancePickerProps) {
     <div className={styles.picker} role="group" aria-label={`Add to ${label}`}>
       <div className={styles.pickerHead}>
         <h3 className={styles.pickerTitle}>Add to {label}</h3>
-        <Button variant="secondary" size="small" onClick={onDone}>
+        <Button variant="secondary" onClick={onDone}>
           Done
         </Button>
       </div>
