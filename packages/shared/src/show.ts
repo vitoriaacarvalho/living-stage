@@ -1,4 +1,5 @@
 import type { DancePreviewSpot } from './dance.ts';
+import { parseIntervalMs } from './running-time.ts';
 
 export const SHOW_TITLE_MAX_LENGTH = 100;
 export const SHOW_VENUE_MAX_LENGTH = 100;
@@ -12,17 +13,30 @@ export type Show = {
   date: string;
   time: string | null;
   venue: string | null;
+  // One interval between every two acts; 0 means none.
+  intervalMs: number;
   createdAt: string;
 };
 
 export type ShowSummary = Show & {
   actCount: number;
   danceCount: number;
+  totalMs: number;
   preview: DancePreviewSpot[];
 };
 
+// name is null for an open spot.
+export type ShowCastMember = { id: string; name: string | null; role: string | null };
+
 // id is the dance's place in the act, not the dance itself.
-export type ShowDance = { id: string; danceId: string; title: string; castCount: number };
+export type ShowDance = {
+  id: string;
+  danceId: string;
+  title: string;
+  castCount: number;
+  durationMs: number | null;
+  cast: ShowCastMember[];
+};
 
 export type Act = { id: string; order: number; name: string | null; dances: ShowDance[] };
 
@@ -33,6 +47,7 @@ export type ShowInput = {
   date: string;
   time: string | null;
   venue: string | null;
+  intervalMs: number;
 };
 
 // At least one field is set.
@@ -94,8 +109,10 @@ export function parseShowInput(value: unknown): ShowInput | null {
   const date = parseShowDate(body.date);
   const time = parseShowTime(body.time ?? null);
   const venue = parseShowVenue(body.venue ?? null);
+  const intervalMs = parseIntervalMs(body.intervalMs ?? 0);
   if (!title || !date || time === undefined || venue === undefined) return null;
-  return { title, date, time, venue };
+  if (intervalMs === undefined) return null;
+  return { title, date, time, venue, intervalMs };
 }
 
 export function parseShowUpdate(value: unknown): ShowUpdate | null {
@@ -121,6 +138,11 @@ export function parseShowUpdate(value: unknown): ShowUpdate | null {
     const venue = parseShowVenue(body.venue);
     if (venue === undefined) return null;
     update.venue = venue;
+  }
+  if (body.intervalMs !== undefined) {
+    const intervalMs = parseIntervalMs(body.intervalMs);
+    if (intervalMs === undefined) return null;
+    update.intervalMs = intervalMs;
   }
   return Object.keys(update).length > 0 ? update : null;
 }

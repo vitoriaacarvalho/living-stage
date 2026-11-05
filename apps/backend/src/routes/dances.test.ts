@@ -39,6 +39,7 @@ const kitri = {
   showGuides: true,
   labelMode: 'name' as const,
   colorMode: 'dancer' as const,
+  durationMs: null,
   createdAt: new Date('2026-10-27T12:00:00.000Z'),
 };
 
@@ -204,6 +205,36 @@ describe('POST /api/schools/:schoolId/dances', () => {
 
 describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
   const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
+
+  test('saves a typed duration', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+    await fetch(
+      `${baseUrl}/api/schools/school-1/dances/dance-1`,
+      send('PATCH', { durationMs: 220_000 }),
+    );
+    expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { durationMs: 220_000 } }),
+    );
+  });
+
+  test('clears the duration', async () => {
+    vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+    await fetch(
+      `${baseUrl}/api/schools/school-1/dances/dance-1`,
+      send('PATCH', { durationMs: null }),
+    );
+    expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { durationMs: null } }),
+    );
+  });
+
+  test('responds 400 for a duration in part of a second', async () => {
+    const res = await fetch(
+      `${baseUrl}/api/schools/school-1/dances/dance-1`,
+      send('PATCH', { durationMs: 220_500 }),
+    );
+    expect(res.status).toBe(400);
+  });
 
   test('responds with the renamed dance', async () => {
     vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([{ ...kitri, title: 'Kitri' }]);

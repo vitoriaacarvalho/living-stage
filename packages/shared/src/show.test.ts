@@ -82,21 +82,30 @@ describe('parseShowTime', () => {
 
 describe('parseShowInput', () => {
   test('accepts a full show', () => {
-    expect(parseShowInput(gala)).toEqual(gala);
+    expect(parseShowInput({ ...gala, intervalMs: 15 * 60_000 })).toEqual({
+      ...gala,
+      intervalMs: 15 * 60_000,
+    });
   });
 
   test('trims the title and venue', () => {
-    expect(parseShowInput({ ...gala, title: ' Winter gala ', venue: ' City theatre ' })).toEqual(
-      gala,
-    );
+    expect(parseShowInput({ ...gala, title: ' Winter gala ', venue: ' City theatre ' })).toEqual({
+      ...gala,
+      intervalMs: 0,
+    });
   });
 
-  test('takes a missing time and venue as none', () => {
+  test('takes a missing time, venue and interval as none', () => {
     expect(parseShowInput({ title: 'Winter gala', date: '2026-12-12' })).toEqual({
       ...gala,
       time: null,
       venue: null,
+      intervalMs: 0,
     });
+  });
+
+  test('rejects an interval in part of a minute', () => {
+    expect(parseShowInput({ ...gala, intervalMs: 90_000 })).toBeNull();
   });
 
   test('takes a blank venue as none', () => {

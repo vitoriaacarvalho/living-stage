@@ -13,9 +13,11 @@ const gala: ShowSummary = {
   date: '2026-12-12',
   time: '19:00',
   venue: 'City theatre',
+  intervalMs: 0,
   createdAt: '2026-11-05T12:00:00.000Z',
   actCount: 2,
   danceCount: 10,
+  totalMs: 57 * 60_000,
   preview: [],
 };
 const festival: ShowSummary = {
@@ -112,6 +114,7 @@ test('creates a show with its title and day', async () => {
     date: '2027-04-10',
     time: null,
     venue: null,
+    intervalMs: 0,
   });
 });
 

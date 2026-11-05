@@ -66,7 +66,14 @@ describe('moveDance', () => {
   });
 });
 
-const dance = (id: string) => ({ id, danceId: `dance-${id}`, title: id, castCount: 1 });
+const dance = (id: string) => ({
+  id,
+  danceId: `dance-${id}`,
+  title: id,
+  castCount: 1,
+  durationMs: null,
+  cast: [],
+});
 const acts: Act[] = [
   { id: 'act-1', order: 0, name: null, dances: [dance('a'), dance('b')] },
   { id: 'act-2', order: 1, name: 'Classics', dances: [] },

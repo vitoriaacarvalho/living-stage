@@ -21,7 +21,7 @@ export function useShows(schoolId: string) {
   // A new show holds only its first, empty act.
   async function add(input: ShowInput) {
     const show = await createShow(schoolId, input);
-    const summary = { ...show, actCount: 1, danceCount: 0, preview: [] };
+    const summary = { ...show, actCount: 1, danceCount: 0, totalMs: 0, preview: [] };
     setState((current) => ({
       status: 'ready',
       shows: [summary, ...(current.status === 'ready' ? current.shows : [])],

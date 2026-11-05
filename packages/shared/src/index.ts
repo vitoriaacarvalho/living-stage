@@ -114,6 +114,17 @@ export {
   type School,
 } from './school.ts';
 export {
+  DURATION_MAX_MS,
+  INTERVAL_MAX_MS,
+  formatDuration,
+  formatRunningTime,
+  parseDurationMs,
+  parseDurationText,
+  parseIntervalMs,
+  runningTime,
+  type RunningTime,
+} from './running-time.ts';
+export {
   ACT_NAME_MAX_LENGTH,
   SHOW_TITLE_MAX_LENGTH,
   SHOW_VENUE_MAX_LENGTH,
@@ -136,6 +147,7 @@ export {
   type ActUpdate,
   type ListShowsResponse,
   type Show,
+  type ShowCastMember,
   type ShowDance,
   type ShowDetail,
   type ShowDetailResponse,

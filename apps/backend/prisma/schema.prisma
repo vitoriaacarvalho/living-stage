@@ -122,6 +122,7 @@ model Dance {
   showGuides Boolean      @default(true)
   labelMode  LabelMode    @default(name)
   colorMode  ColorMode    @default(dancer)
+  durationMs Int?
   createdAt  DateTime     @default(now())
   cast       CastMember[]
   figures    Figure[]
@@ -186,16 +187,17 @@ model Position {
 }
 
 model Show {
-  id        String    @id @default(cuid())
-  schoolId  String
-  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  title     String
-  date      DateTime  @db.Date
-  time      String?
-  venue     String?
-  createdAt DateTime  @default(now())
-  acts      Act[]
-  items     ActItem[]
+  id         String    @id @default(cuid())
+  schoolId   String
+  school     School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title      String
+  date       DateTime  @db.Date
+  time       String?
+  venue      String?
+  intervalMs Int       @default(0)
+  createdAt  DateTime  @default(now())
+  acts       Act[]
+  items      ActItem[]
 
   @@index([schoolId])
   @@map("show")

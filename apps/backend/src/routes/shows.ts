@@ -5,6 +5,7 @@ import {
   parseShowInput,
   parseShowOrder,
   parseShowUpdate,
+  runningTime,
   type Act,
   type ActDanceResponse,
   type ActResponse,
@@ -45,7 +46,18 @@ const detailActs = {
   include: {
     items: {
       orderBy: { order: 'asc' },
-      include: { dance: { select: { title: true, _count: { select: { cast: true } } } } },
+      include: {
+        dance: {
+          select: {
+            title: true,
+            durationMs: true,
+            cast: {
+              orderBy: { createdAt: 'asc' },
+              select: { id: true, role: true, dancer: { select: { name: true } } },
+            },
+          },
+        },
+      },
     },
   },
 } satisfies Prisma.Show$actsArgs;
@@ -372,13 +384,14 @@ function toDbUpdate({ date, ...rest }: ShowUpdate) {
 
 type ShowRow = Omit<Show, 'date' | 'createdAt'> & { date: Date; createdAt: Date };
 
-function toShow({ id, title, date, time, venue, createdAt }: ShowRow): Show {
+function toShow({ id, title, date, time, venue, intervalMs, createdAt }: ShowRow): Show {
   return {
     id,
     title,
     date: date.toISOString().slice(0, 10),
     time,
     venue,
+    intervalMs,
     createdAt: createdAt.toISOString(),
   };
 }
@@ -391,7 +404,14 @@ function toShowSummary({ acts, ...show }: SummaryRow): ShowSummary {
   const preview = first
     ? dancePreview(first.cast.map(toCastMember), first.figures[0]?.positions ?? [], first.colorMode)
     : [];
-  return { ...toShow(show), actCount: acts.length, danceCount: dances.length, preview };
+  const timed = acts.map(({ items }) => ({ dances: items.map(({ dance }) => dance) }));
+  return {
+    ...toShow(show),
+    actCount: acts.length,
+    danceCount: dances.length,
+    totalMs: runningTime(timed, show.intervalMs).totalMs,
+    preview,
+  };
 }
 
 type DetailRow = ShowRow & Prisma.ShowGetPayload<{ include: { acts: typeof detailActs } }>;
@@ -399,7 +419,18 @@ type DetailRow = ShowRow & Prisma.ShowGetPayload<{ include: { acts: typeof detai
 type ItemRow = DetailRow['acts'][number]['items'][number];
 
 function toShowDance({ id, danceId, dance }: ItemRow): ShowDance {
-  return { id, danceId, title: dance.title, castCount: dance._count.cast };
+  return {
+    id,
+    danceId,
+    title: dance.title,
+    castCount: dance.cast.length,
+    durationMs: dance.durationMs,
+    cast: dance.cast.map((member) => ({
+      id: member.id,
+      name: member.dancer?.name ?? null,
+      role: member.role,
+    })),
+  };
 }
 
 function toAct({ id, order, name, items }: DetailRow['acts'][number]): Act {

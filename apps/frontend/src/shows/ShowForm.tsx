@@ -1,6 +1,7 @@
 import {
   SHOW_TITLE_MAX_LENGTH,
   SHOW_VENUE_MAX_LENGTH,
+  parseIntervalMs,
   parseShowInput,
   type Show,
   type ShowInput,
@@ -13,6 +14,14 @@ import listStyles from '../dances/DanceList.module.css';
 import styles from './Shows.module.css';
 
 const invalidError = 'Give the show a title and a day.';
+const intervalError = 'Type the interval in whole minutes, from 0 to 60.';
+
+// Whole minutes; blank means no interval. Anything else fails the shared check.
+function intervalFrom(text: string): number | null {
+  const trimmed = text.trim();
+  if (trimmed === '') return 0;
+  return /^\d+$/.test(trimmed) ? Number(trimmed) * 60_000 : null;
+}
 
 type ShowFormProps = {
   show: Show | null;
@@ -26,7 +35,13 @@ export function ShowForm({ show, onSave, onClose }: ShowFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const input = parseShowInput(Object.fromEntries(new FormData(event.currentTarget)));
+    const form = new FormData(event.currentTarget);
+    const intervalMs = intervalFrom(String(form.get('interval')));
+    if (parseIntervalMs(intervalMs) === undefined) {
+      setError(intervalError);
+      return;
+    }
+    const input = parseShowInput({ ...Object.fromEntries(form), intervalMs });
     if (!input) {
       setError(invalidError);
       return;
@@ -70,6 +85,14 @@ export function ShowForm({ show, onSave, onClose }: ShowFormProps) {
           help="Optional"
         />
       </div>
+      <TextField
+        label="Interval between acts"
+        name="interval"
+        inputMode="numeric"
+        defaultValue={show && show.intervalMs > 0 ? String(show.intervalMs / 60_000) : ''}
+        help="Minutes, from 0 to 60. Leave blank for none."
+        autoComplete="off"
+      />
       <TextField
         label="Venue"
         name="venue"

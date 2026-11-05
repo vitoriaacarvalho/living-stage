@@ -5,7 +5,14 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { RunningOrder } from './RunningOrder.tsx';
 import type { ShowActions } from './useShow.ts';
 
-const dance = (id: string) => ({ id, danceId: `dance-${id}`, title: `Dance ${id}`, castCount: 4 });
+const dance = (id: string) => ({
+  id,
+  danceId: `dance-${id}`,
+  title: `Dance ${id}`,
+  castCount: 4,
+  durationMs: null,
+  cast: [],
+});
 
 const gala: ShowDetail = {
   id: 'show-1',
@@ -13,6 +20,7 @@ const gala: ShowDetail = {
   date: '2026-12-12',
   time: null,
   venue: null,
+  intervalMs: 0,
   createdAt: '2026-11-05T12:00:00.000Z',
   acts: [
     { id: 'act-1', order: 0, name: null, dances: [dance('A'), dance('B'), dance('C')] },

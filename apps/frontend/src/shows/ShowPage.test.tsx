@@ -33,13 +33,23 @@ const gala: ShowDetail = {
   date: '2026-12-12',
   time: '19:00',
   venue: 'City theatre',
+  intervalMs: 0,
   createdAt: '2026-11-05T12:00:00.000Z',
   acts: [
     {
       id: 'act-1',
       order: 0,
       name: null,
-      dances: [{ id: 'item-1', danceId: 'dance-1', title: 'Kitri variation', castCount: 16 }],
+      dances: [
+        {
+          id: 'item-1',
+          danceId: 'dance-1',
+          title: 'Kitri variation',
+          castCount: 16,
+          durationMs: null,
+          cast: [],
+        },
+      ],
     },
     { id: 'act-2', order: 1, name: 'Classics', dances: [] },
   ],
@@ -156,6 +166,7 @@ describe('editing the show', () => {
       date: '2026-12-12',
       time: '19:00',
       venue: 'Old mill',
+      intervalMs: 0,
     });
   });
 
@@ -166,6 +177,25 @@ describe('editing the show', () => {
     await user.type(screen.getByLabelText('Venue'), 'Old mill');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Old mill')).toBeInTheDocument();
+  });
+
+  test('sets the interval between acts in minutes', async () => {
+    vi.mocked(updateShow).mockResolvedValue({ ...gala, intervalMs: 15 * 60_000 });
+    const { user } = await edit();
+    await user.type(screen.getByLabelText('Interval between acts'), '15');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(updateShow).toHaveBeenCalledWith(
+      'school-1',
+      'show-1',
+      expect.objectContaining({ intervalMs: 15 * 60_000 }),
+    );
+  });
+
+  test('refuses an interval over an hour', async () => {
+    const { user } = await edit();
+    await user.type(screen.getByLabelText('Interval between acts'), '90');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('from 0 to 60');
   });
 
   test('asks before deleting the show', async () => {
@@ -258,7 +288,14 @@ describe('dances in an act', () => {
     return panel;
   }
 
-  const waltz = { id: 'item-2', danceId: 'dance-2', title: 'Waltz', castCount: 22 };
+  const waltz = {
+    id: 'item-2',
+    danceId: 'dance-2',
+    title: 'Waltz',
+    castCount: 22,
+    durationMs: null,
+    cast: [],
+  };
 
   test('offers only the dances not yet in the show', async () => {
     await openPicker();

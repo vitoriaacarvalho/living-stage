@@ -63,6 +63,7 @@ const gala = {
   date: new Date('2026-12-12T00:00:00.000Z'),
   time: '19:00',
   venue: 'City theatre',
+  intervalMs: 0,
   createdAt: new Date('2026-11-05T12:00:00.000Z'),
 };
 
@@ -72,6 +73,7 @@ const galaJson = {
   date: '2026-12-12',
   time: '19:00',
   venue: 'City theatre',
+  intervalMs: 0,
   createdAt: '2026-11-05T12:00:00.000Z',
 };
 
@@ -79,6 +81,7 @@ const kitri = {
   id: 'dance-1',
   title: 'Kitri variation',
   colorMode: 'dancer' as const,
+  durationMs: 220_000,
   cast: [
     {
       id: 'cast-1',
@@ -147,6 +150,21 @@ describe('GET /shows', () => {
     expect(show.preview).toEqual([{ x: 0.5, y: 0.5, color: 3, open: false }]);
   });
 
+  test('adds up the running time with the intervals', async () => {
+    vi.mocked(prisma.show.findMany).mockResolvedValue([
+      {
+        ...gala,
+        intervalMs: 15 * 60_000,
+        acts: [
+          { items: [{ dance: kitri }] },
+          { items: [{ dance: { ...kitri, durationMs: null } }] },
+        ],
+      },
+    ] as never);
+    const { shows } = (await (await fetch(`${baseUrl}/shows`)).json()) as ListShowsResponse;
+    expect(shows[0]!.totalMs).toBe(220_000 + 15 * 60_000);
+  });
+
   test('previews an empty stage for a show with no dances', async () => {
     expect((await listed([{ items: [] }])).preview).toEqual([]);
   });
@@ -197,6 +215,11 @@ describe('POST /shows', () => {
     );
   });
 
+  test('creates the show with no interval unless one is given', async () => {
+    await post({ title: 'Winter gala', date: '2026-12-12' });
+    expect(vi.mocked(prisma.show.create).mock.calls[0]![0].data.intervalMs).toBe(0);
+  });
+
   test('creates the show with its first act', async () => {
     await post({ title: 'Winter gala', date: '2026-12-12' });
     expect(vi.mocked(prisma.show.create).mock.calls[0]![0].data.acts).toEqual({
@@ -232,7 +255,14 @@ describe('GET /shows/:showId', () => {
           {
             id: 'item-1',
             danceId: 'dance-1',
-            dance: { title: 'Kitri variation', _count: { cast: 16 } },
+            dance: {
+              title: 'Kitri variation',
+              durationMs: 220_000,
+              cast: [
+                { id: 'cast-1', role: 'Kitri', dancer: { name: 'Clara' } },
+                { id: 'cast-2', role: null, dancer: null },
+              ],
+            },
           },
         ]),
         act('act-2', 1),
@@ -244,7 +274,19 @@ describe('GET /shows/:showId', () => {
         id: 'act-1',
         order: 0,
         name: null,
-        dances: [{ id: 'item-1', danceId: 'dance-1', title: 'Kitri variation', castCount: 16 }],
+        dances: [
+          {
+            id: 'item-1',
+            danceId: 'dance-1',
+            title: 'Kitri variation',
+            castCount: 2,
+            durationMs: 220_000,
+            cast: [
+              { id: 'cast-1', name: 'Clara', role: 'Kitri' },
+              { id: 'cast-2', name: null, role: null },
+            ],
+          },
+        ],
       },
       { id: 'act-2', order: 1, name: null, dances: [] },
     ]);
@@ -281,6 +323,17 @@ describe('PATCH /shows/:showId', () => {
       where: { id: 'show-1', schoolId: 'school-1' },
       data: { venue: null },
     });
+  });
+
+  test('sets the interval between acts', async () => {
+    await patch({ intervalMs: 15 * 60_000 });
+    expect(vi.mocked(prisma.show.updateManyAndReturn).mock.calls[0]![0].data).toEqual({
+      intervalMs: 15 * 60_000,
+    });
+  });
+
+  test('responds 400 for an interval in part of a minute', async () => {
+    expect((await patch({ intervalMs: 90_000 })).status).toBe(400);
   });
 
   test('stores a new date as that day at midnight UTC', async () => {
@@ -479,14 +532,21 @@ describe('POST /shows/:showId/acts/:actId/dances', () => {
     vi.mocked(prisma.actItem.create).mockResolvedValue({
       id: 'item-4',
       danceId: 'dance-1',
-      dance: { title: 'Kitri variation', _count: { cast: 16 } },
+      dance: { title: 'Kitri variation', durationMs: null, cast: [] },
     } as never);
   });
 
   test('responds 201 with the dance in the act', async () => {
     const res = await post({ danceId: 'dance-1' });
     expect(await res.json()).toEqual({
-      dance: { id: 'item-4', danceId: 'dance-1', title: 'Kitri variation', castCount: 16 },
+      dance: {
+        id: 'item-4',
+        danceId: 'dance-1',
+        title: 'Kitri variation',
+        castCount: 0,
+        durationMs: null,
+        cast: [],
+      },
     });
   });
 

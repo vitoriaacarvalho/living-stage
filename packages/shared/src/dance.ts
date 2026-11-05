@@ -1,5 +1,6 @@
 import type { DancerColor } from './dancer.ts';
 import type { StagePoint } from './figure.ts';
+import { parseDurationMs } from './running-time.ts';
 
 export const DANCE_TITLE_MAX_LENGTH = 100;
 
@@ -27,6 +28,7 @@ export type DanceUpdate = {
   showGuides?: boolean;
   labelMode?: LabelMode;
   colorMode?: ColorMode;
+  durationMs?: number | null;
 };
 
 function isOneOf<T extends string>(values: readonly T[], value: unknown): value is T {
@@ -80,6 +82,11 @@ export function parseDanceUpdate(value: unknown): DanceUpdate | null {
   if (body.colorMode !== undefined) {
     if (!isOneOf(COLOR_MODES, body.colorMode)) return null;
     update.colorMode = body.colorMode;
+  }
+  if (body.durationMs !== undefined) {
+    const durationMs = parseDurationMs(body.durationMs);
+    if (durationMs === undefined) return null;
+    update.durationMs = durationMs;
   }
   return Object.keys(update).length > 0 ? update : null;
 }
