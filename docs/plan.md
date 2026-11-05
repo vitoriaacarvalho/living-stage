@@ -376,6 +376,7 @@ First milestone to show real teachers.
   - Done when: 40 dancers animate smoothly between figures without music on an iPad
   - Requirements: D1, D4, D5, D6, E9 · Screens: `Timeline`, `Stage`, figure panel
   - Note: the 40-dancer cap is enforced here, on the cast route (409 `cast_full`) and in the cast picker
+  - To do: measure playback of 40 dancers on a real iPad (steps in `docs/features/2.7-straight-line-playback.md`, Measurements). Put off on 5 Nov 2026; E9 and 2.7 stay open until then, and the plans after 2.7 can go ahead
 
 #### MVP 4 — Show details
 
@@ -454,6 +455,10 @@ Not ordered yet; plan it when the MVP ships.
 - ⬜ **8.3 Languages** · after 1.6
   - Done when: Every screen works in pt-BR and English; default follows the browser
   - Requirements: J1, J2, J3
+
+### To do
+
+- [ ] Measure 2.7 playback (40 dancers with labels) on a real iPad and record the numbers; closes E9 and 2.7
 
 ### Open questions to settle in each part's planning session
 
