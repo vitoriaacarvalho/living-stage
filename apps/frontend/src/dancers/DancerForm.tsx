@@ -24,7 +24,7 @@ export function DancerForm({ dancer, actions, onClose }: DancerFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  async function run(action: () => Promise<void>, failure: string) {
+  async function run(action: () => Promise<unknown>, failure: string) {
     setError(null);
     setPending(true);
     try {
@@ -108,7 +108,7 @@ export function DancerForm({ dancer, actions, onClose }: DancerFormProps) {
 
 type ColorPickerProps = { color: DancerColor | null; onPick: (color: DancerColor | null) => void };
 
-function ColorPicker({ color, onPick }: ColorPickerProps) {
+export function ColorPicker({ color, onPick }: ColorPickerProps) {
   return (
     <fieldset className={styles.colors}>
       <legend className={styles.legend}>Default color</legend>

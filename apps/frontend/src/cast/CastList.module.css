@@ -40,6 +40,16 @@
   padding: 0 var(--space-4) var(--space-2);
 }
 
+.lead {
+  flex: none;
+  padding: 0 var(--space-1);
+  color: var(--primary-strong);
+}
+
+.lead .pick {
+  color: inherit;
+}
+
 .empty {
   margin: 0;
   padding: var(--space-4);

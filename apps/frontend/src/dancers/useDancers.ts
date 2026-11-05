@@ -7,7 +7,7 @@ export type DancersState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; dancers: Dancer[] };
 
 export type DancerActions = {
-  add: (input: DancerInput) => Promise<void>;
+  add: (input: DancerInput) => Promise<Dancer>;
   save: (dancer: Dancer) => Promise<void>;
   remove: (dancerId: string) => Promise<void>;
 };
@@ -35,6 +35,7 @@ export function useDancers(schoolId: string): { state: DancersState } & DancerAc
   async function add(input: DancerInput) {
     const dancer = await createDancer(schoolId, input);
     change((dancers) => [...dancers, dancer]);
+    return dancer;
   }
 
   async function save(dancer: Dancer) {

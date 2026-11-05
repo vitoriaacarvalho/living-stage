@@ -3,14 +3,17 @@ import {
   type CastMember,
   type CastMemberInput,
   type Dancer,
+  type DancerInput,
 } from '@living-stage/shared';
 import { useState } from 'react';
 import { matchesName } from '../dancers/match-name.ts';
 import { useDancers } from '../dancers/useDancers.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
+import { Icon } from '../ui/Icon.tsx';
 import { TextField } from '../ui/TextField.tsx';
 import styles from './CastList.module.css';
+import { NewDancerForm } from './NewDancerForm.tsx';
 
 type CastPickerProps = {
   schoolId: string;
@@ -79,9 +82,10 @@ type RosterPickerProps = {
 };
 
 function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerProps) {
-  const { state } = useDancers(schoolId);
+  const { state, add } = useDancers(schoolId);
   const [failed, setFailed] = useState<Dancer | null>(null);
   const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
   const castIds = new Set(cast.map((member) => member.dancer?.id));
 
   async function pick(dancer: Dancer) {
@@ -91,6 +95,17 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
     } catch {
       setFailed(dancer);
     }
+  }
+
+  async function create(input: DancerInput) {
+    const dancer = await add(input);
+    setCreating(false);
+    setQuery('');
+    await pick(dancer);
+  }
+
+  if (creating) {
+    return <NewDancerForm onSave={create} onCancel={() => setCreating(false)} />;
   }
 
   return (
@@ -115,6 +130,14 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
             onChange={(event) => setQuery(event.target.value)}
             autoComplete="off"
           />
+        </div>
+      )}
+      {state.status === 'ready' && (
+        <div className={styles.lead}>
+          <button type="button" className={styles.pick} onClick={() => setCreating(true)}>
+            <Icon name="plus" />
+            <span className={styles.name}>New dancer</span>
+          </button>
         </div>
       )}
       {state.status === 'ready' && (

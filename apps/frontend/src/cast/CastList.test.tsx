@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast, removeCastMember, updateCastMember } from '../api/cast.ts';
-import { fetchDancers } from '../api/dancers.ts';
+import { createDancer, fetchDancers } from '../api/dancers.ts';
 import { fetchFigures } from '../api/figures.ts';
 import { CastList } from './CastList.tsx';
 import { useCast } from './useCast.ts';
@@ -14,12 +14,13 @@ vi.mock('../api/cast.ts', () => ({
   updateCastMember: vi.fn(),
   removeCastMember: vi.fn(),
 }));
-vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
+vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn(), createDancer: vi.fn() }));
 vi.mock('../api/figures.ts', () => ({ fetchFigures: vi.fn() }));
 
 const clara = { id: 'dancer-1', name: 'Clara Souza', color: 3 };
 const bia = { id: 'dancer-2', name: 'Bia Lima', color: null };
 const julia = { id: 'dancer-3', name: 'Júlia Rocha', color: 5 };
+const ana = { id: 'dancer-4', name: 'Ana Reis', color: 4 };
 const claraAsKitri = { id: 'cast-1', dancer: clara, role: 'Kitri' };
 
 beforeEach(() => {
@@ -32,6 +33,7 @@ beforeEach(() => {
       positions: [{ figureId: 'figure-1', castMemberId: 'cast-2', x: -0.0625, y: 0.05 }],
     });
   vi.mocked(fetchDancers).mockReset().mockResolvedValue([bia, clara]);
+  vi.mocked(createDancer).mockReset().mockResolvedValue(ana);
   vi.mocked(updateCastMember)
     .mockReset()
     .mockImplementation(async (_schoolId, _danceId, _id, update) => ({
@@ -170,6 +172,78 @@ test('says when a dancer cannot be added', async () => {
   const user = await openPicker();
   await user.click(await screen.findByRole('button', { name: /Bia Lima/ }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not add Bia Lima');
+});
+
+async function fillNewDancer() {
+  const user = await openPicker();
+  await user.click(await screen.findByRole('button', { name: 'New dancer' }));
+  await user.type(screen.getByLabelText('Name'), ' Ana Reis ');
+  await user.click(screen.getByRole('button', { name: 'Teal' }));
+  return user;
+}
+
+test('creates a new dancer in the roster from the picker', async () => {
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(createDancer).toHaveBeenCalledWith('school-1', { name: 'Ana Reis', color: 4 });
+});
+
+test('casts the new dancer into this dance', async () => {
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(addCastMember).toHaveBeenCalledWith('school-1', 'dance-1', {
+    dancerId: 'dancer-4',
+    role: null,
+  });
+});
+
+test('goes back to the dancers to pick once the new dancer is saved', async () => {
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByLabelText('Search by name')).toHaveValue('');
+});
+
+test('asks for a name before saving a new dancer', async () => {
+  renderCast();
+  const user = await openPicker();
+  await user.click(await screen.findByRole('button', { name: 'New dancer' }));
+  await user.type(screen.getByLabelText('Name'), '   ');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(createDancer).not.toHaveBeenCalled();
+});
+
+test('says when the new dancer cannot be saved', async () => {
+  vi.mocked(createDancer).mockRejectedValue(new Error('POST dancer answered 500'));
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not save the dancer');
+});
+
+test('says when the new dancer cannot join this dance', async () => {
+  vi.mocked(addCastMember).mockRejectedValue(new Error('POST cast member answered 500'));
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Could not add Ana Reis');
+});
+
+test('offers the new dancer to pick again when she could not join this dance', async () => {
+  vi.mocked(addCastMember).mockRejectedValue(new Error('POST cast member answered 500'));
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(await screen.findByRole('button', { name: /Ana ReisAdd/ })).toBeInTheDocument();
+});
+
+test('goes back to the dancers to pick when the new dancer is cancelled', async () => {
+  renderCast();
+  const user = await fillNewDancer();
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByLabelText('Search by name')).toBeInTheDocument();
 });
 
 function castOf(size: number) {
