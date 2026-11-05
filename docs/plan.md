@@ -200,7 +200,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song and costume photos are added after the MVP.
 - **H5.** A member can upload costume photos to a dance. *(after the MVP)*
 - ✅ **H6.** The show's total running time is calculated from the dance durations. In the MVP the teacher types each dance's duration; once music ships, it comes from the song.
-- **H7.** A dance belongs to the school and can appear in more than one show, or be duplicated as a starting point.
+- ✅ **H7.** A dance belongs to the school and can appear in more than one show, or be duplicated as a starting point.
 
 ### Part I — PDF export *(after the MVP)*
 
@@ -385,9 +385,10 @@ First milestone to show real teachers.
   - Done when: Each dance shows its cast, dancer count and typed duration; the show's total time is right
   - Requirements: H4, H6 (typed durations) · Screens: `ShowManager`, `DanceRow`
   - Note: durations are typed on the show's dance rows and kept on the dance; the total adds an optional interval between acts; the cast opens under a row on tap
-- 🟨 **6.3 Reuse and duplicate dances** · after 6.1, 2.3
+- ✅ **6.3 Reuse and duplicate dances** · after 6.1, 2.3
   - Done when: One dance in two shows; duplicate a dance with its cast and figures
   - Requirements: H7 · Screens: `DanceRow`
+  - Note: Duplicate is a button on each dance card on Home; the copy, "X (copy)", takes everything but the shows and opens in its rename form
 
 #### MVP 5 — Movement and rehearsal
 
