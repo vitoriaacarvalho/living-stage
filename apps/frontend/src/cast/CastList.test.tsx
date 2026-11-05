@@ -246,6 +246,51 @@ test('goes back to the dancers to pick when the new dancer is cancelled', async 
   expect(screen.getByLabelText('Search by name')).toBeInTheDocument();
 });
 
+async function searchFor(query: string) {
+  const user = await openPicker();
+  await user.type(await screen.findByLabelText('Search by name'), query);
+  return user;
+}
+
+test('offers to add a searched name that is not in the roster as a new dancer', async () => {
+  renderCast();
+  await searchFor(' Ana ');
+  expect(screen.getByRole('button', { name: 'Add “Ana” as a new dancer' })).toBeInTheDocument();
+});
+
+test('offers a new dancer when the search matches only part of a name', async () => {
+  renderCast();
+  await searchFor('Bia');
+  expect(screen.getByRole('button', { name: 'Add “Bia” as a new dancer' })).toBeInTheDocument();
+});
+
+test('does not offer a new dancer for a name already in the roster', async () => {
+  renderCast();
+  await searchFor('bia lima');
+  expect(screen.queryByRole('button', { name: /as a new dancer/ })).not.toBeInTheDocument();
+});
+
+test('does not offer a new dancer for the name of a dancer already cast', async () => {
+  renderCast();
+  await searchFor('Clara Souza');
+  expect(screen.queryByRole('button', { name: /as a new dancer/ })).not.toBeInTheDocument();
+});
+
+test('fills the new dancer form with the searched name', async () => {
+  renderCast();
+  const user = await searchFor('Ana Reis');
+  await user.click(screen.getByRole('button', { name: 'Add “Ana Reis” as a new dancer' }));
+  expect(screen.getByLabelText('Name')).toHaveValue('Ana Reis');
+});
+
+test('keeps the search when the new dancer is cancelled', async () => {
+  renderCast();
+  const user = await searchFor('Ana');
+  await user.click(screen.getByRole('button', { name: 'Add “Ana” as a new dancer' }));
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.getByLabelText('Search by name')).toHaveValue('Ana');
+});
+
 function castOf(size: number) {
   return Array.from({ length: size }, (_, index) => ({
     id: `cast-${index + 10}`,

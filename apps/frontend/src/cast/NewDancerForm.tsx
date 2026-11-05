@@ -15,11 +15,12 @@ const blankNameError = 'Give the dancer a name.';
 const saveError = 'Could not save the dancer. Try again.';
 
 type NewDancerFormProps = {
+  name: string;
   onSave: (input: DancerInput) => Promise<void>;
   onCancel: () => void;
 };
 
-export function NewDancerForm({ onSave, onCancel }: NewDancerFormProps) {
+export function NewDancerForm({ name: typedName, onSave, onCancel }: NewDancerFormProps) {
   const [color, setColor] = useState<DancerColor | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -47,6 +48,7 @@ export function NewDancerForm({ onSave, onCancel }: NewDancerFormProps) {
       <TextField
         label="Name"
         name="name"
+        defaultValue={typedName}
         help="Also added to the roster."
         maxLength={DANCER_NAME_MAX_LENGTH}
         autoComplete="off"

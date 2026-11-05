@@ -6,7 +6,7 @@ import {
   type DancerInput,
 } from '@living-stage/shared';
 import { useState } from 'react';
-import { matchesName } from '../dancers/match-name.ts';
+import { isSameName, matchesName } from '../dancers/match-name.ts';
 import { useDancers } from '../dancers/useDancers.ts';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
@@ -86,6 +86,7 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
   const [failed, setFailed] = useState<Dancer | null>(null);
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
+  const typed = query.trim();
   const castIds = new Set(cast.map((member) => member.dancer?.id));
 
   async function pick(dancer: Dancer) {
@@ -105,7 +106,7 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
   }
 
   if (creating) {
-    return <NewDancerForm onSave={create} onCancel={() => setCreating(false)} />;
+    return <NewDancerForm name={typed} onSave={create} onCancel={() => setCreating(false)} />;
   }
 
   return (
@@ -132,11 +133,13 @@ function RosterPicker({ schoolId, cast, copy, onPick, onClose }: RosterPickerPro
           />
         </div>
       )}
-      {state.status === 'ready' && (
+      {state.status === 'ready' && !state.dancers.some(({ name }) => isSameName(name, typed)) && (
         <div className={styles.lead}>
           <button type="button" className={styles.pick} onClick={() => setCreating(true)}>
             <Icon name="plus" />
-            <span className={styles.name}>New dancer</span>
+            <span className={styles.name}>
+              {typed ? `Add “${typed}” as a new dancer` : 'New dancer'}
+            </span>
           </button>
         </div>
       )}

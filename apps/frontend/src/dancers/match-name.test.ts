@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { byName, matchesName } from './match-name.ts';
+import { byName, isSameName, matchesName } from './match-name.ts';
 
 describe('matchesName', () => {
   test('matches part of the name', () => {
@@ -40,5 +40,15 @@ describe('byName', () => {
   test('ignores case', () => {
     const names = ['bia', 'Ana', 'Carla'].map((name) => ({ name }));
     expect(names.sort(byName).map(({ name }) => name)).toEqual(['Ana', 'bia', 'Carla']);
+  });
+});
+
+describe('isSameName', () => {
+  test('is the same name ignoring case, accents and spaces around it', () => {
+    expect(isSameName('Júlia Castro', ' julia castro ')).toBe(true);
+  });
+
+  test('is not the same name when only part of it matches', () => {
+    expect(isSameName('Júlia Castro', 'Júlia')).toBe(false);
   });
 });
