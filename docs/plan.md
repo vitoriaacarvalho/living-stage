@@ -139,7 +139,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **B4.** The roster can be searched and sorted by name.
 - ✅ **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
 - **B6.** Costume photos are resized in the browser to 1600 px on the long edge before upload; originals up to 10 MB are accepted, including iPhone HEIC. *(after the MVP)*
-- **B7.** A member can add a new dancer, with a name and an optional color, from a dance's "Add to cast" panel; she joins the roster and the dance's cast at once.
+- ✅ **B7.** A member can add a new dancer, with a name and an optional color, from a dance's "Add to cast" panel; she joins the roster and the dance's cast at once.
 
 ### Part C — Formation editor
 
@@ -380,7 +380,7 @@ First milestone to show real teachers.
   - Note: the 40-dancer cap is enforced here, on the cast route (409 `cast_full`) and in the cast picker
   - To do: measure playback of 40 dancers on a real iPad (steps in `docs/features/2.7-straight-line-playback.md`, Measurements). Put off on 5 Nov 2026; E9 and 2.7 stay open until then, and the plans after 2.7 can go ahead
 
-- ⬜ **2.8 Quick-add dancers** · after 2.2, 1.7
+- ✅ **2.8 Quick-add dancers** · after 2.2, 1.7
   - Done when: From a dance's "Add to cast" panel, search the roster and add a new dancer who is not in it yet; she lands in the roster and in the cast without leaving the dance
   - Requirements: B7 · Screens: `CastList` (the "Add to cast" panel)
   - Note: the panel gets a search field; a "New dancer" row opens a name and color form, and a search with no exact match offers "Add “Ana” as a new dancer". The Dancers screen stays as it is
