@@ -13,12 +13,18 @@ vi.mock('../auth/auth.ts', () => ({
 vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
+    $transaction: vi.fn(),
     dance: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       create: vi.fn(),
       updateManyAndReturn: vi.fn(),
       deleteMany: vi.fn(),
     },
+    castMember: { createMany: vi.fn() },
+    figure: { createMany: vi.fn() },
+    position: { createMany: vi.fn() },
   },
 }));
 
@@ -71,6 +77,14 @@ beforeEach(() => {
   vi.mocked(prisma.dance.create).mockReset();
   vi.mocked(prisma.dance.updateManyAndReturn).mockReset();
   vi.mocked(prisma.dance.deleteMany).mockReset();
+  vi.mocked(prisma.dance.findFirst).mockReset();
+  vi.mocked(prisma.dance.findUniqueOrThrow).mockReset();
+  vi.mocked(prisma.dance.create).mockReset();
+  vi.mocked(prisma.castMember.createMany).mockReset();
+  vi.mocked(prisma.figure.createMany).mockReset();
+  vi.mocked(prisma.position.createMany).mockReset();
+  vi.mocked(prisma.$transaction).mockImplementation(((run: (tx: typeof prisma) => unknown) =>
+    run(prisma)) as never);
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user,
     session: { id: 'session-1', userId: user.id } as never,
@@ -199,6 +213,128 @@ describe('POST /api/schools/:schoolId/dances', () => {
   test('does not create a dance in a school the user does not teach at', async () => {
     vi.mocked(prisma.school.findFirst).mockResolvedValue(null);
     await fetch(url(), send('POST', { title: 'Kitri variation' }));
+    expect(prisma.dance.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
+  const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1/copies`;
+  const copyOfKitri = () => fetch(url(), { method: 'POST' });
+  const castCreatedAt = new Date('2026-10-27T12:00:00.000Z');
+
+  const source = {
+    ...kitri,
+    cast: [
+      {
+        id: 'cast-1',
+        danceId: 'dance-1',
+        dancerId: 'dancer-1',
+        role: 'Kitri',
+        createdAt: castCreatedAt,
+      },
+    ],
+    figures: [
+      {
+        id: 'figure-1',
+        danceId: 'dance-1',
+        order: 0,
+        name: 'Entrance',
+        transitionMs: 4000,
+        positions: [{ figureId: 'figure-1', castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
+      },
+    ],
+  };
+
+  const saved = {
+    ...kitri,
+    id: 'dance-2',
+    title: 'Kitri variation (copy)',
+    createdAt: new Date('2026-11-05T12:00:00.000Z'),
+    cast: [
+      {
+        id: 'cast-9',
+        role: 'Kitri',
+        dancer: { id: 'dancer-1', schoolId: 'school-1', name: 'Clara', color: 3 },
+      },
+    ],
+    figures: [{ positions: [{ castMemberId: 'cast-9', x: 0.25, y: 0.5 }] }],
+    showItems: [],
+  };
+
+  beforeEach(() => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(source as never);
+    vi.mocked(prisma.dance.findUniqueOrThrow).mockResolvedValue(saved as never);
+  });
+
+  test('responds 201 with the copy as it is listed', async () => {
+    const res = await copyOfKitri();
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({
+      dance: {
+        id: 'dance-2',
+        title: 'Kitri variation (copy)',
+        showGuides: true,
+        labelMode: 'name',
+        colorMode: 'dancer',
+        createdAt: '2026-11-05T12:00:00.000Z',
+        castCount: 1,
+        preview: [{ x: 0.25, y: 0.5, color: 3, open: false }],
+        showTitles: [],
+      },
+    });
+  });
+
+  test('looks the dance up in this school', async () => {
+    await copyOfKitri();
+    expect(prisma.dance.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'dance-1', schoolId: 'school-1' } }),
+    );
+  });
+
+  test('copies the dance inside one transaction', async () => {
+    await copyOfKitri();
+    expect(prisma.$transaction).toHaveBeenCalledOnce();
+  });
+
+  test('creates the copy in this school with its new title', async () => {
+    await copyOfKitri();
+    expect(vi.mocked(prisma.dance.create).mock.calls[0]![0].data).toMatchObject({
+      schoolId: 'school-1',
+      title: 'Kitri variation (copy)',
+    });
+  });
+
+  test('creates the copied cast in the copy', async () => {
+    await copyOfKitri();
+    const { id } = vi.mocked(prisma.dance.create).mock.calls[0]![0].data;
+    expect(vi.mocked(prisma.castMember.createMany).mock.calls[0]![0]!.data).toMatchObject([
+      { danceId: id, dancerId: 'dancer-1', role: 'Kitri' },
+    ]);
+  });
+
+  test('creates the copied figures in the copy', async () => {
+    await copyOfKitri();
+    const { id } = vi.mocked(prisma.dance.create).mock.calls[0]![0].data;
+    expect(vi.mocked(prisma.figure.createMany).mock.calls[0]![0]!.data).toMatchObject([
+      { danceId: id, order: 0, name: 'Entrance' },
+    ]);
+  });
+
+  test('creates the copied positions', async () => {
+    await copyOfKitri();
+    expect(vi.mocked(prisma.position.createMany).mock.calls[0]![0]!.data).toMatchObject([
+      { x: 0.25, y: 0.5 },
+    ]);
+  });
+
+  test('responds 404 for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    expect((await copyOfKitri()).status).toBe(404);
+  });
+
+  test('creates nothing for a dance of another school', async () => {
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+    await copyOfKitri();
     expect(prisma.dance.create).not.toHaveBeenCalled();
   });
 });

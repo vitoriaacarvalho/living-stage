@@ -16,6 +16,7 @@ export {
 
 export {
   DANCE_TITLE_MAX_LENGTH,
+  copyTitle,
   parseDanceInput,
   parseDanceTitle,
   parseDanceUpdate,
@@ -24,6 +25,7 @@ export {
   type DanceInput,
   type DancePreviewSpot,
   type DanceSummary,
+  type DanceSummaryResponse,
   type DanceUpdate,
   type LabelMode,
   type DanceResponse,

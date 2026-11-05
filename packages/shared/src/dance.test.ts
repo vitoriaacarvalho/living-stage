@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   DANCE_TITLE_MAX_LENGTH,
+  copyTitle,
   parseDanceInput,
   parseDanceTitle,
   parseDanceUpdate,
@@ -30,6 +31,30 @@ describe('parseDanceTitle', () => {
 
   test('rejects a value that is not a string', () => {
     expect(parseDanceTitle(42)).toBeNull();
+  });
+});
+
+describe('copyTitle', () => {
+  test('adds (copy) to the title', () => {
+    expect(copyTitle('Kitri variation')).toBe('Kitri variation (copy)');
+  });
+
+  test('adds another (copy) to the title of a copy', () => {
+    expect(copyTitle('Kitri variation (copy)')).toBe('Kitri variation (copy) (copy)');
+  });
+
+  test('keeps a title that just fits whole', () => {
+    const title = 'a'.repeat(DANCE_TITLE_MAX_LENGTH - ' (copy)'.length);
+    expect(copyTitle(title)).toBe(`${title} (copy)`);
+  });
+
+  test('cuts a long title so the copy fits the maximum length', () => {
+    expect(copyTitle('a'.repeat(DANCE_TITLE_MAX_LENGTH))).toHaveLength(DANCE_TITLE_MAX_LENGTH);
+  });
+
+  test('drops the spaces left at the cut', () => {
+    const title = `${'a'.repeat(DANCE_TITLE_MAX_LENGTH - ' (copy)'.length - 1)} b`;
+    expect(copyTitle(title)).toBe(`${'a'.repeat(DANCE_TITLE_MAX_LENGTH - 8)} (copy)`);
   });
 });
 

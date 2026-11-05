@@ -49,11 +49,19 @@ export type ListDancesResponse = { dances: DanceSummary[] };
 
 export type DanceResponse = { dance: Dance };
 
+export type DanceSummaryResponse = { dance: DanceSummary };
+
 export function parseDanceTitle(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const title = value.trim();
   if (title.length === 0 || title.length > DANCE_TITLE_MAX_LENGTH) return null;
   return title;
+}
+
+const COPY_SUFFIX = ' (copy)';
+
+export function copyTitle(title: string): string {
+  return title.slice(0, DANCE_TITLE_MAX_LENGTH - COPY_SUFFIX.length).trimEnd() + COPY_SUFFIX;
 }
 
 export function parseDanceInput(value: unknown): DanceInput | null {
