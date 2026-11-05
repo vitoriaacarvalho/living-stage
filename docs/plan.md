@@ -244,7 +244,7 @@ Path          figureId, castMemberId, segments[]  (route arriving into this figu
 AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
 CostumePhoto  id, danceId, url, caption?
 
-Show          id, schoolId, title, date, time?, venue?   (date is a calendar day and time a wall-clock time, kept as typed)
+Show          id, schoolId, title, date, time?, venue?, intervalMs   (date is a calendar day and time a wall-clock time, kept as typed; intervalMs is the interval between acts, 0 by default)
 Act           id, showId, order, name?   (numbered "Act 1" with an optional name; a show keeps at least one)
 ActItem       id, showId, actId, danceId, order   (a dance is in a show at most once; showId is there for that check)
 
@@ -384,6 +384,7 @@ First milestone to show real teachers.
 - ⬜ **6.5 Show details and running time** · after 6.1, 2.2
   - Done when: Each dance shows its cast, dancer count and typed duration; the show's total time is right
   - Requirements: H4, H6 (typed durations) · Screens: `ShowManager`, `DanceRow`
+  - Note: durations are typed on the show's dance rows and kept on the dance; the total adds an optional interval between acts; the cast opens under a row on tap
 - ⬜ **6.3 Reuse and duplicate dances** · after 6.1, 2.3
   - Done when: One dance in two shows; duplicate a dance with its cast and figures
   - Requirements: H7 · Screens: `DanceRow`
