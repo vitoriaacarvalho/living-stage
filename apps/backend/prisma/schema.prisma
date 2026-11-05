@@ -83,6 +83,7 @@ model School {
   invite      Invite?
   dancers     Dancer[]
   dances      Dance[]
+  shows       Show[]
 
   @@map("school")
 }
@@ -124,6 +125,7 @@ model Dance {
   createdAt  DateTime     @default(now())
   cast       CastMember[]
   figures    Figure[]
+  showItems  ActItem[]
 
   @@index([schoolId])
   @@map("dance")
@@ -181,4 +183,48 @@ model Position {
 
   @@id([figureId, castMemberId])
   @@map("position")
+}
+
+model Show {
+  id        String    @id @default(cuid())
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title     String
+  date      DateTime  @db.Date
+  time      String?
+  venue     String?
+  createdAt DateTime  @default(now())
+  acts      Act[]
+  items     ActItem[]
+
+  @@index([schoolId])
+  @@map("show")
+}
+
+model Act {
+  id     String    @id @default(cuid())
+  showId String
+  show   Show      @relation(fields: [showId], references: [id], onDelete: Cascade)
+  order  Int
+  name   String?
+  items  ActItem[]
+
+  @@unique([showId, order])
+  @@map("act")
+}
+
+// showId repeats the act's show so the database can refuse a dance twice in one show.
+model ActItem {
+  id      String @id @default(cuid())
+  showId  String
+  show    Show   @relation(fields: [showId], references: [id], onDelete: Cascade)
+  actId   String
+  act     Act    @relation(fields: [actId], references: [id], onDelete: Cascade)
+  danceId String
+  dance   Dance  @relation(fields: [danceId], references: [id], onDelete: Cascade)
+  order   Int
+
+  @@unique([actId, order])
+  @@unique([showId, danceId])
+  @@map("act_item")
 }
