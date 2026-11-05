@@ -165,20 +165,50 @@ type DanceRowProps = { dance: ShowDance; place: number; tools: RowTools };
 
 function DanceRow({ dance, place, tools }: DanceRowProps) {
   const { node, handle, isDragging } = useDragged(dance.id, 'dance');
+  const [castOpen, setCastOpen] = useState(false);
   return (
     <li {...node} className={isDragging ? `${styles.row} ${styles.lifted}` : styles.row}>
       <Grip label={dance.title} handle={handle} kind="dance" />
       <span className={styles.order}>{String(place).padStart(2, '0')}</span>
       <span className={styles.what}>
         <span className={styles.danceTitle}>{dance.title}</span>
-        <span className={styles.cast}>
+        <button
+          type="button"
+          className={styles.cast}
+          aria-expanded={castOpen}
+          aria-controls={`${dance.id}-cast`}
+          onClick={() => setCastOpen(!castOpen)}
+        >
           <Icon name="users" />
           {dancerCount(dance.castCount)}
-        </span>
+        </button>
       </span>
       <Duration dance={dance} onSave={tools.saveDuration} />
       <Button variant="ghost" icon="x" aria-label={tools.removeLabel} onClick={tools.remove} />
+      {castOpen && <CastNames id={`${dance.id}-cast`} dance={dance} />}
     </li>
+  );
+}
+
+function CastNames({ id, dance }: { id: string; dance: ShowDance }) {
+  if (dance.cast.length === 0) {
+    return (
+      <p id={id} className={styles.castNames}>
+        Nobody is cast in {dance.title} yet.
+      </p>
+    );
+  }
+  return (
+    <ul id={id} className={styles.castNames} aria-label={`Cast of ${dance.title}`}>
+      {dance.cast.map((member) => (
+        <li key={member.id}>
+          <span className={member.name ? undefined : styles.openSpot}>
+            {member.name ?? 'Open spot'}
+          </span>
+          {member.role && <span className={styles.castRole}>{member.role}</span>}
+        </li>
+      ))}
+    </ul>
   );
 }
 

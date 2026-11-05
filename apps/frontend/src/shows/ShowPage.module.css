@@ -119,9 +119,57 @@
   flex: none;
   align-items: center;
   gap: var(--space-1);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-2);
+  margin-left: calc(-1 * var(--space-2));
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--ink-muted);
   font: var(--text-label);
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.cast[aria-expanded='true'] {
+  color: var(--primary-strong);
+}
+
+@media (hover: hover) {
+  .cast:hover {
+    background: var(--surface-sunken);
+  }
+}
+
+.row {
+  flex-wrap: wrap;
+}
+
+.castNames {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  flex: 1 1 100%;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: var(--space-2) 0 var(--space-1) calc(var(--touch-min) + 24px + var(--space-3));
+  border-top: 1px solid var(--hairline);
+  list-style: none;
+  font: var(--text-label);
+}
+
+.castNames > li {
+  display: flex;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.castRole {
+  color: var(--ink-muted);
+}
+
+.openSpot {
+  color: var(--ink-muted);
 }
 
 .cast svg {

@@ -504,3 +504,67 @@ describe('durations', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not save the time');
   });
 });
+
+describe('cast of a dance', () => {
+  const cast = [
+    { id: 'cast-1', name: 'Clara', role: 'Kitri' },
+    { id: 'cast-2', name: null, role: null },
+  ];
+
+  function withCast() {
+    vi.mocked(fetchShow).mockResolvedValue({
+      ...gala,
+      acts: [
+        { ...gala.acts[0]!, dances: [{ ...gala.acts[0]!.dances[0]!, castCount: 2, cast }] },
+        gala.acts[1]!,
+      ],
+    });
+  }
+
+  test('keeps the cast closed at first', async () => {
+    withCast();
+    renderPage();
+    await screen.findByRole('list', { name: 'Acts' });
+    expect(screen.queryByRole('list', { name: 'Cast of Kitri variation' })).not.toBeInTheDocument();
+  });
+
+  test('opens the names and roles under the row', async () => {
+    withCast();
+    const { user } = renderPage();
+    await user.click(await screen.findByRole('button', { name: '2 dancers' }));
+    expect(screen.getByRole('list', { name: 'Cast of Kitri variation' })).toHaveTextContent(
+      'ClaraKitriOpen spot',
+    );
+  });
+
+  test('says the cast is open', async () => {
+    withCast();
+    const { user } = renderPage();
+    await user.click(await screen.findByRole('button', { name: '2 dancers' }));
+    expect(screen.getByRole('button', { name: '2 dancers' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  test('closes the cast on a second tap', async () => {
+    withCast();
+    const { user } = renderPage();
+    await user.click(await screen.findByRole('button', { name: '2 dancers' }));
+    await user.click(screen.getByRole('button', { name: '2 dancers' }));
+    expect(screen.queryByRole('list', { name: 'Cast of Kitri variation' })).not.toBeInTheDocument();
+  });
+
+  test('says when nobody is cast yet', async () => {
+    vi.mocked(fetchShow).mockResolvedValue({
+      ...gala,
+      acts: [
+        { ...gala.acts[0]!, dances: [{ ...gala.acts[0]!.dances[0]!, castCount: 0 }] },
+        gala.acts[1]!,
+      ],
+    });
+    const { user } = renderPage();
+    await user.click(await screen.findByRole('button', { name: '0 dancers' }));
+    expect(screen.getByText('Nobody is cast in Kitri variation yet.')).toBeInTheDocument();
+  });
+});
