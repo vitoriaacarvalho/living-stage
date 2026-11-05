@@ -159,11 +159,11 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part D — Paths and animation
 
-- **D1.** Each dancer's move between two figures is a straight line by default.
+- ✅ **D1.** Each dancer's move between two figures is a straight line by default.
 - **D2.** A path can be bent into a curve by dragging handles, or given waypoints.
 - **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
-- **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
-- **D5.** Playback can run without music too, with a default duration per transition.
+- ✅ **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
+- ✅ **D5.** Playback can run without music too, with a default duration per transition.
 
 ### Part E — Music timeline *(after the MVP, except E9)*
 
@@ -369,7 +369,7 @@ First milestone to show real teachers.
 - ✅ **2.4 Dragging and selection** · after 2.3
   - Done when: Drag one or many dancers on the plan, with optional snapping, by finger and mouse
   - Requirements: C8, C9 · Screens: `Stage`
-- ⬜ **2.7 Straight-line playback** · after 2.3
+- 🟨 **2.7 Straight-line playback** · after 2.3
   - Done when: 40 dancers animate smoothly between figures without music on an iPad
   - Requirements: D1, D4, D5, E9 · Screens: `Timeline`, `Stage`
   - Note: the 40-dancer cap is enforced here, on the cast route (409 `cast_full`) and in the cast picker
