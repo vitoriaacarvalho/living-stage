@@ -84,6 +84,14 @@ export {
   type PositionsUpdate,
 } from './placement.ts';
 export {
+  TRANSITION_MS,
+  easeInOutCubic,
+  figureTimeMs,
+  playbackLengthMs,
+  stageAt,
+  type StageMoment,
+} from './playback.ts';
+export {
   SCHOOL_NAME_MAX_LENGTH,
   parseSchoolName,
   type CreateSchoolRequest,
