@@ -34,14 +34,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const selected = { id: 'figure-1', editable: true };
+
 function renderStrip(onReorder = vi.fn().mockResolvedValue(undefined), onSelect = vi.fn()) {
   render(
-    <FigureStrip
-      figures={figures}
-      selectedId="figure-1"
-      onSelect={onSelect}
-      onReorder={onReorder}
-    />,
+    <FigureStrip figures={figures} active={selected} onSelect={onSelect} onReorder={onReorder} />,
   );
   return { onReorder, onSelect, user: userEvent.setup() };
 }
@@ -58,6 +55,23 @@ test('shows the figures in order', () => {
 test('marks the selected figure', () => {
   renderStrip();
   expect(chips()[0]).toHaveAttribute('aria-current', 'true');
+});
+
+test('shows the pencil on the selected figure', () => {
+  renderStrip();
+  expect(chips()[0]!.querySelector('svg')).not.toBeNull();
+});
+
+test('marks the figure being reached without the pencil', () => {
+  render(
+    <FigureStrip
+      figures={figures}
+      active={{ id: 'figure-2', editable: false }}
+      onSelect={vi.fn()}
+      onReorder={vi.fn()}
+    />,
+  );
+  expect(chips()[1]!.querySelector('svg')).toBeNull();
 });
 
 test('selects a figure when tapped', async () => {

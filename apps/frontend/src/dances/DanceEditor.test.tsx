@@ -618,3 +618,108 @@ describe('dragging on the 2D plan', () => {
     expect(screen.getByTestId('dancer')).not.toHaveClass(/selected/);
   });
 });
+
+describe('playback', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: 'Entrance',
+        positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
+      },
+    ]);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function play() {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Play' }));
+    return user;
+  }
+
+  function chip(name: string) {
+    return within(screen.getByRole('list', { name: 'Figures' })).getByRole('button', { name });
+  }
+
+  test('shows the playback time over the length', async () => {
+    await openKitri();
+    expect(screen.getByText('/ 00:04')).toBeInTheDocument();
+  });
+
+  test('turns Play into Pause while playing', async () => {
+    await play();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+  });
+
+  test('turns dragging off while playing', async () => {
+    await play();
+    expect(screen.queryByTestId('dancer-hit')).not.toBeInTheDocument();
+  });
+
+  test('keeps dragging off while paused between figures', async () => {
+    const user = await play();
+    await user.click(screen.getByRole('button', { name: 'Pause' }));
+    expect(screen.queryByTestId('dancer-hit')).not.toBeInTheDocument();
+  });
+
+  test('marks the figure being reached', async () => {
+    await play();
+    expect(chip('Entrance')).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('stops when a figure is tapped', async () => {
+    const user = await play();
+    await user.click(chip('Figure 1'));
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+
+  test('turns dragging back on once a figure is tapped', async () => {
+    const user = await play();
+    await user.click(chip('Entrance'));
+    expect(screen.getByTestId('dancer-hit')).toBeInTheDocument();
+  });
+
+  test('jumps to the tapped figure', async () => {
+    const user = await play();
+    await user.click(chip('Entrance'));
+    expect(chip('Entrance')).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('does not open the figure panel when a tap stops playback', async () => {
+    const user = await play();
+    await user.click(chip('Entrance'));
+    expect(screen.queryByRole('complementary', { name: 'Figure' })).not.toBeInTheDocument();
+  });
+
+  test('stops when a figure is added', async () => {
+    vi.mocked(copyFigure).mockResolvedValue({
+      id: 'figure-3',
+      order: 2,
+      name: null,
+      positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
+    });
+    const user = await play();
+    await user.click(screen.getByRole('button', { name: 'New figure' }));
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+
+  test('cannot play a dance with a single figure', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      { id: 'figure-1', order: 0, name: null, positions: [] },
+    ]);
+    await openKitri();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
+  });
+});

@@ -1,7 +1,7 @@
 import { type Figure, figureTimeMs, playbackLengthMs } from '@living-stage/shared';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
-export type PlaybackStatus = 'stopped' | 'playing' | 'paused';
+export type Playback = ReturnType<typeof usePlayback>;
 
 type Clock = { status: 'stopped' } | { status: 'playing' | 'paused'; atMs: number };
 

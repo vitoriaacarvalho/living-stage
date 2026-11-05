@@ -53,6 +53,18 @@
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
 }
 
+/* The timeline band runs to the edges of the main column, like the design's Timeline. */
+.timeline {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 calc(-1 * var(--space-4)) calc(-1 * var(--space-4));
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--hairline);
+  background: var(--surface);
+}
+
 .viewControls {
   display: flex;
   flex: none;
@@ -107,5 +119,10 @@
 
   .main {
     padding: var(--space-3) var(--space-5) var(--space-5);
+  }
+
+  .timeline {
+    margin: 0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5));
+    padding: var(--space-3) var(--space-5) var(--space-4);
   }
 }

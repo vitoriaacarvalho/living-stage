@@ -21,7 +21,14 @@ const paths = {
       <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
     </>
   ),
+  pause: (
+    <>
+      <rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none" />
+      <rect x="13.7" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none" />
+    </>
+  ),
   pencil: <path d="M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4zM13.5 6.5l4 4" />,
+  play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   plus: <path d="M12 5v14M5 12h14" />,
   x: <path d="M6 6l12 12M18 6L6 18" />,
 } satisfies Record<string, ReactNode>;

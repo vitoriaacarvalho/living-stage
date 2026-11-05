@@ -1,4 +1,4 @@
-import type { Dance, FigureCopy, Position } from '@living-stage/shared';
+import { stageAt, type Dance, type FigureCopy, type Position } from '@living-stage/shared';
 import { type CSSProperties, useEffect, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
@@ -7,6 +7,8 @@ import { useCast } from '../cast/useCast.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
+import { Transport } from '../playback/Transport.tsx';
+import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
@@ -43,6 +45,14 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const selection = selectedIds.every((id) => castIds.includes(id)) ? selectedIds : [];
   const figures = cast.status === 'ready' ? cast.figures : [];
   const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
+  const playback = usePlayback({
+    figures,
+    selectedIndex: figure ? figures.indexOf(figure) : 0,
+    onFinish: setSelectedFigureId,
+  });
+  // Editing is only on while playback is stopped at a figure.
+  const stopped = playback.status === 'stopped';
+  const moment = stopped ? null : stageAt(figures, playback.timeMs);
   const dancers =
     cast.status === 'ready' && figure ? stageDancers(cast.cast, figure.positions, dance) : [];
 
@@ -64,12 +74,14 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   // Tapping the selected figure again opens its panel. The id is kept even then, since
   // the first figure is only selected by default and may be moved away from first place.
   function selectFigure(figureId: string) {
-    if (figureId === figure?.id) setFigurePanelOpen(true);
+    if (stopped && figureId === figure?.id) setFigurePanelOpen(true);
+    playback.stop();
     setSelectedFigureId(figureId);
   }
 
   async function copyFigure(placement: FigureCopy['placement']) {
     if (!figure) return;
+    playback.stop();
     const copy = await castActions.copyFigure({ copyOf: figure.id, placement });
     setSelectedFigureId(copy.id);
   }
@@ -78,9 +90,15 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   async function deleteFigure(figureId: string) {
     const index = figures.findIndex(({ id }) => id === figureId);
     const next = figures[index - 1] ?? figures[index + 1];
+    playback.stop();
     await castActions.deleteFigure(figureId);
     setSelectedFigureId(next?.id ?? null);
     setFigurePanelOpen(false);
+  }
+
+  function reorderFigures(figureIds: string[]) {
+    playback.stop();
+    return castActions.reorderFigures(figureIds);
   }
 
   // Shown right away; put back if saving fails.
@@ -143,22 +161,29 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               <Stage
                 showGuides={dance.showGuides}
                 dancers={dancers}
-                edit={{
-                  selectedIds: selection,
-                  snap: snapping,
-                  onSelect: setSelectedIds,
-                  onMove: moveDancers,
-                }}
+                edit={
+                  stopped
+                    ? {
+                        selectedIds: selection,
+                        snap: snapping,
+                        onSelect: setSelectedIds,
+                        onMove: moveDancers,
+                      }
+                    : undefined
+                }
               />
             </div>
           </div>
           {figure && (
-            <FigureStrip
-              figures={figures}
-              selectedId={figure.id}
-              onSelect={selectFigure}
-              onReorder={castActions.reorderFigures}
-            />
+            <section className={styles.timeline} aria-label="Timeline">
+              <Transport playback={playback} />
+              <FigureStrip
+                figures={figures}
+                active={{ id: moment?.to.id ?? figure.id, editable: stopped }}
+                onSelect={selectFigure}
+                onReorder={reorderFigures}
+              />
+            </section>
           )}
         </main>
         {figurePanelOpen && figure ? (

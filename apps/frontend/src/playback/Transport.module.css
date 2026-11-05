@@ -1,0 +1,50 @@
+.transport {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.play {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-tool);
+  height: var(--touch-tool);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.play:hover:not(:disabled) {
+  background: var(--primary-strong);
+}
+
+.play:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.play svg {
+  width: 22px;
+  height: 22px;
+}
+
+.time {
+  margin: 0;
+  font: var(--text-numeric);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.length {
+  color: var(--ink-muted);
+  font: var(--text-label);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}

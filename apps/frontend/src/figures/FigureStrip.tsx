@@ -33,14 +33,18 @@ const instructions = {
     'To move a figure, press Space, move it with the arrow keys, then press Space again. Press Escape to cancel.',
 };
 
+// editable shows the pencil: tapping that chip again opens its panel. While playing, the
+// figure being reached is marked instead, without it.
+export type ActiveFigure = { id: string; editable: boolean };
+
 type FigureStripProps = {
   figures: Figure[];
-  selectedId: string;
+  active: ActiveFigure;
   onSelect: (figureId: string) => void;
   onReorder: (figureIds: string[]) => Promise<void>;
 };
 
-export function FigureStrip({ figures, selectedId, onSelect, onReorder }: FigureStripProps) {
+export function FigureStrip({ figures, active, onSelect, onReorder }: FigureStripProps) {
   const [failed, setFailed] = useState(false);
   const dragging = useRef(false);
   const ids = figures.map(({ id }) => id);
@@ -103,7 +107,7 @@ export function FigureStrip({ figures, selectedId, onSelect, onReorder }: Figure
                 key={figure.id}
                 figure={figure}
                 label={figureLabel(figure, index)}
-                selected={figure.id === selectedId}
+                mark={figure.id !== active.id ? null : active.editable ? 'selected' : 'reached'}
                 onTap={() => {
                   if (!dragging.current) onSelect(figure.id);
                 }}
@@ -121,9 +125,14 @@ export function FigureStrip({ figures, selectedId, onSelect, onReorder }: Figure
   );
 }
 
-type FigureChipProps = { figure: Figure; label: string; selected: boolean; onTap: () => void };
+type FigureChipProps = {
+  figure: Figure;
+  label: string;
+  mark: 'selected' | 'reached' | null;
+  onTap: () => void;
+};
 
-function FigureChip({ figure, label, selected, onTap }: FigureChipProps) {
+function FigureChip({ figure, label, mark, onTap }: FigureChipProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: figure.id,
   });
@@ -139,11 +148,11 @@ function FigureChip({ figure, label, selected, onTap }: FigureChipProps) {
         {...attributes}
         {...listeners}
         aria-roledescription="draggable figure"
-        aria-current={selected ? 'true' : undefined}
+        aria-current={mark ? 'true' : undefined}
         onClick={onTap}
       >
         {label}
-        {selected && <Icon name="pencil" />}
+        {mark === 'selected' && <Icon name="pencil" />}
       </button>
     </li>
   );
