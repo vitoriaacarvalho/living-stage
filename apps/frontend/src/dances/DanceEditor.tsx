@@ -1,4 +1,10 @@
-import { stageAt, type Dance, type FigureCopy, type Position } from '@living-stage/shared';
+import {
+  stageAt,
+  type Dance,
+  type FigureCopy,
+  type PathPoint,
+  type Position,
+} from '@living-stage/shared';
 import { type CSSProperties, useEffect, useState } from 'react';
 import { updateDance } from '../api/dances.ts';
 import { CastList } from '../cast/CastList.tsx';
@@ -72,6 +78,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   function moveDancers(positions: Position[]) {
     if (!figure) return;
     castActions.movePositions(figure.id, positions).catch(() => {});
+  }
+
+  function bendPath(castMemberId: string, points: PathPoint[]) {
+    if (!figure) return;
+    castActions.bendPath(figure.id, { castMemberId, points }).catch(() => {});
   }
 
   // Tapping the selected figure again opens its panel. The id is kept even then, since
@@ -172,6 +183,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                         snap: snapping,
                         onSelect: setSelectedIds,
                         onMove: moveDancers,
+                        onBend: bendPath,
                       }
                     : undefined
                 }

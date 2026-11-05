@@ -115,6 +115,7 @@ export {
   PLAN_BOUNDS,
   SNAP_DISTANCE_M,
   arrowStep,
+  clampToPlan,
   isInsidePlan,
   moveGroup,
   parsePositionsUpdate,

@@ -5,6 +5,7 @@ import {
   PLAN_BOUNDS,
   SNAP_DISTANCE_M,
   arrowStep,
+  clampToPlan,
   isInsidePlan,
   moveGroup,
   parsePositionsUpdate,
@@ -224,5 +225,15 @@ describe('parsePositionsUpdate', () => {
 
   test('rejects a cast member listed twice', () => {
     expect(parsePositionsUpdate({ positions: [position, { ...position, x: 0.2 }] })).toBeNull();
+  });
+});
+
+describe('clampToPlan', () => {
+  test('keeps a spot on the plan where it is', () => {
+    expect(clampToPlan({ x: 0.5, y: 0.5 })).toEqual({ x: 0.5, y: 0.5 });
+  });
+
+  test('brings a spot past a corner back onto the plan', () => {
+    expect(clampToPlan({ x: -9, y: 9 })).toEqual({ x: PLAN_BOUNDS.minX, y: PLAN_BOUNDS.maxY });
   });
 });

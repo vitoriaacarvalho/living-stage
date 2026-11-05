@@ -5,6 +5,7 @@ import type {
   Figure,
   FigureCopy,
   FigureUpdate,
+  Path,
   Position,
 } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ import {
   fetchFigures,
   moveFigurePositions,
   reorderFigures as putFigureOrder,
+  savePath,
   updateFigure,
 } from '../api/figures.ts';
 
@@ -35,6 +37,7 @@ export type CastActions = {
   reorderFigures: (figureIds: string[]) => Promise<void>;
   deleteFigure: (figureId: string) => Promise<void>;
   movePositions: (figureId: string, positions: Position[]) => Promise<void>;
+  bendPath: (figureId: string, path: Path) => Promise<void>;
 };
 
 export function useCast(schoolId: string, danceId: string): { state: CastState } & CastActions {
@@ -150,6 +153,21 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }
   }
 
+  // Shown right away; the path goes back to how it was if saving fails.
+  async function bendPath(figureId: string, path: Path) {
+    const figure =
+      state.status === 'ready' ? state.figures.find(({ id }) => id === figureId) : null;
+    const previous = figure?.paths.find(({ castMemberId }) => castMemberId === path.castMemberId);
+    const before = previous ?? { castMemberId: path.castMemberId, points: [] };
+    change(({ cast, figures }) => ({ cast, figures: withPath(figures, figureId, path) }));
+    try {
+      await savePath(schoolId, danceId, { figureId, castMemberId: path.castMemberId }, path.points);
+    } catch (error) {
+      change(({ cast, figures }) => ({ cast, figures: withPath(figures, figureId, before) }));
+      throw error;
+    }
+  }
+
   return {
     state,
     add,
@@ -161,6 +179,7 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     reorderFigures,
     deleteFigure,
     movePositions,
+    bendPath,
   };
 }
 
@@ -194,4 +213,13 @@ function placed(figures: Figure[], figureId: string, positions: Position[]) {
         }
       : figure,
   );
+}
+
+// A path with no points is straight, so it leaves the figure's list.
+function withPath(figures: Figure[], figureId: string, path: Path): Figure[] {
+  return figures.map((figure) => {
+    if (figure.id !== figureId) return figure;
+    const others = figure.paths.filter(({ castMemberId }) => castMemberId !== path.castMemberId);
+    return { ...figure, paths: path.points.length === 0 ? others : [...others, path] };
+  });
 }

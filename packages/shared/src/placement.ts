@@ -31,6 +31,11 @@ export function isInsidePlan({ x, y }: StagePoint): boolean {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
+export function clampToPlan({ x, y }: StagePoint): StagePoint {
+  const { minX, maxX, minY, maxY } = PLAN_BOUNDS;
+  return { x: clamp(x, minX, maxX), y: clamp(y, minY, maxY) };
+}
+
 // The delta is cut down so the whole group stops at the edge together and keeps its shape.
 export function moveGroup<T extends StagePoint>(points: T[], delta: StagePoint): T[] {
   const { minX, maxX, minY, maxY } = PLAN_BOUNDS;

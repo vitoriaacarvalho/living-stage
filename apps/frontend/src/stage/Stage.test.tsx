@@ -1,7 +1,7 @@
 import { PLAN_BOUNDS, STAGE_DEPTH_M, STAGE_WIDTH_M, type StagePoint } from '@living-stage/shared';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { Stage } from './Stage.tsx';
+import { Stage, type StagePath } from './Stage.tsx';
 
 test('is named as the stage seen from above', () => {
   render(<Stage showGuides />);
@@ -114,7 +114,7 @@ describe('editing', () => {
   const odile = { ...clara, id: 'cast-2', dancerId: 'dancer-2', label: 'Odile', x: 0.25 };
 
   function editing(selectedIds: string[] = []) {
-    return { selectedIds, snap: false, onSelect: vi.fn(), onMove: vi.fn() };
+    return { selectedIds, snap: false, onSelect: vi.fn(), onMove: vi.fn(), onBend: vi.fn() };
   }
 
   function hitOf(label: string) {
@@ -577,5 +577,160 @@ describe('paths', () => {
   test('draws no path for a dancer not on the plan', () => {
     render(<Stage showGuides dancers={[]} paths={[fromLeft]} />);
     expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+});
+
+describe('bending a path', () => {
+  const crossing = { ...clara, x: 0.8, y: 0.5 };
+  const fromLeft: StagePath = { id: crossing.id, from: { x: 0.2, y: 0.5 }, points: [] };
+  const moveM = 7.2;
+  const spanX = PLAN_BOUNDS.maxX - PLAN_BOUNDS.minX;
+  const spanY = PLAN_BOUNDS.maxY - PLAN_BOUNDS.minY;
+  const client = ({ x, y }: StagePoint) => ({
+    clientX: ((x - PLAN_BOUNDS.minX) / spanX) * 1500,
+    clientY: ((y - PLAN_BOUNDS.minY) / spanY) * 900,
+  });
+
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      DOMRect.fromRect({ width: 1500, height: 900 }),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function editing(selectedIds = [crossing.id]) {
+    return { selectedIds, snap: false, onSelect: vi.fn(), onMove: vi.fn(), onBend: vi.fn() };
+  }
+
+  function renderBending(edit = editing(), path = fromLeft) {
+    render(
+      <Stage
+        showGuides
+        dancers={[crossing, { ...clara, id: 'cast-2', x: 0.1 }]}
+        paths={[path]}
+        edit={edit}
+      />,
+    );
+    return edit;
+  }
+
+  function dragHandle(to: StagePoint) {
+    const handle = screen.getByTestId('path-handle');
+    fireEvent.pointerDown(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
+    fireEvent.pointerMove(handle, { pointerId: 1, ...client(to) });
+    fireEvent.pointerUp(handle, { pointerId: 1, ...client(to) });
+  }
+
+  test('offers a handle on the path of the one selected dancer', () => {
+    renderBending();
+    expect(screen.getByRole('button', { name: 'Bend the path of Clara' })).toBeInTheDocument();
+  });
+
+  test('puts the handle of a straight path halfway along it', () => {
+    renderBending();
+    const left = parseFloat(screen.getByTestId('path-handle').style.left);
+    expect(left).toBeCloseTo(((0.5 - PLAN_BOUNDS.minX) / spanX) * 100);
+  });
+
+  test('offers no handle with two dancers selected', () => {
+    renderBending(editing([crossing.id, 'cast-2']));
+    expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
+  });
+
+  test('offers no handle on a move shorter than 1.5 m', () => {
+    renderBending(editing(), { ...fromLeft, from: { x: 0.8 - 1.4 / 12, y: 0.5 } });
+    expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
+  });
+
+  test('offers a handle on a move of 1.5 m', () => {
+    renderBending(editing(), { ...fromLeft, from: { x: 0.8 - 1.5 / 12, y: 0.5 } });
+    expect(screen.getByTestId('path-handle')).toBeInTheDocument();
+  });
+
+  test('offers no handle while the plan is only shown', () => {
+    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
+  });
+
+  test('saves the bend where the handle is let go', () => {
+    const edit = renderBending();
+    dragHandle({ x: 0.5, y: 0.3 });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [
+      { along: expect.closeTo(0.5), side: expect.closeTo((0.2 * 8) / moveM) },
+    ]);
+  });
+
+  test('bends the line while the handle is dragged', () => {
+    const { container } = render(
+      <Stage showGuides dancers={[crossing]} paths={[fromLeft]} edit={editing()} />,
+    );
+    const handle = screen.getByTestId('path-handle');
+    fireEvent.pointerDown(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
+    fireEvent.pointerMove(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.3 }) });
+    const points = container.querySelector('polyline')!.getAttribute('points')!.split(' ');
+    const ys = points.map((pair) => Number(pair.split(',')[1]));
+    expect(Math.min(...ys)).toBeCloseTo(0.3 * STAGE_DEPTH_M, 1);
+  });
+
+  test('straightens the path when the handle is let go within 30 cm of the line', () => {
+    const edit = renderBending();
+    dragHandle({ x: 0.5, y: 0.5 - 0.25 / 8 });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, []);
+  });
+
+  test('keeps the bend when the handle is let go just past 30 cm from the line', () => {
+    const edit = renderBending();
+    dragHandle({ x: 0.5, y: 0.5 - 0.35 / 8 });
+    expect(vi.mocked(edit.onBend).mock.calls[0]![1]).toHaveLength(1);
+  });
+
+  test('saves nothing when the handle is only tapped', () => {
+    const edit = renderBending();
+    const handle = screen.getByTestId('path-handle');
+    fireEvent.pointerDown(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
+    fireEvent.pointerUp(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
+    expect(edit.onBend).not.toHaveBeenCalled();
+  });
+
+  test('keeps the selection when the handle is pressed', () => {
+    const edit = renderBending();
+    dragHandle({ x: 0.5, y: 0.3 });
+    expect(edit.onSelect).not.toHaveBeenCalled();
+  });
+
+  test('keeps the handle on the plan when dragged past its edge', () => {
+    const edit = renderBending();
+    dragHandle({ x: 0.5, y: -5 });
+    const [[, [point]]] = vi.mocked(edit.onBend).mock.calls as [[string, { side: number }[]]];
+    expect(point!.side).toBeCloseTo(((0.5 - PLAN_BOUNDS.minY) * 8) / moveM);
+  });
+
+  test('bends the path a quarter metre with an arrow key', () => {
+    const edit = renderBending();
+    fireEvent.keyDown(screen.getByTestId('path-handle'), { key: 'ArrowUp' });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [
+      { along: expect.closeTo(0.5), side: expect.closeTo(0.25 / moveM) },
+    ]);
+  });
+
+  test('bends the path a metre with Shift and an arrow key', () => {
+    const edit = renderBending();
+    fireEvent.keyDown(screen.getByTestId('path-handle'), { key: 'ArrowUp', shiftKey: true });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [
+      { along: expect.closeTo(0.5), side: expect.closeTo(1 / moveM) },
+    ]);
+  });
+
+  test('straightens the path when an arrow key brings the handle back to the line', () => {
+    const edit = renderBending(editing(), {
+      ...fromLeft,
+      points: [{ along: 0.5, side: 0.25 / moveM }],
+    });
+    fireEvent.keyDown(screen.getByTestId('path-handle'), { key: 'ArrowDown' });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, []);
   });
 });

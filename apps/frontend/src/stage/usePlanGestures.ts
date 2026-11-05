@@ -5,6 +5,7 @@ import {
   arrowStep,
   moveGroup,
   snapToGuides,
+  type PathPoint,
   type Position,
   type StagePoint,
 } from '@living-stage/shared';
@@ -16,6 +17,8 @@ export type StageEditing = {
   snap: boolean;
   onSelect: (ids: string[]) => void;
   onMove: (positions: Position[]) => void;
+  // No points makes the path straight again.
+  onBend: (castMemberId: string, points: PathPoint[]) => void;
 };
 
 type Press = { pointerId: number; start: { clientX: number; clientY: number }; moved: boolean };
@@ -43,7 +46,7 @@ type GestureSetup = {
 };
 
 // A press that travels less than this is a tap, so a shaky finger doesn't move anyone.
-const TAP_SLOP_PX = 4;
+export const TAP_SLOP_PX = 4;
 
 const spanX = PLAN_BOUNDS.maxX - PLAN_BOUNDS.minX;
 const spanY = PLAN_BOUNDS.maxY - PLAN_BOUNDS.minY;
@@ -71,17 +74,20 @@ function snapped(
   return { x: target.x - origin.x, y: target.y - origin.y };
 }
 
+// The plan box spans exactly PLAN_BOUNDS, so its pixels map straight onto stage units.
+export function stagePointAt(plan: HTMLElement, clientX: number, clientY: number): StagePoint {
+  const rect = plan.getBoundingClientRect();
+  return {
+    x: PLAN_BOUNDS.minX + ((clientX - rect.left) / rect.width) * spanX,
+    y: PLAN_BOUNDS.minY + ((clientY - rect.top) / rect.height) * spanY,
+  };
+}
+
 export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
   const [gesture, setGesture] = useState<Gesture | null>(null);
 
-  // The plan box spans exactly PLAN_BOUNDS, so its pixels map straight onto stage units.
-  function toStage(clientX: number, clientY: number): StagePoint {
-    const rect = planRef.current!.getBoundingClientRect();
-    return {
-      x: PLAN_BOUNDS.minX + ((clientX - rect.left) / rect.width) * spanX,
-      y: PLAN_BOUNDS.minY + ((clientY - rect.top) / rect.height) * spanY,
-    };
-  }
+  const toStage = (clientX: number, clientY: number) =>
+    stagePointAt(planRef.current!, clientX, clientY);
 
   const moved = gesture?.kind === 'drag' ? moveGroup(gesture.origins, gesture.delta) : [];
   const shown = dancers.map((dancer) => {

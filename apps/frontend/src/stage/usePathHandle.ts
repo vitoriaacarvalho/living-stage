@@ -1,0 +1,110 @@
+import {
+  ARROW_LARGE_STEP_M,
+  ARROW_STEP_M,
+  PATH_HANDLE_MIN_M,
+  arrowStep,
+  clampToPlan,
+  isNearlyStraight,
+  moveLengthM,
+  pathPointAt,
+  pathPointSpot,
+  type PathPoint,
+  type StagePoint,
+} from '@living-stage/shared';
+import { type KeyboardEvent, type PointerEvent, type RefObject, useState } from 'react';
+import type { StagePath } from './PathLayer.tsx';
+import type { StageDancer } from './Stage.tsx';
+import { TAP_SLOP_PX, stagePointAt, type StageEditing } from './usePlanGestures.ts';
+
+// A straight path's handle sits halfway along it.
+const MIDDLE: PathPoint = { along: 0.5, side: 0 };
+
+type Bending = {
+  pointerId: number;
+  start: { clientX: number; clientY: number };
+  point: PathPoint;
+  moved: boolean;
+};
+
+export type PathHandle = {
+  dancer: StageDancer;
+  spot: StagePoint;
+  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
+  onPointerMove: (event: PointerEvent<HTMLElement>) => void;
+  onPointerUp: (event: PointerEvent<HTMLElement>) => void;
+  onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+};
+
+type HandleSetup = {
+  paths: StagePath[];
+  dancers: StageDancer[];
+  edit: StageEditing | undefined;
+  planRef: RefObject<HTMLElement | null>;
+};
+
+// Only one selected dancer's path gets a handle, and only on a move long enough that the
+// handle stays clear of her own drag area.
+export function usePathHandle({ paths, dancers, edit, planRef }: HandleSetup) {
+  const [bending, setBending] = useState<Bending | null>(null);
+  const path =
+    edit?.selectedIds.length === 1 ? paths.find(({ id }) => id === edit.selectedIds[0]) : undefined;
+  const dancer = path && dancers.find(({ id }) => id === path.id);
+  const point = bending?.point ?? path?.points[0] ?? MIDDLE;
+  const drawn =
+    bending && path
+      ? paths.map((each) => (each === path ? { ...each, points: [point] } : each))
+      : paths;
+
+  if (!edit || !path || !dancer || moveLengthM(path.from, dancer) < PATH_HANDLE_MIN_M) {
+    return { drawn, handle: null };
+  }
+  const { from } = path;
+
+  // Within reach of the straight line the bend goes, so the path is straight again.
+  function save(bent: PathPoint, straight: boolean) {
+    edit!.onBend(path!.id, straight ? [] : [bent]);
+  }
+
+  const handle: PathHandle = {
+    dancer,
+    spot: clampToPlan(pathPointSpot(from, dancer, point)),
+    onPointerDown(event) {
+      event.stopPropagation();
+      if (bending) return;
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const { pointerId, clientX, clientY } = event;
+      setBending({ pointerId, start: { clientX, clientY }, point, moved: false });
+    },
+    onPointerMove(event) {
+      if (!bending || event.pointerId !== bending.pointerId) return;
+      const { clientX, clientY } = event;
+      const travelled = Math.hypot(
+        clientX - bending.start.clientX,
+        clientY - bending.start.clientY,
+      );
+      if (!bending.moved && travelled < TAP_SLOP_PX) return;
+      const spot = clampToPlan(stagePointAt(planRef.current!, clientX, clientY));
+      setBending({ ...bending, moved: true, point: pathPointAt(from, dancer, spot) });
+    },
+    onPointerUp(event) {
+      if (!bending || event.pointerId !== bending.pointerId) return;
+      if (bending.moved) save(bending.point, isNearlyStraight(from, dancer, bending.point));
+      setBending(null);
+    },
+    onPointerCancel(event) {
+      if (bending && event.pointerId === bending.pointerId) setBending(null);
+    },
+    // Snapping by key works within half a step, or one press could never leave the line.
+    onKeyDown(event) {
+      const step = arrowStep(event.key, event.shiftKey ? ARROW_LARGE_STEP_M : ARROW_STEP_M);
+      if (!step || bending) return;
+      event.preventDefault();
+      const spot = pathPointSpot(from, dancer, point);
+      const moved = clampToPlan({ x: spot.x + step.x, y: spot.y + step.y });
+      const bent = pathPointAt(from, dancer, moved);
+      save(bent, Math.abs(bent.side) * moveLengthM(from, dancer) < ARROW_STEP_M / 2);
+    },
+  };
+  return { drawn, handle };
+}

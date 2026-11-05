@@ -5,6 +5,7 @@ import type {
   FigureResponse,
   FigureUpdate,
   ListFiguresResponse,
+  PathPoint,
   PositionsUpdate,
 } from '@living-stage/shared';
 
@@ -93,4 +94,28 @@ export async function deleteFigure(
     method: 'DELETE',
   });
   if (!res.ok) throw new Error(`DELETE figure answered ${res.status}`);
+}
+
+type PathKey = { figureId: string; castMemberId: string };
+
+// No points makes the path straight, which is the same as having none.
+export async function savePath(
+  schoolId: string,
+  danceId: string,
+  { figureId, castMemberId }: PathKey,
+  points: PathPoint[],
+): Promise<void> {
+  const url = `/api/schools/${schoolId}/dances/${danceId}/figures/${figureId}/paths/${castMemberId}`;
+  const res = await fetch(
+    url,
+    points.length === 0
+      ? { method: 'DELETE' }
+      : {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ points }),
+        },
+  );
+  if (!res.ok)
+    throw new Error(`${points.length === 0 ? 'DELETE' : 'PUT'} path answered ${res.status}`);
 }

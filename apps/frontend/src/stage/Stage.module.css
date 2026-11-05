@@ -225,3 +225,32 @@
 .arrow {
   fill: var(--dot);
 }
+
+/* The hit area is touch-min; the ring drawn inside it is what the teacher sees. */
+.handle {
+  position: absolute;
+  z-index: 2;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  margin: calc(var(--touch-min) / -2) 0 0 calc(var(--touch-min) / -2);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--stage-floor) 0 5px,
+    var(--stage-accent) 5px 7px,
+    transparent 7px
+  );
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.handle:focus-visible {
+  outline: 2px solid var(--stage-accent);
+  outline-offset: -8px;
+}

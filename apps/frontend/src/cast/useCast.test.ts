@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchCast } from '../api/cast.ts';
-import { fetchFigures, moveFigurePositions, reorderFigures } from '../api/figures.ts';
+import { fetchFigures, moveFigurePositions, reorderFigures, savePath } from '../api/figures.ts';
 import { useCast } from './useCast.ts';
 
 vi.mock('../api/cast.ts', () => ({ fetchCast: vi.fn() }));
@@ -9,6 +9,7 @@ vi.mock('../api/figures.ts', () => ({
   fetchFigures: vi.fn(),
   moveFigurePositions: vi.fn(),
   reorderFigures: vi.fn(),
+  savePath: vi.fn(),
 }));
 
 const entrance = {
@@ -33,6 +34,7 @@ beforeEach(() => {
   vi.mocked(fetchFigures).mockReset().mockResolvedValue([entrance, finale]);
   vi.mocked(reorderFigures).mockReset();
   vi.mocked(moveFigurePositions).mockReset();
+  vi.mocked(savePath).mockReset().mockResolvedValue();
 });
 
 async function loadedCast() {
@@ -122,5 +124,57 @@ describe('movePositions', () => {
     await act(() => hook.result.current.movePositions('figure-1', [moved]));
     const { state } = hook.result.current;
     expect(state.status === 'ready' && state.figures[1]).toEqual(finale);
+  });
+});
+
+describe('bendPath', () => {
+  const bent = { castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }] };
+  const straight = { castMemberId: 'cast-1', points: [] };
+
+  function finalePaths(hook: Awaited<ReturnType<typeof loadedCast>>) {
+    const { state } = hook.result.current;
+    return state.status === 'ready' ? state.figures[1]!.paths : [];
+  }
+
+  test('shows the bend before it is saved', async () => {
+    vi.mocked(savePath).mockReturnValue(new Promise(() => {}));
+    const hook = await loadedCast();
+    act(() => {
+      hook.result.current.bendPath('figure-2', bent);
+    });
+    expect(finalePaths(hook)).toEqual([bent]);
+  });
+
+  test('saves the points of the path into this figure', async () => {
+    const hook = await loadedCast();
+    await act(() => hook.result.current.bendPath('figure-2', bent));
+    expect(savePath).toHaveBeenCalledWith(
+      'school-1',
+      'dance-1',
+      { figureId: 'figure-2', castMemberId: 'cast-1' },
+      bent.points,
+    );
+  });
+
+  test('drops a straightened path from the figure', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([entrance, { ...finale, paths: [bent] }]);
+    const hook = await loadedCast();
+    await act(() => hook.result.current.bendPath('figure-2', straight));
+    expect(finalePaths(hook)).toEqual([]);
+  });
+
+  test('puts a new bend back to straight when saving fails', async () => {
+    vi.mocked(savePath).mockRejectedValue(new Error('PUT path answered 500'));
+    const hook = await loadedCast();
+    await act(() => hook.result.current.bendPath('figure-2', bent).catch(() => {}));
+    expect(finalePaths(hook)).toEqual([]);
+  });
+
+  test('puts the earlier bend back when saving fails', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([entrance, { ...finale, paths: [bent] }]);
+    vi.mocked(savePath).mockRejectedValue(new Error('DELETE path answered 500'));
+    const hook = await loadedCast();
+    await act(() => hook.result.current.bendPath('figure-2', straight).catch(() => {}));
+    expect(finalePaths(hook)).toEqual([bent]);
   });
 });
