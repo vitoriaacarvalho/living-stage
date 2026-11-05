@@ -387,7 +387,7 @@ First milestone to show real teachers.
   - Note: durations are typed on the show's dance rows and kept on the dance; the total adds an optional interval between acts; the cast opens under a row on tap
 - ✅ **6.3 Reuse and duplicate dances** · after 6.1, 2.3
   - Done when: One dance in two shows; duplicate a dance with its cast and figures
-  - Requirements: H7 · Screens: `DanceRow`
+  - Requirements: H7 · Screens: `DanceCard` on Home
   - Note: Duplicate is a button on each dance card on Home; the copy, "X (copy)", takes everything but the shows and opens in its rename form
 
 #### MVP 5 — Movement and rehearsal
