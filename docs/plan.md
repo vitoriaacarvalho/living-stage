@@ -149,7 +149,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C5.** Dancers appear as colored circles on the plan; the label can show name, role or both.
 - ✅ **C6.** Dancers can be colored by their own color or by role, chosen per dance.
 - ✅ **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
-- **C8.** Dancers are placed by dragging; several can be selected and moved together.
+- ✅ **C8.** Dancers are placed by dragging; several can be selected and moved together.
 - ✅ **C9.** Optional snapping to guide lines.
 - **C10.** Layout tools for a selection: mirror left/right, align in a line, spread evenly, arrange in a circle. *(after the MVP)*
 - **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one, as dashed circles. *(after the MVP)*
@@ -366,7 +366,7 @@ First milestone to show real teachers.
 - ✅ **2.3 Figures** · after 2.2
   - Done when: Add, duplicate, rename, reorder, delete figures
   - Requirements: C7 · Screens: `Toolbar`, `Timeline` (figure markers)
-- 🟨 **2.4 Dragging and selection** · after 2.3
+- ✅ **2.4 Dragging and selection** · after 2.3
   - Done when: Drag one or many dancers on the plan, with optional snapping, by finger and mouse
   - Requirements: C8, C9 · Screens: `Stage`
 - ⬜ **2.7 Straight-line playback** · after 2.3
@@ -399,6 +399,7 @@ First milestone to show real teachers.
 - ⬜ **8.2 iPhone editor** · after 2.4
   - Done when: Quick edits work on iPhone; landscape hint for heavy editing
   - Requirements: K3 · Screens: `DanceEditorIPhone`
+  - Note: today the editor squeezes the stage to about 205 px wide on a 393 px iPhone, so dancers and names overlap; the full-bleed stage fixes it. Dragging and the keyboard already work there
 
 ### After the MVP
 
