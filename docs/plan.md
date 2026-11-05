@@ -244,9 +244,9 @@ Path          figureId, castMemberId, segments[]  (route arriving into this figu
 AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
 CostumePhoto  id, danceId, url, caption?
 
-Show          id, schoolId, title, date, venue?
-Act           id, showId, order, title
-ActItem       id, actId, danceId, order
+Show          id, schoolId, title, date, time?, venue?   (date is a calendar day and time a wall-clock time, kept as typed)
+Act           id, showId, order, name?   (numbered "Act 1" with an optional name; a show keeps at least one)
+ActItem       id, showId, actId, danceId, order   (a dance is in a show at most once; showId is there for that check)
 
 EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 ```
@@ -351,6 +351,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 - ⬜ **6.1 Shows and acts** · after 2.0
   - Done when: Create a show with acts holding dances
   - Requirements: H1, H2 · Screens: `ShowManager`, `ShowCard`, `DanceRow`
+  - Note: shows have an optional time; the only status is "Performed", from the date
 - ⬜ **6.2 Reordering** · after 6.1
   - Done when: Drag acts and dances into a new order
   - Requirements: H3 · Screens: `ShowManager`
@@ -468,5 +469,5 @@ Not ordered yet; plan it when the MVP ships.
 - [x] Deleted dancers: kept as placeholders
 - [x] MVP scope: shows, dances, casting, formations, the stage plan, paths, presentation mode and iPhone editing; see §1
 - [x] Stage view: 2D plan only, dancers as colored circles; the 3D stage and ballerinas were dropped (Nov 2026)
-- [ ] Deleting a dance: removed for good after a confirm in plan 2.0; revisit in plan 6.1, once a dance can belong to shows
+- [x] Deleting a dance: removed for good after a confirm; from plan 6.1 the confirm names the shows it is in, and it leaves them
 - [ ] App name: Living Stage check domain and trademark
