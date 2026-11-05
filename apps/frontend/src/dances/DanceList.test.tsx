@@ -1,11 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createDance, deleteDance, fetchDances, updateDance } from '../api/dances.ts';
+import { copyDance, createDance, deleteDance, fetchDances, updateDance } from '../api/dances.ts';
 import { DanceList } from './DanceList.tsx';
 
 vi.mock('../api/dances.ts', () => ({
   fetchDances: vi.fn(),
+  copyDance: vi.fn(),
   createDance: vi.fn(),
   updateDance: vi.fn(),
   deleteDance: vi.fn(),
@@ -36,6 +37,7 @@ const waltz = {
 
 beforeEach(() => {
   vi.mocked(fetchDances).mockReset().mockResolvedValue([kitri]);
+  vi.mocked(copyDance).mockReset();
   vi.mocked(createDance).mockReset();
   vi.mocked(updateDance).mockReset();
   vi.mocked(deleteDance).mockReset();
@@ -211,6 +213,59 @@ describe('renaming', () => {
     const user = await openRename();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(await cards()).toEqual(['Kitri variation']);
+  });
+});
+
+describe('duplicating', () => {
+  const copy = { ...kitri, id: 'dance-3', title: 'Kitri variation (copy)' };
+
+  async function duplicateKitri() {
+    const user = userEvent.setup();
+    render(<DanceList schoolId="school-1" onOpen={() => {}} />);
+    await user.click(await screen.findByRole('button', { name: 'Duplicate Kitri variation' }));
+    return user;
+  }
+
+  test('copies this dance in this school', async () => {
+    vi.mocked(copyDance).mockResolvedValue(copy);
+    await duplicateKitri();
+    expect(copyDance).toHaveBeenCalledWith('school-1', 'dance-1');
+  });
+
+  test('opens the rename form of the copy', async () => {
+    vi.mocked(copyDance).mockResolvedValue(copy);
+    await duplicateKitri();
+    expect(
+      await screen.findByRole('form', { name: 'Rename Kitri variation (copy)' }),
+    ).toBeInTheDocument();
+  });
+
+  test("starts the rename form from the copy's title", async () => {
+    vi.mocked(copyDance).mockResolvedValue(copy);
+    await duplicateKitri();
+    expect(await screen.findByLabelText('Title')).toHaveValue('Kitri variation (copy)');
+  });
+
+  test('puts the copy first', async () => {
+    vi.mocked(copyDance).mockResolvedValue(copy);
+    const user = await duplicateKitri();
+    await user.click(await screen.findByRole('button', { name: 'Cancel' }));
+    expect(await cards()).toEqual(['Kitri variation (copy)', 'Kitri variation']);
+  });
+
+  test('copies once when tapped again before the copy arrives', async () => {
+    vi.mocked(copyDance).mockReturnValue(new Promise(() => {}));
+    const user = await duplicateKitri();
+    await user.click(screen.getByRole('button', { name: 'Duplicate Kitri variation' }));
+    expect(copyDance).toHaveBeenCalledOnce();
+  });
+
+  test('says so when the dance cannot be duplicated', async () => {
+    vi.mocked(copyDance).mockRejectedValue(new Error('POST dance copy answered 500'));
+    await duplicateKitri();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not duplicate Kitri variation. Try again.',
+    );
   });
 });
 

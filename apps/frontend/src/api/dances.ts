@@ -3,6 +3,7 @@ import type {
   DanceInput,
   DanceResponse,
   DanceSummary,
+  DanceSummaryResponse,
   DanceUpdate,
   ListDancesResponse,
 } from '@living-stage/shared';
@@ -22,6 +23,15 @@ export async function createDance(schoolId: string, input: DanceInput): Promise<
   });
   if (!res.ok) throw new Error(`POST dance answered ${res.status}`);
   const body: DanceResponse = await res.json();
+  return body.dance;
+}
+
+export async function copyDance(schoolId: string, danceId: string): Promise<DanceSummary> {
+  const res = await fetch(`/api/schools/${schoolId}/dances/${danceId}/copies`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error(`POST dance copy answered ${res.status}`);
+  const body: DanceSummaryResponse = await res.json();
   return body.dance;
 }
 

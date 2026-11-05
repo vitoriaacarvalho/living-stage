@@ -10,6 +10,7 @@ import styles from './DanceList.module.css';
 import { useDances } from './useDances.ts';
 
 const loadError = 'Could not load the dances. Reload the page to try again.';
+const duplicateError = (title: string) => `Could not duplicate ${title}. Try again.`;
 
 const addedOn = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
@@ -24,7 +25,22 @@ type DanceListProps = { schoolId: string; onOpen: (dance: Dance) => void };
 export function DanceList({ schoolId, onOpen }: DanceListProps) {
   const { state, ...actions } = useDances(schoolId);
   const [editing, setEditing] = useState<Editing>(null);
+  const [duplicating, setDuplicating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const close = () => setEditing(null);
+
+  async function duplicate(dance: Dance) {
+    if (duplicating) return;
+    setError(null);
+    setDuplicating(true);
+    try {
+      setEditing({ dance: await actions.duplicate(dance.id) });
+    } catch {
+      setError(duplicateError(dance.title));
+    } finally {
+      setDuplicating(false);
+    }
+  }
 
   return (
     <section className={styles.section} aria-labelledby="dances-heading">
@@ -45,6 +61,11 @@ export function DanceList({ schoolId, onOpen }: DanceListProps) {
           {loadError}
         </p>
       )}
+      {error && (
+        <p role="alert" className={formStyles.error}>
+          {error}
+        </p>
+      )}
       {state.status === 'ready' && state.dances.length === 0 && (
         <p className={styles.empty}>
           No dances yet. Create one to cast dancers and plan its figures.
@@ -59,8 +80,11 @@ export function DanceList({ schoolId, onOpen }: DanceListProps) {
               ) : (
                 <DanceCard
                   dance={dance}
-                  onOpen={() => onOpen(dance)}
-                  onRename={() => setEditing({ dance })}
+                  on={{
+                    open: () => onOpen(dance),
+                    rename: () => setEditing({ dance }),
+                    duplicate: () => duplicate(dance),
+                  }}
                 />
               )}
             </li>
@@ -71,9 +95,11 @@ export function DanceList({ schoolId, onOpen }: DanceListProps) {
   );
 }
 
-type DanceCardProps = { dance: DanceSummary; onOpen: () => void; onRename: () => void };
+type DanceCardActions = { open: () => void; rename: () => void; duplicate: () => void };
 
-function DanceCard({ dance, onOpen, onRename }: DanceCardProps) {
+type DanceCardProps = { dance: DanceSummary; on: DanceCardActions };
+
+function DanceCard({ dance, on }: DanceCardProps) {
   return (
     <article className={styles.card}>
       <div className={styles.art}>
@@ -82,7 +108,7 @@ function DanceCard({ dance, onOpen, onRename }: DanceCardProps) {
       <div className={styles.body}>
         <div className={styles.cardHead}>
           <h3 className={styles.danceTitle}>
-            <button type="button" className={styles.open} onClick={onOpen}>
+            <button type="button" className={styles.open} onClick={on.open}>
               {dance.title}
             </button>
           </h3>
@@ -90,7 +116,13 @@ function DanceCard({ dance, onOpen, onRename }: DanceCardProps) {
             variant="ghost"
             icon="pencil"
             aria-label={`Rename ${dance.title}`}
-            onClick={onRename}
+            onClick={on.rename}
+          />
+          <Button
+            variant="ghost"
+            icon="copy"
+            aria-label={`Duplicate ${dance.title}`}
+            onClick={on.duplicate}
           />
         </div>
         <span className={styles.meta}>
