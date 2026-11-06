@@ -764,7 +764,7 @@ describe('waypoints', () => {
     vi.restoreAllMocks();
   });
 
-  function renderWinding() {
+  function renderWinding(through = points) {
     const edit = {
       selectedIds: [crossing.id],
       snap: false,
@@ -772,7 +772,8 @@ describe('waypoints', () => {
       onMove: vi.fn(),
       onBend: vi.fn(),
     };
-    render(<Stage showGuides dancers={[crossing]} paths={[winding]} edit={edit} />);
+    const path = { ...winding, points: through };
+    render(<Stage showGuides dancers={[crossing]} paths={[path]} edit={edit} />);
     return edit;
   }
 
@@ -824,5 +825,52 @@ describe('waypoints', () => {
       points[1],
       { along: expect.closeTo(0.75), side: expect.closeTo(2 / 7.2) },
     ]);
+  });
+
+  function tapLine(at: StagePoint, to: StagePoint = at) {
+    const line = screen.getByTestId('path-line');
+    fireEvent.pointerDown(line, { pointerId: 2, ...client(at) });
+    fireEvent.pointerUp(line, { pointerId: 2, ...client(to) });
+  }
+
+  test('adds a point where the line is tapped, between the points either side', () => {
+    const edit = renderWinding();
+    tapLine({ x: 0.5 + 0.125 * 0.6, y: 0.5 - 1 / 8 });
+    const saved = vi.mocked(edit.onBend).mock.calls[0]![1];
+    expect([saved[0], saved[1], saved[3]]).toEqual([points[0], points[1], points[2]]);
+  });
+
+  test('puts the added point where the line was tapped', () => {
+    const edit = renderWinding();
+    tapLine({ x: 0.5 + 0.125 * 0.6, y: 0.5 - 1 / 8 });
+    const added = vi.mocked(edit.onBend).mock.calls[0]![1][2]!;
+    expect([added.along, added.side]).toEqual([expect.closeTo(0.625), expect.closeTo(up)]);
+  });
+
+  test('adds nothing when the press on the line travels', () => {
+    const edit = renderWinding();
+    tapLine({ x: 0.575, y: 0.5 - 1 / 8 }, { x: 0.65, y: 0.2 });
+    expect(edit.onBend).not.toHaveBeenCalled();
+  });
+
+  test('keeps the selection when the line is tapped', () => {
+    const edit = renderWinding();
+    tapLine({ x: 0.575, y: 0.5 - 1 / 8 });
+    expect(edit.onSelect).not.toHaveBeenCalled();
+  });
+
+  test('takes no more points once a path holds five', () => {
+    const full = Array.from({ length: 5 }, (_, index) => ({
+      along: 0.15 + index * 0.15,
+      side: up,
+    }));
+    renderWinding(full);
+    expect(screen.queryByTestId('path-line')).not.toBeInTheDocument();
+  });
+
+  test('takes points on the line of a path with four', () => {
+    const four = Array.from({ length: 4 }, (_, index) => ({ along: 0.2 + index * 0.15, side: up }));
+    renderWinding(four);
+    expect(screen.getByTestId('path-line')).toBeInTheDocument();
   });
 });

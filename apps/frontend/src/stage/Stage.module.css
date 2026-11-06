@@ -226,6 +226,17 @@
   fill: var(--dot);
 }
 
+/* A finger-wide, invisible band along the line being edited, where a tap adds a point. */
+.routeTap {
+  fill: none;
+  stroke: transparent;
+  stroke-width: var(--touch-min);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  cursor: copy;
+}
+
 /* The hit area is touch-min; the ring drawn inside it is what the teacher sees. */
 .handle {
   position: absolute;

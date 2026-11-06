@@ -2,6 +2,7 @@ import {
   ARROW_LARGE_STEP_M,
   ARROW_STEP_M,
   PATH_HANDLE_MIN_M,
+  PATH_POINTS_MAX,
   PATH_STRAIGHT_M,
   arrowStep,
   clampToPlan,
@@ -9,11 +10,12 @@ import {
   offLineM,
   pathPointAt,
   pathPointSpot,
+  withPointAt,
   type PathPoint,
   type StagePoint,
 } from '@living-stage/shared';
 import { type KeyboardEvent, type PointerEvent, type RefObject, useState } from 'react';
-import type { StagePath } from './PathLayer.tsx';
+import type { DrawnPath, LineTap, StagePath } from './PathLayer.tsx';
 import type { StageDancer } from './Stage.tsx';
 import { TAP_SLOP_PX, stagePointAt, type StageEditing } from './usePlanGestures.ts';
 
@@ -52,12 +54,17 @@ const replaced = (points: PathPoint[], index: number, point: PathPoint) =>
 // stay clear of her own drag area.
 export function usePathHandles({ paths, dancers, edit, planRef }: HandleSetup) {
   const [bending, setBending] = useState<Bending | null>(null);
+  const [tapping, setTapping] = useState<{
+    pointerId: number;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
   const path =
     edit?.selectedIds.length === 1 ? paths.find(({ id }) => id === edit.selectedIds[0]) : undefined;
   const dancer = path && dancers.find(({ id }) => id === path.id);
   const held = path && (path.points.length > 0 ? path.points : [MIDDLE]);
   const live = held && bending ? replaced(held, bending.index, bending.point) : held;
-  const drawn =
+  const drawn: DrawnPath[] =
     bending && path
       ? paths.map((each) => (each === path ? { ...each, points: live! } : each))
       : paths;
@@ -120,5 +127,24 @@ export function usePathHandles({ paths, dancers, edit, planRef }: HandleSetup) {
       save(replaced(live, index, pathPointAt(from, dancer, moved)), index, ARROW_STEP_M / 2);
     },
   }));
-  return { drawn, handles };
+  // A press that travels is not a tap, and a full path takes no more points.
+  const tap: LineTap = {
+    onPointerDown(event) {
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const { pointerId, clientX, clientY } = event;
+      setTapping({ pointerId, clientX, clientY });
+    },
+    onPointerUp(event) {
+      if (!tapping || event.pointerId !== tapping.pointerId) return;
+      setTapping(null);
+      const { clientX, clientY } = event;
+      if (Math.hypot(clientX - tapping.clientX, clientY - tapping.clientY) >= TAP_SLOP_PX) return;
+      const spot = stagePointAt(planRef.current!, clientX, clientY);
+      edit.onBend(path.id, withPointAt(from, dancer, path.points, spot));
+    },
+  };
+  const tappable = path.points.length < PATH_POINTS_MAX && !bending;
+  const lines = tappable ? drawn.map((each) => (each === path ? { ...each, tap } : each)) : drawn;
+  return { drawn: lines, handles };
 }
