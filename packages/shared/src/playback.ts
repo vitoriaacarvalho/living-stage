@@ -1,5 +1,5 @@
-import type { Figure, Position } from './figure.ts';
-import { pathCurve, spotAlong } from './path.ts';
+import type { Figure, Position, StagePoint } from './figure.ts';
+import { orbitSpot, pathCurve, spotAlong } from './path.ts';
 
 // A new figure's time to arrive, until the teacher changes it or music pins figures (E4).
 export const TRANSITION_MS = 4000;
@@ -44,15 +44,37 @@ export function stageAt(figures: Figure[], timeMs: number): StageMoment | null {
   return { positions: between(from, to, easeInOutCubic(progress)), from, to, progress };
 }
 
+type Move = { from: Figure; to: Figure };
+
+const spotOf = (figure: Figure, castMemberId: string) =>
+  figure.positions.find((position) => position.castMemberId === castMemberId);
+
+// Straight or along the bend, ignoring any circle: what a circling dancer turns around.
+function plainSpot({ from, to }: Move, castMemberId: string, eased: number): StagePoint | null {
+  const start = spotOf(from, castMemberId);
+  const end = spotOf(to, castMemberId);
+  if (!start || !end) return null;
+  const path = to.paths.find((each) => each.castMemberId === castMemberId);
+  if (path && path.points.length > 0) return spotAlong(pathCurve(start, end, path.points), eased);
+  return { x: start.x + (end.x - start.x) * eased, y: start.y + (end.y - start.y) * eased };
+}
+
+// A circle whose centre isn't in both figures falls back to the plain route.
+function spotDuring(move: Move, castMemberId: string, eased: number): StagePoint | null {
+  const around = move.to.paths.find((each) => each.castMemberId === castMemberId)?.around;
+  const start = spotOf(move.from, castMemberId);
+  const end = spotOf(move.to, castMemberId);
+  if (around && start && end && plainSpot(move, around.castMemberId, 0)) {
+    const centreAt = (progress: number) => plainSpot(move, around.castMemberId, progress)!;
+    return orbitSpot({ start, end, centreAt, ...around }, eased);
+  }
+  return plainSpot(move, castMemberId, eased);
+}
+
 function between(from: Figure, to: Figure, eased: number): Position[] {
   const moving = from.positions.map((start) => {
-    const end = to.positions.find(({ castMemberId }) => castMemberId === start.castMemberId);
-    if (!end) return start;
-    const path = to.paths.find(({ castMemberId }) => castMemberId === start.castMemberId);
-    const spot = path
-      ? spotAlong(pathCurve(start, end, path.points), eased)
-      : { x: start.x + (end.x - start.x) * eased, y: start.y + (end.y - start.y) * eased };
-    return { castMemberId: start.castMemberId, ...spot };
+    const spot = spotDuring({ from, to }, start.castMemberId, eased);
+    return spot ? { castMemberId: start.castMemberId, ...spot } : start;
   });
   const arriving = to.positions.filter(
     ({ castMemberId }) => !from.positions.some((start) => start.castMemberId === castMemberId),

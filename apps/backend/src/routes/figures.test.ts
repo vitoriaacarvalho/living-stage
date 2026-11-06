@@ -100,7 +100,7 @@ test('lists the bent paths into each figure', async () => {
   } as never);
   const res = await fetch(url);
   const { figures } = (await res.json()) as ListFiguresResponse;
-  expect(figures[1]!.paths).toEqual(bent);
+  expect(figures[1]!.paths).toEqual([{ ...bent[0], around: null }]);
 });
 
 test('lists the figures of the dance with their positions', async () => {
@@ -625,7 +625,7 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/:ca
 
   test('responds with the bent path', async () => {
     const res = await bend({ points });
-    expect(await res.json()).toEqual({ path: { castMemberId: 'cast-1', points } });
+    expect(await res.json()).toEqual({ path: { castMemberId: 'cast-1', points, around: null } });
   });
 
   test('saves the points for this cast member in this figure', async () => {

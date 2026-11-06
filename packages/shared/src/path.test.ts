@@ -5,8 +5,11 @@ import {
   PATH_ALONG_MIN,
   PATH_POINTS_MAX,
   PATH_SIDE_MAX,
+  PATH_TURNS_MAX,
   moveLengthM,
   offLineM,
+  orbitSpot,
+  parsePathAround,
   parsePathPoints,
   parsePathUpdate,
   pathCurve,
@@ -279,5 +282,117 @@ describe('parsePathUpdate', () => {
 
   test('refuses a body without points', () => {
     expect(parsePathUpdate({})).toBeNull();
+  });
+});
+
+describe('orbitSpot', () => {
+  const centre = { x: 0.5, y: 0.5 };
+  const still = () => centre;
+  // Two metres stage right of the centre, and two metres downstage of it.
+  const east = { x: 0.5 + 2 / 12, y: 0.5 };
+  const south = { x: 0.5, y: 0.5 + 2 / 8 };
+  const full = { start: east, end: east, centreAt: still, clockwise: true, turns: 0 };
+
+  test('starts at her start', () => {
+    expect(orbitSpot(full, 0)).toEqual(near(east));
+  });
+
+  test('ends at her spot after going once around back to it', () => {
+    expect(orbitSpot(full, 1)).toEqual(near(east));
+  });
+
+  test('is on the far side of the centre halfway around', () => {
+    expect(orbitSpot(full, 0.5)).toEqual(near({ x: 0.5 - 2 / 12, y: 0.5 }));
+  });
+
+  test('turns clockwise as seen on the plan, downstage first from stage right', () => {
+    expect(orbitSpot(full, 0.25)).toEqual(near(south));
+  });
+
+  test('turns the other way counterclockwise', () => {
+    expect(orbitSpot({ ...full, clockwise: false }, 0.25)).toEqual(
+      near({ x: 0.5, y: 0.5 - 2 / 8 }),
+    );
+  });
+
+  test('takes the short arc when it goes that way', () => {
+    const arc = { ...full, end: south };
+    const corner = Math.SQRT1_2 * 2;
+    expect(orbitSpot(arc, 0.5)).toEqual(near({ x: 0.5 + corner / 12, y: 0.5 + corner / 8 }));
+  });
+
+  test('takes the long arc the other way', () => {
+    const spot = orbitSpot({ ...full, end: south, clockwise: false }, 0.5);
+    expect([spot.x < 0.5, spot.y < 0.5]).toEqual([true, true]);
+  });
+
+  test('adds a whole circle for each extra turn', () => {
+    const spot = orbitSpot({ ...full, end: south, turns: 1 }, 0.5);
+    expect([spot.x < 0.5, spot.y < 0.5]).toEqual([true, true]);
+  });
+
+  test('changes her distance from the centre evenly', () => {
+    const wider = { ...full, end: { x: 0.5, y: 0.5 + 4 / 8 } };
+    const spot = orbitSpot(wider, 0.5);
+    expect(Math.hypot((spot.x - 0.5) * 12, (spot.y - 0.5) * 8)).toBeCloseTo(3);
+  });
+
+  test('follows a centre that moves', () => {
+    const walking = (progress: number) => ({ x: 0.3 + 0.4 * progress, y: 0.5 });
+    const orbit = {
+      start: { x: 0.3 + 2 / 12, y: 0.5 },
+      end: { x: 0.7 + 2 / 12, y: 0.5 },
+      centreAt: walking,
+      clockwise: true,
+      turns: 0,
+    };
+    expect(orbitSpot(orbit, 0.5)).toEqual(near({ x: 0.5 - 2 / 12, y: 0.5 }));
+  });
+});
+
+describe('parsePathAround', () => {
+  const around = { castMemberId: 'cast-2', clockwise: false, turns: 2 };
+
+  test('reads a circle', () => {
+    expect(parsePathAround(around)).toEqual(around);
+  });
+
+  test('accepts the most extra turns', () => {
+    expect(parsePathAround({ ...around, turns: PATH_TURNS_MAX })).toEqual({
+      ...around,
+      turns: PATH_TURNS_MAX,
+    });
+  });
+
+  test('refuses more extra turns', () => {
+    expect(parsePathAround({ ...around, turns: PATH_TURNS_MAX + 1 })).toBeNull();
+  });
+
+  test('refuses negative turns', () => {
+    expect(parsePathAround({ ...around, turns: -1 })).toBeNull();
+  });
+
+  test('refuses part of a turn', () => {
+    expect(parsePathAround({ ...around, turns: 0.5 })).toBeNull();
+  });
+
+  test('refuses a circle with no direction', () => {
+    expect(parsePathAround({ castMemberId: 'cast-2', turns: 0 })).toBeNull();
+  });
+
+  test('refuses a circle around nobody', () => {
+    expect(parsePathAround({ ...around, castMemberId: '' })).toBeNull();
+  });
+});
+
+describe('parsePathUpdate with a circle', () => {
+  const around = { castMemberId: 'cast-2', clockwise: true, turns: 0 };
+
+  test('reads a circle', () => {
+    expect(parsePathUpdate({ around })).toEqual({ around });
+  });
+
+  test('refuses points and a circle together', () => {
+    expect(parsePathUpdate({ around, points: [{ along: 0.5, side: 0.1 }] })).toBeNull();
   });
 });

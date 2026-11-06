@@ -128,8 +128,8 @@ describe('movePositions', () => {
 });
 
 describe('bendPath', () => {
-  const bent = { castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }] };
-  const straight = { castMemberId: 'cast-1', points: [] };
+  const bent = { castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }], around: null };
+  const straight = { castMemberId: 'cast-1', points: [], around: null };
 
   function finalePaths(hook: Awaited<ReturnType<typeof loadedCast>>) {
     const { state } = hook.result.current;

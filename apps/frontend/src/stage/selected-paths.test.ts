@@ -16,7 +16,10 @@ const figure = (order: number, x: number): Figure => ({
 
 const bend = [{ along: 0.5, side: 0.2 }];
 const first = figure(0, 0.2);
-const second = { ...figure(1, 0.8), paths: [{ castMemberId: 'cast-1', points: bend }] };
+const second = {
+  ...figure(1, 0.8),
+  paths: [{ castMemberId: 'cast-1', points: bend, around: null }],
+};
 const figures = [first, second];
 
 test('starts a selected dancer from her spot in the figure before', () => {

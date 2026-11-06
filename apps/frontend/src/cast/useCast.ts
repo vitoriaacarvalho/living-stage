@@ -158,7 +158,7 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     const figure =
       state.status === 'ready' ? state.figures.find(({ id }) => id === figureId) : null;
     const previous = figure?.paths.find(({ castMemberId }) => castMemberId === path.castMemberId);
-    const before = previous ?? { castMemberId: path.castMemberId, points: [] };
+    const before = previous ?? { castMemberId: path.castMemberId, points: [], around: null };
     change(({ cast, figures }) => ({ cast, figures: withPath(figures, figureId, path) }));
     try {
       await savePath(schoolId, danceId, { figureId, castMemberId: path.castMemberId }, path.points);

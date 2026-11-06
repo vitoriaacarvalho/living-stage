@@ -135,7 +135,7 @@ schoolFiguresRouter.put(
   '/dances/:danceId/figures/:figureId/paths/:castMemberId',
   async (req, res) => {
     const update = parsePathUpdate(req.body);
-    if (!update) {
+    if (!update || !('points' in update)) {
       res.status(400).json({ error: 'invalid_path' });
       return;
     }
@@ -154,7 +154,9 @@ schoolFiguresRouter.put(
       res.status(400).json({ error: 'first_figure' });
       return;
     }
-    res.json({ path: { castMemberId, points: update.points } } satisfies PathResponse);
+    res.json({
+      path: { castMemberId, points: update.points, around: null },
+    } satisfies PathResponse);
   },
 );
 
@@ -263,7 +265,10 @@ function movePositions(danceId: string, figureId: string, { positions }: Positio
 type PathKey = { danceId: string; figureId: string; castMemberId: string };
 
 // Nothing arrives into the first figure, so it holds no paths.
-function bendPath({ danceId, figureId, castMemberId }: PathKey, { points }: PathUpdate) {
+function bendPath(
+  { danceId, figureId, castMemberId }: PathKey,
+  { points }: Extract<PathUpdate, { points: unknown }>,
+) {
   return prisma.$transaction(async (tx) => {
     const figure = await tx.figure.findFirst({ where: { id: figureId, danceId } });
     const cast = await tx.castMember.count({ where: { id: castMemberId, danceId } });
@@ -336,6 +341,7 @@ function toFigure({ id, order, name, transitionMs, positions, paths }: FigureRow
   const bent = paths.map(({ castMemberId, points }) => ({
     castMemberId,
     points: points as PathPoint[],
+    around: null,
   }));
   return { id, order, name, transitionMs, positions, paths: bent };
 }

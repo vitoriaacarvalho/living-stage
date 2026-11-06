@@ -187,7 +187,7 @@ describe('stageAt', () => {
       figure(0, 4000, [spot('a', 0.2, 0.5), spot('b', 0.2, 0.8)]),
       { ...figure(1, 4000, [spot('a', 0.8, 0.5), spot('b', 0.8, 0.8)]), paths },
     ];
-    const bent = bentInto([{ castMemberId: 'a', points: [bend] }]);
+    const bent = bentInto([{ castMemberId: 'a', points: [bend], around: null }]);
     const dancerAt = (timeMs: number, index = 0) => stageAt(bent, timeMs)!.positions[index]!;
 
     test('passes through the bend halfway', () => {
@@ -222,10 +222,42 @@ describe('stageAt', () => {
         figure(0, 4000, []),
         {
           ...figure(1, 4000, [spot('a', 0.6, 0.2)]),
-          paths: [{ castMemberId: 'a', points: [bend] }],
+          paths: [{ castMemberId: 'a', points: [bend], around: null }],
         },
       ];
       expect(xy(stageAt(pair, 2000)?.positions)).toEqual([['a', 0.6, 0.2]]);
+    });
+  });
+
+  describe('circling another dancer', () => {
+    const centre = { x: 0.5, y: 0.5 };
+    const east = { x: 0.5 + 2 / 12, y: 0.5 };
+    const circling = (around: Path['around'], positions = [spot('a', 0.5, 0.5)]) => [
+      figure(0, 4000, [...positions, spot('b', east.x, east.y)]),
+      {
+        ...figure(1, 4000, [spot('a', centre.x, centre.y), spot('b', east.x, east.y)]),
+        paths: [{ castMemberId: 'b', points: [], around }],
+      },
+    ];
+    const bAt = (figures: Figure[], timeMs: number) =>
+      stageAt(figures, timeMs)!.positions.find(({ castMemberId }) => castMemberId === 'b')!;
+
+    test('goes around the other dancer and back to her spot', () => {
+      const around = { castMemberId: 'a', clockwise: true, turns: 0 };
+      const b = bAt(circling(around), 2000);
+      expect([b.x, b.y]).toEqual([expect.closeTo(0.5 - 2 / 12), expect.closeTo(0.5)]);
+    });
+
+    test('ends at her spot in the figure', () => {
+      const around = { castMemberId: 'a', clockwise: true, turns: 0 };
+      const b = bAt(circling(around), 4000);
+      expect([b.x, b.y]).toEqual([expect.closeTo(east.x), expect.closeTo(east.y)]);
+    });
+
+    test('walks straight when the dancer she circles was not in the figure before', () => {
+      const around = { castMemberId: 'a', clockwise: true, turns: 0 };
+      const b = bAt(circling(around, []), 2000);
+      expect([b.x, b.y]).toEqual([expect.closeTo(east.x), expect.closeTo(east.y)]);
     });
   });
 });

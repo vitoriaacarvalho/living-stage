@@ -7,16 +7,31 @@ import { STAGE_DEPTH_M, STAGE_WIDTH_M } from './stage.ts';
 // either end moves.
 export type PathPoint = { along: number; side: number };
 
-// The route a cast member takes into a figure, from her spot in the figure before.
-export type Path = { castMemberId: string; points: PathPoint[] };
+// Circling another cast member: clockwise as seen on the plan, with whole extra turns.
+export type PathAround = { castMemberId: string; clockwise: boolean; turns: number };
+
+// The route a cast member takes into a figure, from her spot in the figure before: a
+// curve through its points, or a circle around another cast member (then no points).
+export type Path = { castMemberId: string; points: PathPoint[]; around: PathAround | null };
 
 export type PathResponse = { path: Path };
 
-export type PathUpdate = { points: PathPoint[] };
+export type PathUpdate = { points: PathPoint[] } | { around: PathAround };
+
+// An arc around a centre that may itself be moving: centreAt(0) and centreAt(1) are its
+// spots at the start and end of the move.
+export type Orbit = {
+  start: StagePoint;
+  end: StagePoint;
+  centreAt: (progress: number) => StagePoint;
+  clockwise: boolean;
+  turns: number;
+};
 
 export type CubicSegment = { start: StagePoint; c1: StagePoint; c2: StagePoint; end: StagePoint };
 
 export const PATH_POINTS_MAX = 5;
+export const PATH_TURNS_MAX = 3;
 export const PATH_ALONG_MIN = 0.05;
 export const PATH_ALONG_MAX = 0.95;
 export const PATH_SIDE_MAX = 2;
@@ -26,6 +41,7 @@ export const PATH_STRAIGHT_M = 0.3;
 export const PATH_HANDLE_MIN_M = 1.5;
 
 const SAMPLES_PER_SEGMENT = 32;
+const TAU = 2 * Math.PI;
 
 type Vector = { x: number; y: number };
 
@@ -189,6 +205,27 @@ export function spotsAlong(curve: CubicSegment[], count: number): StagePoint[] {
   return Array.from({ length: count + 1 }, (_, index) => spotIn(table, index / count));
 }
 
+const turnShare = (angle: number) => ((angle % TAU) + TAU) % TAU;
+
+// Her angle around the centre and her distance from it change evenly from start to end.
+// With no extra turns and the same angle at both ends she still goes once around, since
+// circling someone and coming back is what was asked for.
+export function orbitSpot(
+  { start, end, centreAt, clockwise, turns }: Orbit,
+  progress: number,
+): StagePoint {
+  const from = minus(toMetres(start), toMetres(centreAt(0)));
+  const to = minus(toMetres(end), toMetres(centreAt(1)));
+  const startAngle = Math.atan2(from.y, from.x);
+  const endAngle = Math.atan2(to.y, to.x);
+  const way = turnShare(clockwise ? endAngle - startAngle : startAngle - endAngle) || TAU;
+  const sweep = (way + turns * TAU) * (clockwise ? 1 : -1);
+  const angle = startAngle + sweep * progress;
+  const radius = length(from) + (length(to) - length(from)) * progress;
+  const around = { x: radius * Math.cos(angle), y: radius * Math.sin(angle) };
+  return toStage(plus(toMetres(centreAt(progress)), around));
+}
+
 export function parsePathPoints(value: unknown): PathPoint[] | null {
   if (!Array.isArray(value) || value.length === 0 || value.length > PATH_POINTS_MAX) return null;
   const points = value.map(parsePathPoint);
@@ -205,8 +242,25 @@ function parsePathPoint(value: unknown): PathPoint | null {
   return { along, side };
 }
 
+export function parsePathAround(value: unknown): PathAround | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { castMemberId, clockwise, turns } = value as Record<string, unknown>;
+  if (typeof castMemberId !== 'string' || castMemberId.length === 0) return null;
+  if (typeof clockwise !== 'boolean') return null;
+  if (typeof turns !== 'number' || !Number.isInteger(turns)) return null;
+  if (turns < 0 || turns > PATH_TURNS_MAX) return null;
+  return { castMemberId, clockwise, turns };
+}
+
+// Either points or a circle, never both.
 export function parsePathUpdate(value: unknown): PathUpdate | null {
   if (typeof value !== 'object' || value === null) return null;
-  const points = parsePathPoints((value as Record<string, unknown>).points);
+  const body = value as Record<string, unknown>;
+  if ('points' in body === 'around' in body) return null;
+  if ('around' in body) {
+    const around = parsePathAround(body.around);
+    return around ? { around } : null;
+  }
+  const points = parsePathPoints(body.points);
   return points ? { points } : null;
 }

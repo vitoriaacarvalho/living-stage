@@ -82,7 +82,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
 
   function bendPath(castMemberId: string, points: PathPoint[]) {
     if (!figure) return;
-    castActions.bendPath(figure.id, { castMemberId, points }).catch(() => {});
+    castActions.bendPath(figure.id, { castMemberId, points, around: null }).catch(() => {});
   }
 
   // Tapping the selected figure again opens its panel. The id is kept even then, since
