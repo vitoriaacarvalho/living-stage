@@ -32,7 +32,16 @@ const kitri: DanceSource = {
       name: null,
       transitionMs: 2500,
       positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.25 }],
-      paths: [{ castMemberId: 'cast-1', points: [{ along: 0.4, side: -0.3 }] }],
+      paths: [
+        {
+          castMemberId: 'cast-1',
+          points: [{ along: 0.4, side: -0.3 }],
+          aroundId: null,
+          clockwise: true,
+          turns: 0,
+        },
+        { castMemberId: 'cast-2', points: [], aroundId: 'cast-1', clockwise: false, turns: 2 },
+      ],
     },
   ],
 };
@@ -98,9 +107,24 @@ describe('danceCopy', () => {
 
   test("bends each copied cast member's path like the original", () => {
     const { cast, figures, paths } = danceCopy(kitri);
-    expect(paths).toEqual([
-      { figureId: figures[1]!.id, castMemberId: cast[0]!.id, points: [{ along: 0.4, side: -0.3 }] },
-    ]);
+    expect(paths[0]).toEqual({
+      figureId: figures[1]!.id,
+      castMemberId: cast[0]!.id,
+      points: [{ along: 0.4, side: -0.3 }],
+      aroundId: null,
+      clockwise: true,
+      turns: 0,
+    });
+  });
+
+  test('keeps each copied circle around the copy of the dancer circled', () => {
+    const { cast, paths } = danceCopy(kitri);
+    expect(paths[1]).toMatchObject({
+      castMemberId: cast[1]!.id,
+      aroundId: cast[0]!.id,
+      clockwise: false,
+      turns: 2,
+    });
   });
 
   test('copies a dance with no cast and one empty figure', () => {

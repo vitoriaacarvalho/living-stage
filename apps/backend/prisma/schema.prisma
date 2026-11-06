@@ -156,7 +156,8 @@ model CastMember {
   role      String?
   createdAt DateTime   @default(now())
   positions Position[]
-  paths     Path[]
+  paths     Path[]     @relation("PathOf")
+  circledBy Path[]     @relation("PathAround")
 
   @@unique([danceId, dancerId])
   @@map("cast_member")
@@ -189,13 +190,19 @@ model Position {
 }
 
 // The route a cast member takes into a figure; points are { along, side } relative to
-// the straight line from her spot in the figure before (see PathPoint in shared).
+// the straight line from her spot in the figure before (see PathPoint in shared). A path
+// with aroundId circles that cast member instead and has no points; it turns straight if
+// she leaves the cast.
 model Path {
   figureId     String
-  figure       Figure     @relation(fields: [figureId], references: [id], onDelete: Cascade)
+  figure       Figure      @relation(fields: [figureId], references: [id], onDelete: Cascade)
   castMemberId String
-  castMember   CastMember @relation(fields: [castMemberId], references: [id], onDelete: Cascade)
+  castMember   CastMember  @relation("PathOf", fields: [castMemberId], references: [id], onDelete: Cascade)
   points       Json
+  aroundId     String?
+  around       CastMember? @relation("PathAround", fields: [aroundId], references: [id], onDelete: SetNull)
+  clockwise    Boolean     @default(true)
+  turns        Int         @default(0)
 
   @@id([figureId, castMemberId])
   @@map("path")

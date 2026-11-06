@@ -632,8 +632,15 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/:ca
     await bend({ points });
     expect(prisma.path.upsert).toHaveBeenCalledWith({
       where: { figureId_castMemberId: { figureId: 'figure-2', castMemberId: 'cast-1' } },
-      create: { figureId: 'figure-2', castMemberId: 'cast-1', points },
-      update: { points },
+      create: {
+        figureId: 'figure-2',
+        castMemberId: 'cast-1',
+        points,
+        aroundId: null,
+        clockwise: true,
+        turns: 0,
+      },
+      update: { points, aroundId: null, clockwise: true, turns: 0 },
     });
   });
 
@@ -647,8 +654,72 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/:ca
   test('looks the cast member up in this dance', async () => {
     await bend({ points });
     expect(prisma.castMember.count).toHaveBeenCalledWith({
-      where: { id: 'cast-1', danceId: 'dance-1' },
+      where: { id: { in: ['cast-1'] }, danceId: 'dance-1' },
     });
+  });
+
+  const around = { castMemberId: 'cast-2', clockwise: false, turns: 1 };
+
+  test('responds with the circling path', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(2);
+    const res = await bend({ around });
+    expect(await res.json()).toEqual({ path: { castMemberId: 'cast-1', points: [], around } });
+  });
+
+  test('saves the circle with no points', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(2);
+    await bend({ around });
+    expect(vi.mocked(prisma.path.upsert).mock.calls[0]![0].update).toEqual({
+      points: [],
+      aroundId: 'cast-2',
+      clockwise: false,
+      turns: 1,
+    });
+  });
+
+  test('clears a circle when points are saved', async () => {
+    await bend({ points });
+    expect(vi.mocked(prisma.path.upsert).mock.calls[0]![0].update).toEqual({
+      points,
+      aroundId: null,
+      clockwise: true,
+      turns: 0,
+    });
+  });
+
+  test('looks both dancers up in this dance', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(2);
+    await bend({ around });
+    expect(prisma.castMember.count).toHaveBeenCalledWith({
+      where: { id: { in: ['cast-1', 'cast-2'] }, danceId: 'dance-1' },
+    });
+  });
+
+  test('responds 404 for circling a dancer who is not in the dance', async () => {
+    vi.mocked(prisma.castMember.count).mockResolvedValue(1);
+    const res = await bend({ around });
+    expect(res.status).toBe(404);
+  });
+
+  test('responds 400 for a dancer circling herself', async () => {
+    const res = await bend({ around: { ...around, castMemberId: 'cast-1' } });
+    expect(res.status).toBe(400);
+  });
+
+  test('lists a circle with the paths of its figure', async () => {
+    const circling = {
+      castMemberId: 'cast-1',
+      points: [],
+      aroundId: 'cast-2',
+      clockwise: false,
+      turns: 1,
+    };
+    vi.mocked(prisma.dance.findFirst).mockResolvedValue({
+      figures: [firstFigure, { ...secondFigure, paths: [circling] }],
+    } as never);
+    const res = await fetch(url);
+    const { figures } = (await res.json()) as ListFiguresResponse;
+    expect(figures[1]!.paths).toEqual([{ castMemberId: 'cast-1', points: [], around }]);
   });
 
   test('responds 400 for points a path cannot hold', async () => {

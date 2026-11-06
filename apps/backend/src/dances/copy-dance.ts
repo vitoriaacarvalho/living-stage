@@ -67,10 +67,13 @@ export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy 
       })),
     ),
     paths: figures.flatMap(({ id, paths }) =>
-      paths.map(({ castMemberId, points }) => ({
+      paths.map(({ castMemberId, points, aroundId, clockwise, turns }) => ({
         figureId: figureIds.get(id)!,
         castMemberId: castIds.get(castMemberId)!,
         points: points as Prisma.InputJsonValue,
+        aroundId: aroundId && castIds.get(aroundId)!,
+        clockwise,
+        turns,
       })),
     ),
   };

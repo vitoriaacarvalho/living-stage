@@ -9,6 +9,7 @@ import {
   type FigureOrder,
   type FigureResponse,
   type ListFiguresResponse,
+  type Path,
   type PathPoint,
   type PathResponse,
   type PathUpdate,
@@ -22,7 +23,9 @@ export const schoolFiguresRouter = Router();
 
 const figureFields = {
   positions: { select: { castMemberId: true, x: true, y: true } },
-  paths: { select: { castMemberId: true, points: true } },
+  paths: {
+    select: { castMemberId: true, points: true, aroundId: true, clockwise: true, turns: true },
+  },
 } as const;
 
 schoolFiguresRouter.get('/dances/:danceId/figures', async (req, res) => {
@@ -135,7 +138,7 @@ schoolFiguresRouter.put(
   '/dances/:danceId/figures/:figureId/paths/:castMemberId',
   async (req, res) => {
     const update = parsePathUpdate(req.body);
-    if (!update || !('points' in update)) {
+    if (!update || ('around' in update && update.around.castMemberId === req.params.castMemberId)) {
       res.status(400).json({ error: 'invalid_path' });
       return;
     }
@@ -154,9 +157,7 @@ schoolFiguresRouter.put(
       res.status(400).json({ error: 'first_figure' });
       return;
     }
-    res.json({
-      path: { castMemberId, points: update.points, around: null },
-    } satisfies PathResponse);
+    res.json({ path: pathOf(castMemberId, update) } satisfies PathResponse);
   },
 );
 
@@ -265,23 +266,37 @@ function movePositions(danceId: string, figureId: string, { positions }: Positio
 type PathKey = { danceId: string; figureId: string; castMemberId: string };
 
 // Nothing arrives into the first figure, so it holds no paths.
-function bendPath(
-  { danceId, figureId, castMemberId }: PathKey,
-  { points }: Extract<PathUpdate, { points: unknown }>,
-) {
+// Nothing arrives into the first figure, so it holds no paths. The dancer circled has to
+// be in the dance too.
+function bendPath({ danceId, figureId, castMemberId }: PathKey, update: PathUpdate) {
   return prisma.$transaction(async (tx) => {
     const figure = await tx.figure.findFirst({ where: { id: figureId, danceId } });
-    const cast = await tx.castMember.count({ where: { id: castMemberId, danceId } });
-    if (!figure || cast === 0) return 'not_found';
+    const ids = 'around' in update ? [castMemberId, update.around.castMemberId] : [castMemberId];
+    const cast = await tx.castMember.count({ where: { id: { in: ids }, danceId } });
+    if (!figure || cast !== ids.length) return 'not_found';
     if (figure.order === 0) return 'first_figure';
 
+    const data = pathData(update);
     await tx.path.upsert({
       where: { figureId_castMemberId: { figureId, castMemberId } },
-      create: { figureId, castMemberId, points },
-      update: { points },
+      create: { figureId, castMemberId, ...data },
+      update: data,
     });
     return 'bent';
   });
+}
+
+function pathData(update: PathUpdate) {
+  if ('points' in update)
+    return { points: update.points, aroundId: null, clockwise: true, turns: 0 };
+  const { castMemberId, clockwise, turns } = update.around;
+  return { points: [], aroundId: castMemberId, clockwise, turns };
+}
+
+function pathOf(castMemberId: string, update: PathUpdate): Path {
+  return 'points' in update
+    ? { castMemberId, points: update.points, around: null }
+    : { castMemberId, points: [], around: update.around };
 }
 
 type DeleteResult = 'deleted' | 'not_found' | 'last_figure';
@@ -332,16 +347,22 @@ function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
 }
 
-type FigureRow = Omit<Figure, 'paths'> & {
-  paths: { castMemberId: string; points: Prisma.JsonValue }[];
+type PathRow = {
+  castMemberId: string;
+  points: Prisma.JsonValue;
+  aroundId: string | null;
+  clockwise: boolean;
+  turns: number;
 };
+
+type FigureRow = Omit<Figure, 'paths'> & { paths: PathRow[] };
 
 // points is JSON in the database and only ever written after parsePathPoints.
 function toFigure({ id, order, name, transitionMs, positions, paths }: FigureRow): Figure {
-  const bent = paths.map(({ castMemberId, points }) => ({
+  const routes = paths.map(({ castMemberId, points, aroundId, clockwise, turns }) => ({
     castMemberId,
     points: points as PathPoint[],
-    around: null,
+    around: aroundId ? { castMemberId: aroundId, clockwise, turns } : null,
   }));
-  return { id, order, name, transitionMs, positions, paths: bent };
+  return { id, order, name, transitionMs, positions, paths: routes };
 }
