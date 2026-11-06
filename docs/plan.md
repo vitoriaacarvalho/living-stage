@@ -189,9 +189,9 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part G — Presentation mode
 
-- **G1.** Full-screen stage with playback controls, for showing dancers in rehearsal. Music controls join once music ships.
-- **G2.** Large, readable names, suitable for a TV or projector.
-- **G3.** Figure-by-figure stepping, as well as continuous playback.
+- ✅ **G1.** Full-screen stage with playback controls, for showing dancers in rehearsal. Music controls join once music ships.
+- ✅ **G2.** Large, readable names, suitable for a TV or projector.
+- ✅ **G3.** Figure-by-figure stepping, as well as continuous playback.
 
 ### Part H — Show manager
 
@@ -410,7 +410,7 @@ First milestone to show real teachers.
   - Done when: A dancer circles another dancer
   - Requirements: D3 · Screens: `Stage`, `Toolbar`
   - Note: the Circle around tool, then tap the dancer to circle; the centre follows her live; direction and 0–3 extra turns; circling replaces a bend
-- 🟨 **7.1 Presentation mode** · after 2.7
+- ✅ **7.1 Presentation mode** · after 2.7
   - Done when: Full-screen stage readable on a TV; step or play continuously
   - Requirements: G1, G2, G3 · Screens: `PresentationMode`, `Toolbar`
   - Note: the toolbar's Present tool opens it full screen at the selected figure; X, Escape or leaving full screen goes back to the figure shown. Next plays the move into the next figure, Previous jumps back; dots and labels grow with the stage. Counts, speed, loop and the timeline wait for music
