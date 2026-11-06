@@ -410,9 +410,10 @@ First milestone to show real teachers.
   - Done when: A dancer circles another dancer
   - Requirements: D3 · Screens: `Stage`, `Toolbar`
   - Note: the Circle around tool, then tap the dancer to circle; the centre follows her live; direction and 0–3 extra turns; circling replaces a bend
-- ⬜ **7.1 Presentation mode** · after 2.7
+- 🟨 **7.1 Presentation mode** · after 2.7
   - Done when: Full-screen stage readable on a TV; step or play continuously
-  - Requirements: G1, G2, G3 · Screens: `PresentationMode`
+  - Requirements: G1, G2, G3 · Screens: `PresentationMode`, `Toolbar`
+  - Note: the toolbar's Present tool opens it full screen at the selected figure; X, Escape or leaving full screen goes back to the figure shown. Next plays the move into the next figure, Previous jumps back; dots and labels grow with the stage. Counts, speed, loop and the timeline wait for music
 - ⬜ **8.2 iPhone editor** · after 2.4
   - Done when: Quick edits work on iPhone; landscape hint for heavy editing
   - Requirements: K3 · Screens: `DanceEditorIPhone`
