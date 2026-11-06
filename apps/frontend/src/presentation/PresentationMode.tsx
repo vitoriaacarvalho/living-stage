@@ -85,7 +85,10 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
         </button>
         <div className={styles.heading}>
           <p className={styles.kicker}>
-            {dance.title} · Figure {currentIndex + 1} of {figures.length}
+            {dance.title} ·{' '}
+            <span className={styles.keep}>
+              Figure {currentIndex + 1} of {figures.length}
+            </span>
           </p>
           {current && <h1 className={styles.name}>{figureLabel(current, currentIndex)}</h1>}
         </div>

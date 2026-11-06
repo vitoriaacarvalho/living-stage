@@ -54,9 +54,14 @@ function advance(ms: number) {
 
 const dancerLeft = () => screen.getByTestId('dancer').style.left;
 
-test('names the dance and where the figure stands among the others', () => {
+test('names the dance', () => {
   present('figure-2');
-  expect(screen.getByText('Swans · Figure 2 of 3')).toBeInTheDocument();
+  expect(screen.getByText(/^Swans ·/)).toBeInTheDocument();
+});
+
+test('says where the figure stands among the others', () => {
+  present('figure-2');
+  expect(screen.getByText('Figure 2 of 3')).toBeInTheDocument();
 });
 
 test("shows the figure's name as the title", () => {

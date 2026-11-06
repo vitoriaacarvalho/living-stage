@@ -60,6 +60,10 @@
   overflow-wrap: anywhere;
 }
 
+.keep {
+  white-space: nowrap;
+}
+
 .name {
   margin: 0;
   font: var(--text-title-1);
@@ -95,8 +99,8 @@
 .stageFit {
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
   container-type: inline-size;
-  --stage-dot: clamp(var(--dancer-dot-phone), 4.5cqw, 96px);
-  --stage-label-font: 400 clamp(12px, 1.45cqw, 32px) / 1.25 var(--font-sans);
+  --stage-dot: clamp(var(--dancer-dot-phone), 5cqw, 96px);
+  --stage-label-font: 400 clamp(12px, 1.65cqw, 32px) / 1.25 var(--font-sans);
 }
 
 .controls {
