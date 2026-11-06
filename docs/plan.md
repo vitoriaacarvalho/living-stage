@@ -162,7 +162,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **D1.** Each dancer's move between two figures is a straight line by default.
 - ✅ **D2.** A path can be bent into a curve by dragging handles, or given waypoints.
-- **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
+- ✅ **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
 - ✅ **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
 - ✅ **D5.** Playback can run without music too, with a default duration per transition.
 - ✅ **D6.** Until music pins figures to the song (E4), the teacher sets how long each move takes: 1 to 30 seconds in half seconds, 4 by default.
@@ -406,7 +406,7 @@ First milestone to show real teachers.
   - Done when: Add and move waypoints on a path
   - Requirements: D2 (waypoints) · Screens: `Stage`
   - Note: tap the selected path's line to add a point, up to 5; drag a point back near the line between its neighbours to remove it
-- 🟨 **3.3 Circles and arcs** · after 3.1
+- ✅ **3.3 Circles and arcs** · after 3.1
   - Done when: A dancer circles another dancer
   - Requirements: D3 · Screens: `Stage`, `Toolbar`
   - Note: the Circle around tool, then tap the dancer to circle; the centre follows her live; direction and 0–3 extra turns; circling replaces a bend
@@ -416,7 +416,7 @@ First milestone to show real teachers.
 - ⬜ **8.2 iPhone editor** · after 2.4
   - Done when: Quick edits work on iPhone; landscape hint for heavy editing
   - Requirements: K3 · Screens: `DanceEditorIPhone`
-  - Note: today the editor squeezes the stage to about 205 px wide on a 393 px iPhone, so dancers and names overlap; the full-bleed stage fixes it. Dragging and the keyboard already work there
+  - Note: today the editor squeezes the stage to about 205 px wide on a 393 px iPhone, so dancers and names overlap; the full-bleed stage fixes it. Dragging and the keyboard already work there; the circling row (3.3) wraps to two lines there and shrinks the stage further while a circling dancer is selected
 
 ### After the MVP
 
