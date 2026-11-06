@@ -240,7 +240,7 @@ Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, 
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
 Figure        id, danceId, order, name?, transitionMs, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs or count once music ships)
 Position      figureId, castMemberId, x, y
-Path          figureId, castMemberId, points[]  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before)
+Path          figureId, castMemberId, points[], aroundId?, clockwise, turns  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before; a path with aroundId circles that cast member instead, turns 0–3 extra)
 
 AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
 CostumePhoto  id, danceId, url, caption?
@@ -256,7 +256,7 @@ EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 
 **Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The plan maps 0–1 onto a 12 × 8 m floor; guides, snapping and keyboard moves work in those metres.
 
-**Paths.** A path is saved as the points it passes through, each relative to the straight line from the dancer's spot in the figure before to her spot now (how far along it, how far to the side), so a bend keeps its shape when either end moves. A dancer with no `Path` row walks the straight line. The curve through start, points and end is a centripetal Catmull-Rom spline turned into cubic Bézier segments; waypoints (3.2) are more points, and circles (3.3) are several segments joined.
+**Paths.** A path is saved as the points it passes through, each relative to the straight line from the dancer's spot in the figure before to her spot now (how far along it, how far to the side), so a bend keeps its shape when either end moves. A dancer with no `Path` row walks the straight line. The curve through start, points and end is a centripetal Catmull-Rom spline turned into cubic Bézier segments; waypoints (3.2) are more points. A circle (3.3) is not a curve through points: the dancer turns around the other dancer's live spot, her angle and distance from it changing evenly from start to end.
 
 **Animation.** A dancer's position at time *t* is a pure function of the two figures around *t*, her path and an easing curve. It lives in `packages/shared` and is unit tested.
 
@@ -406,9 +406,10 @@ First milestone to show real teachers.
   - Done when: Add and move waypoints on a path
   - Requirements: D2 (waypoints) · Screens: `Stage`
   - Note: tap the selected path's line to add a point, up to 5; drag a point back near the line between its neighbours to remove it
-- ⬜ **3.3 Circles and arcs** · after 3.1
+- 🟨 **3.3 Circles and arcs** · after 3.1
   - Done when: A dancer circles another dancer
-  - Requirements: D3 · Screens: `Stage`
+  - Requirements: D3 · Screens: `Stage`, `Toolbar`
+  - Note: the Circle around tool, then tap the dancer to circle; the centre follows her live; direction and 0–3 extra turns; circling replaces a bend
 - ⬜ **7.1 Presentation mode** · after 2.7
   - Done when: Full-screen stage readable on a TV; step or play continuously
   - Requirements: G1, G2, G3 · Screens: `PresentationMode`
