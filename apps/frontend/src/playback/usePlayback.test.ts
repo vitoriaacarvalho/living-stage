@@ -156,6 +156,66 @@ test('does not play a single figure', () => {
   expect(result.current.status).toBe('stopped');
 });
 
+test('plays to a figure', () => {
+  const { result } = setup();
+  act(() => result.current.playTo(1));
+  advance(500);
+  expect(result.current.timeMs).toBeCloseTo(500, -2);
+});
+
+test('stops at the figure it plays to', () => {
+  const { result } = setup();
+  act(() => result.current.playTo(1));
+  advance(TRANSITION_MS + 100);
+  expect(result.current.status).toBe('stopped');
+});
+
+test('reports the figure it played to', () => {
+  const { result, onFinish } = setup();
+  act(() => result.current.playTo(1));
+  advance(TRANSITION_MS + 100);
+  expect(onFinish).toHaveBeenCalledWith('f1');
+});
+
+test('keeps playing just before the figure it plays to', () => {
+  const { result } = setup();
+  act(() => result.current.playTo(1));
+  advance(TRANSITION_MS - 100);
+  expect(result.current.status).toBe('playing');
+});
+
+test('plays to a figure from a pause', () => {
+  const { result } = setup();
+  act(() => result.current.play());
+  advance(1000);
+  act(() => result.current.pause());
+  const paused = result.current.timeMs;
+  act(() => result.current.playTo(1));
+  advance(500);
+  expect(result.current.timeMs).toBeCloseTo(paused + 500, -2);
+});
+
+test('stops at a nearer figure when asked while playing', () => {
+  const { result, onFinish } = setup();
+  act(() => result.current.play());
+  advance(1000);
+  act(() => result.current.playTo(1));
+  advance(TRANSITION_MS);
+  expect(onFinish).toHaveBeenCalledWith('f1');
+});
+
+test('does not play to the figure it stands on', () => {
+  const { result } = setup(1);
+  act(() => result.current.playTo(1));
+  expect(result.current.status).toBe('stopped');
+});
+
+test('does not play back to an earlier figure', () => {
+  const { result } = setup(2);
+  act(() => result.current.playTo(1));
+  expect(result.current.status).toBe('stopped');
+});
+
 test('stops asking for frames once unmounted', () => {
   const { result, unmount } = setup();
   act(() => result.current.play());

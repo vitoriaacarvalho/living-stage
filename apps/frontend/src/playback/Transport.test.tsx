@@ -10,6 +10,7 @@ function renderTransport(playback: Partial<Playback> = {}) {
     timeMs: 4000,
     lengthMs: 12_000,
     play: vi.fn(),
+    playTo: vi.fn(),
     pause: vi.fn(),
     stop: vi.fn(),
     ...playback,

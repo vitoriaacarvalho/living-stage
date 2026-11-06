@@ -131,6 +131,7 @@ export {
 export {
   TRANSITION_MS,
   easeInOutCubic,
+  figureIndexAt,
   figureTimeMs,
   playbackLengthMs,
   stageAt,

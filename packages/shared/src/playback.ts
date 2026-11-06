@@ -25,6 +25,13 @@ export function playbackLengthMs(figures: Figure[]): number {
   return figureTimeMs(figures, figures.length - 1);
 }
 
+// The last figure reached by a time; a figure counts as reached at its own moment.
+export function figureIndexAt(figures: Figure[], timeMs: number): number {
+  let index = 0;
+  while (index < figures.length - 1 && figureTimeMs(figures, index + 1) <= timeMs) index += 1;
+  return index;
+}
+
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 // Figures come in their dance order. A dancer missing from one side of the move stays put.

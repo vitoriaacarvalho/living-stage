@@ -2,7 +2,13 @@ import { describe, expect, test } from 'vitest';
 import type { Figure, Position } from './figure.ts';
 import type { Path } from './path.ts';
 import { pathPointSpot } from './path.ts';
-import { easeInOutCubic, figureTimeMs, playbackLengthMs, stageAt } from './playback.ts';
+import {
+  easeInOutCubic,
+  figureIndexAt,
+  figureTimeMs,
+  playbackLengthMs,
+  stageAt,
+} from './playback.ts';
 import { SIDE_WING_DEPTH } from './stage.ts';
 
 const figure = (order: number, transitionMs: number, positions: Position[]): Figure => ({
@@ -68,6 +74,36 @@ describe('playbackLengthMs', () => {
 
   test('is zero with no figures', () => {
     expect(playbackLengthMs([])).toBe(0);
+  });
+});
+
+describe('figureIndexAt', () => {
+  test('is the first figure at the start', () => {
+    expect(figureIndexAt(figures, 0)).toBe(0);
+  });
+
+  test('stays on the figure being left just before the next one', () => {
+    expect(figureIndexAt(figures, intoSecond - 1)).toBe(0);
+  });
+
+  test('reaches a figure at its own moment', () => {
+    expect(figureIndexAt(figures, intoSecond)).toBe(1);
+  });
+
+  test('is the last figure at the end', () => {
+    expect(figureIndexAt(figures, atThird)).toBe(2);
+  });
+
+  test('stays on the last figure past the end', () => {
+    expect(figureIndexAt(figures, atThird + 1000)).toBe(2);
+  });
+
+  test('is the first figure before the start', () => {
+    expect(figureIndexAt(figures, -1)).toBe(0);
+  });
+
+  test('is zero with no figures', () => {
+    expect(figureIndexAt([], 1000)).toBe(0);
   });
 });
 
