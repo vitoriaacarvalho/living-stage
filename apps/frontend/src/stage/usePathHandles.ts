@@ -69,7 +69,15 @@ export function usePathHandles({ paths, dancers, edit, planRef }: HandleSetup) {
       ? paths.map((each) => (each === path ? { ...each, points: live! } : each))
       : paths;
 
-  if (!edit || !path || !dancer || !live || moveLengthM(path.from, dancer) < PATH_HANDLE_MIN_M) {
+  // A circling path has no points to drag.
+  if (
+    !edit ||
+    !path ||
+    path.around ||
+    !dancer ||
+    !live ||
+    moveLengthM(path.from, dancer) < PATH_HANDLE_MIN_M
+  ) {
     return { drawn, handles: [] };
   }
   const { from } = path;

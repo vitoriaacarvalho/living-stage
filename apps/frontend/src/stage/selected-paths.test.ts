@@ -1,5 +1,5 @@
 import type { Figure } from '@living-stage/shared';
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { selectedPaths } from './selected-paths.ts';
 
 const figure = (order: number, x: number): Figure => ({
@@ -50,4 +50,32 @@ test('gives no path to a dancer with no spot in the figure before', () => {
     positions: [...second.positions, { castMemberId: 'cast-3', x: 0.5, y: 0.5 }],
   };
   expect(selectedPaths([first, late], late, ['cast-3'])).toEqual([]);
+});
+
+describe('a circle', () => {
+  const circle = { castMemberId: 'cast-2', clockwise: false, turns: 1 };
+  const circlingInto = {
+    ...figure(1, 0.8),
+    paths: [
+      { castMemberId: 'cast-1', points: [], around: circle },
+      { castMemberId: 'cast-2', points: bend, around: null },
+    ],
+  };
+
+  test('starts the dancer circled from her spot in the figure before, along her own bend', () => {
+    expect(selectedPaths([first, circlingInto], circlingInto, ['cast-1'])[0]?.around).toEqual({
+      id: 'cast-2',
+      from: { x: 0.2, y: 0.8 },
+      points: bend,
+      clockwise: false,
+      turns: 1,
+    });
+  });
+
+  test('walks straight when the dancer circled had no spot in the figure before', () => {
+    const alone = { ...first, positions: first.positions.slice(0, 1) };
+    expect(
+      selectedPaths([alone, circlingInto], circlingInto, ['cast-1'])[0]?.around,
+    ).toBeUndefined();
+  });
 });

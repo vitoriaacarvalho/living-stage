@@ -874,3 +874,74 @@ describe('waypoints', () => {
     expect(screen.getByTestId('path-line')).toBeInTheDocument();
   });
 });
+
+describe('circling paths', () => {
+  const bia = { ...clara, id: 'cast-2', dancerId: 'dancer-2', label: 'Bia', x: 0.5, y: 0.5 };
+  // Two metres stage right of Bia, back at the same spot after going around her.
+  const claraBeside = { ...clara, x: 0.5 + 2 / 12, y: 0.5 };
+  const aroundBia = {
+    id: bia.id,
+    from: { x: 0.5, y: 0.5 },
+    points: [],
+    clockwise: true,
+    turns: 0,
+  };
+  const circling: StagePath = {
+    id: clara.id,
+    from: { x: claraBeside.x, y: 0.5 },
+    points: [],
+    around: aroundBia,
+  };
+
+  function linePoints(container: HTMLElement) {
+    const points = container.querySelector('polyline')!.getAttribute('points')!;
+    return points.split(' ').map((pair) => pair.split(',').map(Number) as [number, number]);
+  }
+
+  test('draws a circle around the other dancer back to the same spot', () => {
+    render(<Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />);
+    expect(screen.getByTestId('path')).toBeInTheDocument();
+  });
+
+  test('passes on the far side of the dancer circled', () => {
+    const { container } = render(
+      <Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />,
+    );
+    const leftMost = Math.min(...linePoints(container).map(([x]) => x));
+    expect(leftMost).toBeCloseTo(0.5 * 12 - 2, 1);
+  });
+
+  test('goes downstage first when circling clockwise from stage right', () => {
+    const { container } = render(
+      <Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />,
+    );
+    const [, y] = linePoints(container)[3]!;
+    expect(y).toBeGreaterThan(0.5 * 8);
+  });
+
+  test('goes upstage first when circling counterclockwise', () => {
+    const other = { ...circling, around: { ...aroundBia, clockwise: false } };
+    const { container } = render(<Stage showGuides dancers={[claraBeside, bia]} paths={[other]} />);
+    const [, y] = linePoints(container)[3]!;
+    expect(y).toBeLessThan(0.5 * 8);
+  });
+
+  test('offers no handle on a circling path', () => {
+    Element.prototype.setPointerCapture = vi.fn();
+    const edit = {
+      selectedIds: [clara.id],
+      snap: false,
+      onSelect: vi.fn(),
+      onMove: vi.fn(),
+      onBend: vi.fn(),
+    };
+    const away = { ...circling, from: { x: 0.1, y: 0.2 } };
+    render(<Stage showGuides dancers={[claraBeside, bia]} paths={[away]} edit={edit} />);
+    expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
+  });
+
+  test('walks straight when the dancer circled is not on the plan', () => {
+    render(<Stage showGuides dancers={[claraBeside]} paths={[circling]} />);
+    expect(screen.queryByTestId('path')).not.toBeInTheDocument();
+  });
+});

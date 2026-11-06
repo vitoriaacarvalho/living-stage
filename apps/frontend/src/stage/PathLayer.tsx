@@ -2,7 +2,9 @@ import {
   STAGE_DEPTH_M,
   STAGE_WIDTH_M,
   moveLengthM,
+  orbitSpot,
   pathCurve,
+  spotAlong,
   spotsAlong,
   type PathPoint,
   type StagePoint,
@@ -15,7 +17,22 @@ import type { PlanScale } from './usePlanScale.ts';
 
 // A dancer's route into the figure shown: from her spot in the figure before, through
 // the points of its bend. With no points it is the straight line.
-export type StagePath = { id: string; from: StagePoint; points: PathPoint[] };
+export type StagePath = {
+  id: string;
+  from: StagePoint;
+  points: PathPoint[];
+  around?: StageAround;
+};
+
+// The dancer circled: her spot in the figure before and the bend of her own route, so the
+// circle follows her live as she walks it.
+export type StageAround = {
+  id: string;
+  from: StagePoint;
+  points: PathPoint[];
+  clockwise: boolean;
+  turns: number;
+};
 
 // Tapping the line of a path being edited adds a point where it was tapped.
 export type LineTap = {
@@ -46,27 +63,59 @@ export function PathLayer({ paths, dancers, scale }: PathLayerProps) {
     <g data-testid="paths">
       {paths.map((path) => {
         const dancer = dancers.find(({ id }) => id === path.id);
-        if (!dancer || moveLengthM(path.from, dancer) < STILL_M) return null;
-        return <Route key={path.id} path={path} dancer={dancer} scale={scale} />;
+        if (!dancer) return null;
+        const spots = routeSpots(path, dancer, dancers);
+        if (!spots) return null;
+        return <Route key={path.id} path={path} spots={spots} dancer={dancer} scale={scale} />;
       })}
     </g>
   );
 }
 
-type RouteProps = { path: DrawnPath; dancer: StageDancer; scale: PlanScale };
+// A circle around someone is drawn even when she comes back to the same spot; any other
+// route needs her to move. A circle whose dancer is off the plan is drawn straight.
+function routeSpots(path: StagePath, dancer: StageDancer, dancers: StageDancer[]) {
+  const centre = path.around && dancers.find(({ id }) => id === path.around!.id);
+  if (path.around && centre) {
+    const { from, points, clockwise, turns } = path.around;
+    const centreRoute = pathCurve(from, centre, points);
+    const orbit = {
+      start: path.from,
+      end: dancer,
+      centreAt: (progress: number) => spotAlong(centreRoute, progress),
+      clockwise,
+      turns,
+    };
+    const steps = STEPS * (turns + 1);
+    return Array.from({ length: steps + 1 }, (_, step) => orbitSpot(orbit, step / steps));
+  }
+  if (moveLengthM(path.from, dancer) < STILL_M) return null;
+  return spotsAlong(pathCurve(path.from, dancer, path.points), STEPS);
+}
 
-function Route({ path, dancer, scale }: RouteProps) {
+// Only the ends are trimmed, so a circle passing back by her start keeps its line.
+function trimmed(line: Metres[], from: Metres, to: Metres, gaps: { start: number; end: number }) {
+  const first = line.findIndex((spot) => distance(spot, from) > gaps.start);
+  const last = line.findLastIndex((spot) => distance(spot, to) > gaps.end);
+  return first === -1 || last < first ? [] : line.slice(first, last + 1);
+}
+
+type RouteProps = {
+  path: DrawnPath;
+  spots: StagePoint[];
+  dancer: StageDancer;
+  scale: PlanScale;
+};
+
+function Route({ path, spots, dancer, scale }: RouteProps) {
   const pxToM = (px: number) => px / scale.pxPerM;
   const radius = pxToM(scale.dotPx / 2);
   const from = inMetres(path.from);
   const to = inMetres(dancer);
-  const line = spotsAlong(pathCurve(path.from, dancer, path.points), STEPS)
-    .map(inMetres)
-    .filter(
-      (spot) =>
-        distance(spot, from) > radius + pxToM(START_GAP_PX) &&
-        distance(spot, to) > radius + pxToM(END_GAP_PX),
-    );
+  const line = trimmed(spots.map(inMetres), from, to, {
+    start: radius + pxToM(START_GAP_PX),
+    end: radius + pxToM(END_GAP_PX),
+  });
   const color = {
     '--dot': dancer.color === null ? 'var(--stage-line)' : dancerColorVar(dancer.color),
   } as CSSProperties;
