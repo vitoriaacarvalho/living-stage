@@ -734,3 +734,95 @@ describe('bending a path', () => {
     expect(edit.onBend).toHaveBeenCalledWith(crossing.id, []);
   });
 });
+
+describe('waypoints', () => {
+  const crossing = { ...clara, x: 0.8, y: 0.5 };
+  const spanX = PLAN_BOUNDS.maxX - PLAN_BOUNDS.minX;
+  const spanY = PLAN_BOUNDS.maxY - PLAN_BOUNDS.minY;
+  const client = ({ x, y }: StagePoint) => ({
+    clientX: ((x - PLAN_BOUNDS.minX) / spanX) * 1500,
+    clientY: ((y - PLAN_BOUNDS.minY) / spanY) * 900,
+  });
+  // Three points in a row a metre upstage of the 7.2 m line.
+  const up = 1 / 7.2;
+  const points = [
+    { along: 0.25, side: up },
+    { along: 0.5, side: up },
+    { along: 0.75, side: up },
+  ];
+  const winding: StagePath = { id: crossing.id, from: { x: 0.2, y: 0.5 }, points };
+  const middleSpot = { x: 0.5, y: 0.5 - 1 / 8 };
+
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      DOMRect.fromRect({ width: 1500, height: 900 }),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function renderWinding() {
+    const edit = {
+      selectedIds: [crossing.id],
+      snap: false,
+      onSelect: vi.fn(),
+      onMove: vi.fn(),
+      onBend: vi.fn(),
+    };
+    render(<Stage showGuides dancers={[crossing]} paths={[winding]} edit={edit} />);
+    return edit;
+  }
+
+  function dragMiddlePoint(to: StagePoint) {
+    const handle = screen.getByRole('button', { name: 'Point 2 of 3 on the path of Clara' });
+    fireEvent.pointerDown(handle, { pointerId: 1, ...client(middleSpot) });
+    fireEvent.pointerMove(handle, { pointerId: 1, ...client(to) });
+    fireEvent.pointerUp(handle, { pointerId: 1, ...client(to) });
+  }
+
+  test('offers a handle on each point', () => {
+    renderWinding();
+    expect(screen.getAllByTestId('path-handle')).toHaveLength(3);
+  });
+
+  test('names each handle by its place along the path', () => {
+    renderWinding();
+    expect(
+      screen.getAllByTestId('path-handle').map((handle) => handle.getAttribute('aria-label')),
+    ).toEqual([
+      'Point 1 of 3 on the path of Clara',
+      'Point 2 of 3 on the path of Clara',
+      'Point 3 of 3 on the path of Clara',
+    ]);
+  });
+
+  test('saves every point with the dragged one moved', () => {
+    const edit = renderWinding();
+    dragMiddlePoint({ x: 0.5, y: 0.5 - 2 / 8 });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [
+      points[0],
+      { along: expect.closeTo(0.5), side: expect.closeTo(2 / 7.2) },
+      points[2],
+    ]);
+  });
+
+  test('removes a point let go on the line between its neighbours', () => {
+    const edit = renderWinding();
+    dragMiddlePoint({ x: 0.5, y: 0.5 - 1.2 / 8 });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [points[0], points[2]]);
+  });
+
+  test('moves only the point whose handle has the arrow key', () => {
+    const edit = renderWinding();
+    const handle = screen.getByRole('button', { name: 'Point 3 of 3 on the path of Clara' });
+    fireEvent.keyDown(handle, { key: 'ArrowUp', shiftKey: true });
+    expect(edit.onBend).toHaveBeenCalledWith(crossing.id, [
+      points[0],
+      points[1],
+      { along: expect.closeTo(0.75), side: expect.closeTo(2 / 7.2) },
+    ]);
+  });
+});

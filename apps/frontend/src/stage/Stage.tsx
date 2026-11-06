@@ -12,7 +12,7 @@ import { type CSSProperties, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import { PathLayer, type StagePath } from './PathLayer.tsx';
 import styles from './Stage.module.css';
-import { type PathHandle, usePathHandle } from './usePathHandle.ts';
+import { type PathHandle, usePathHandles } from './usePathHandles.ts';
 import { usePlanScale } from './usePlanScale.ts';
 import {
   type DancerHandlers,
@@ -68,7 +68,7 @@ export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps
   const svgRef = useRef<SVGSVGElement>(null);
   const scale = usePlanScale(svgRef, planWidth);
   const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, edit, planRef });
-  const { drawn, handle } = usePathHandle({ paths, dancers: shown, edit, planRef });
+  const { drawn, handles } = usePathHandles({ paths, dancers: shown, edit, planRef });
 
   return (
     <div
@@ -106,7 +106,9 @@ export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps
             handlers={edit && dancerHandlers(dancer)}
           />
         ))}
-        {handle && <Handle handle={handle} />}
+        {handles.map((handle) => (
+          <Handle key={handle.label} handle={handle} />
+        ))}
         {box && <Box box={box} />}
       </div>
       <div className={styles.audience}>
@@ -158,14 +160,14 @@ function Box({ box }: { box: SelectionBox }) {
 }
 
 function Handle({ handle }: { handle: PathHandle }) {
-  const { dancer, spot, ...handlers } = handle;
+  const { label, spot, ...handlers } = handle;
   const place = { left: `${percentX(spot.x)}%`, top: `${percentY(spot.y)}%` };
   return (
     <button
       type="button"
       className={styles.handle}
       style={place}
-      aria-label={`Bend the path of ${dancer.label}`}
+      aria-label={label}
       data-testid="path-handle"
       {...handlers}
     />
