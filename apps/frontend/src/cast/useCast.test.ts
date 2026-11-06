@@ -127,7 +127,7 @@ describe('movePositions', () => {
   });
 });
 
-describe('bendPath', () => {
+describe('setPath', () => {
   const bent = { castMemberId: 'cast-1', points: [{ along: 0.5, side: 0.2 }], around: null };
   const straight = { castMemberId: 'cast-1', points: [], around: null };
 
@@ -140,33 +140,28 @@ describe('bendPath', () => {
     vi.mocked(savePath).mockReturnValue(new Promise(() => {}));
     const hook = await loadedCast();
     act(() => {
-      hook.result.current.bendPath('figure-2', bent);
+      hook.result.current.setPath('figure-2', bent);
     });
     expect(finalePaths(hook)).toEqual([bent]);
   });
 
   test('saves the points of the path into this figure', async () => {
     const hook = await loadedCast();
-    await act(() => hook.result.current.bendPath('figure-2', bent));
-    expect(savePath).toHaveBeenCalledWith(
-      'school-1',
-      'dance-1',
-      { figureId: 'figure-2', castMemberId: 'cast-1' },
-      bent.points,
-    );
+    await act(() => hook.result.current.setPath('figure-2', bent));
+    expect(savePath).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-2', bent);
   });
 
   test('drops a straightened path from the figure', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([entrance, { ...finale, paths: [bent] }]);
     const hook = await loadedCast();
-    await act(() => hook.result.current.bendPath('figure-2', straight));
+    await act(() => hook.result.current.setPath('figure-2', straight));
     expect(finalePaths(hook)).toEqual([]);
   });
 
   test('puts a new bend back to straight when saving fails', async () => {
     vi.mocked(savePath).mockRejectedValue(new Error('PUT path answered 500'));
     const hook = await loadedCast();
-    await act(() => hook.result.current.bendPath('figure-2', bent).catch(() => {}));
+    await act(() => hook.result.current.setPath('figure-2', bent).catch(() => {}));
     expect(finalePaths(hook)).toEqual([]);
   });
 
@@ -174,7 +169,18 @@ describe('bendPath', () => {
     vi.mocked(fetchFigures).mockResolvedValue([entrance, { ...finale, paths: [bent] }]);
     vi.mocked(savePath).mockRejectedValue(new Error('DELETE path answered 500'));
     const hook = await loadedCast();
-    await act(() => hook.result.current.bendPath('figure-2', straight).catch(() => {}));
+    await act(() => hook.result.current.setPath('figure-2', straight).catch(() => {}));
     expect(finalePaths(hook)).toEqual([bent]);
+  });
+
+  test('keeps a circle in the figure', async () => {
+    const circling = {
+      castMemberId: 'cast-1',
+      points: [],
+      around: { castMemberId: 'cast-2', clockwise: true, turns: 0 },
+    };
+    const hook = await loadedCast();
+    await act(() => hook.result.current.setPath('figure-2', circling));
+    expect(finalePaths(hook)).toEqual([circling]);
   });
 });

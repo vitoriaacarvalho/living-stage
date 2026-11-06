@@ -39,6 +39,19 @@
   cursor: not-allowed;
 }
 
+.tool[aria-pressed='true'] {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.divider {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  margin: var(--space-1) var(--space-1);
+  background: var(--hairline);
+}
+
 .label {
   display: none;
   font: var(--text-caption);

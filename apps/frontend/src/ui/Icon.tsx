@@ -43,6 +43,14 @@ const paths = {
       <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
     </>
   ),
+  minus: <path d="M5 12h14" />,
+  path: (
+    <>
+      <path d="M5 18c5 0 3-12 8-12 3.2 0 3.6 5 6 8" />
+      <circle cx="5" cy="18" r="2" />
+      <path d="M16.5 14.8l2.6-.9.4 2.8" />
+    </>
+  ),
   pause: (
     <>
       <rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none" />

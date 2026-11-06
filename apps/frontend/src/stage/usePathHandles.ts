@@ -69,9 +69,10 @@ export function usePathHandles({ paths, dancers, edit, planRef }: HandleSetup) {
       ? paths.map((each) => (each === path ? { ...each, points: live! } : each))
       : paths;
 
-  // A circling path has no points to drag.
+  // A circling path has no points to drag, and picking a dancer leaves the path alone.
   if (
     !edit ||
+    edit.onPick ||
     !path ||
     path.around ||
     !dancer ||

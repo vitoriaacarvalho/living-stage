@@ -19,6 +19,8 @@ export type StageEditing = {
   onMove: (positions: Position[]) => void;
   // No points makes the path straight again.
   onBend: (castMemberId: string, points: PathPoint[]) => void;
+  // While set, a tap picks a dancer (or the floor, null) instead of selecting or moving.
+  onPick?: (castMemberId: string | null) => void;
 };
 
 type Press = { pointerId: number; start: { clientX: number; clientY: number }; moved: boolean };
@@ -125,6 +127,10 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
   function pressDancer(dancer: StageDancer, event: PointerEvent<HTMLElement>) {
     event.stopPropagation();
     if (!edit || gesture) return;
+    if (edit.onPick) {
+      edit.onPick(dancer.id);
+      return;
+    }
     if (event.shiftKey) {
       toggle(dancer.id);
       return;
@@ -140,6 +146,11 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
 
   function pressKey(dancer: StageDancer, event: KeyboardEvent<HTMLElement>) {
     if (!edit || gesture) return;
+    if (edit.onPick && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      edit.onPick(dancer.id);
+      return;
+    }
     const step = arrowStep(event.key, event.shiftKey ? ARROW_LARGE_STEP_M : ARROW_STEP_M);
     if (step) {
       event.preventDefault();
@@ -162,6 +173,10 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
 
   function pressFloor(event: PointerEvent<HTMLElement>) {
     if (!edit || gesture) return;
+    if (edit.onPick) {
+      edit.onPick(null);
+      return;
+    }
     const from = toStage(event.clientX, event.clientY);
     setGesture({ ...start(event), kind: 'box', from, to: from });
   }

@@ -1,5 +1,6 @@
 import type { FigureCopy } from '@living-stage/shared';
 import { useState } from 'react';
+import type { CircleTool } from '../paths/useCircling.ts';
 import formStyles from '../ui/Form.module.css';
 import { Icon, type IconName } from '../ui/Icon.tsx';
 import styles from './FigureToolbar.module.css';
@@ -14,9 +15,10 @@ const tools: { placement: Placement; icon: IconName; label: string }[] = [
 type FigureToolbarProps = {
   disabled: boolean;
   onCopy: (placement: Placement) => Promise<void>;
+  circle: CircleTool;
 };
 
-export function FigureToolbar({ disabled, onCopy }: FigureToolbarProps) {
+export function FigureToolbar({ disabled, onCopy, circle }: FigureToolbarProps) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -50,6 +52,20 @@ export function FigureToolbar({ disabled, onCopy }: FigureToolbarProps) {
             </span>
           </button>
         ))}
+        <span className={styles.divider} aria-hidden="true" />
+        <button
+          type="button"
+          className={styles.tool}
+          aria-label="Circle around"
+          aria-pressed={circle.picking}
+          disabled={!circle.available}
+          onClick={circle.onToggle}
+        >
+          <Icon name="path" />
+          <span className={styles.label} aria-hidden="true">
+            Circle around
+          </span>
+        </button>
       </div>
       {failed && (
         <p role="alert" className={formStyles.error}>

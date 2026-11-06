@@ -3,8 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { FigureToolbar } from './FigureToolbar.tsx';
 
+const noCircle = { available: false, picking: false, onToggle: vi.fn() };
+
 function renderToolbar(onCopy = vi.fn().mockResolvedValue(undefined)) {
-  render(<FigureToolbar disabled={false} onCopy={onCopy} />);
+  render(<FigureToolbar disabled={false} onCopy={onCopy} circle={noCircle} />);
   return { onCopy, user: userEvent.setup() };
 }
 
@@ -27,6 +29,27 @@ test('says when the figure cannot be added', async () => {
 });
 
 test('turns the tools off while the dance is loading', () => {
-  render(<FigureToolbar disabled onCopy={vi.fn()} />);
+  render(<FigureToolbar disabled onCopy={vi.fn()} circle={noCircle} />);
   expect(screen.getByRole('button', { name: 'Duplicate' })).toBeDisabled();
+});
+
+test('offers Circle around only when a dancer can circle', () => {
+  renderToolbar();
+  expect(screen.getByRole('button', { name: 'Circle around' })).toBeDisabled();
+});
+
+test('starts picking the dancer to circle around', async () => {
+  const circle = { available: true, picking: false, onToggle: vi.fn() };
+  render(<FigureToolbar disabled={false} onCopy={vi.fn()} circle={circle} />);
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Circle around' }));
+  expect(circle.onToggle).toHaveBeenCalled();
+});
+
+test('shows Circle around pressed while picking', () => {
+  const circle = { available: true, picking: true, onToggle: vi.fn() };
+  render(<FigureToolbar disabled={false} onCopy={vi.fn()} circle={circle} />);
+  expect(screen.getByRole('button', { name: 'Circle around' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });

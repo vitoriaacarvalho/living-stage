@@ -2,6 +2,7 @@ import {
   stageAt,
   type Dance,
   type FigureCopy,
+  type Path,
   type PathPoint,
   type Position,
 } from '@living-stage/shared';
@@ -13,6 +14,9 @@ import { useCast } from '../cast/useCast.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
+import { CirclingRow } from '../paths/CirclingRow.tsx';
+import circlingStyles from '../paths/CirclingRow.module.css';
+import { useCircling } from '../paths/useCircling.ts';
 import { Transport } from '../playback/Transport.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
@@ -64,15 +68,27 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const dancers =
     cast.status === 'ready' && positions ? stageDancers(cast.cast, positions, dance) : [];
   const paths = stopped && figure ? selectedPaths(figures, figure, selection) : [];
+  const circling = useCircling({
+    figures,
+    figure,
+    selection,
+    stopped,
+    cast: cast.status === 'ready' ? cast.cast : [],
+    save: savePath,
+  });
+  const { picking, cancel: cancelPicking } = circling;
 
+  // Escape first stops picking a dancer to circle, then clears the selection.
   useEffect(() => {
     if (selection.length === 0) return;
-    function clearOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') setSelectedIds([]);
+    function onEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      if (picking) cancelPicking();
+      else setSelectedIds([]);
     }
-    document.addEventListener('keydown', clearOnEscape);
-    return () => document.removeEventListener('keydown', clearOnEscape);
-  }, [selection.length]);
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [selection.length, picking, cancelPicking]);
 
   // A failed save puts the dancers back, which is the only feedback needed.
   function moveDancers(positions: Position[]) {
@@ -80,10 +96,14 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     castActions.movePositions(figure.id, positions).catch(() => {});
   }
 
-  function bendPath(castMemberId: string, points: PathPoint[]) {
+  // Like moving dancers, a failed save puts the path back.
+  function savePath(path: Path) {
     if (!figure) return;
-    castActions.bendPath(figure.id, { castMemberId, points, around: null }).catch(() => {});
+    castActions.setPath(figure.id, path).catch(() => {});
   }
+
+  const bendPath = (castMemberId: string, points: PathPoint[]) =>
+    savePath({ castMemberId, points, around: null });
 
   // Tapping the selected figure again opens its panel. The id is kept even then, since
   // the first figure is only selected by default and may be moved away from first place.
@@ -169,7 +189,13 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               Snap
             </button>
           </div>
-          <FigureToolbar disabled={!figure} onCopy={copyFigure} />
+          <FigureToolbar disabled={!figure} onCopy={copyFigure} circle={circling.tool} />
+          {picking && (
+            <p role="status" className={circlingStyles.hint}>
+              Tap the dancer to circle around
+            </p>
+          )}
+          {circling.row && <CirclingRow {...circling.row} />}
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
               <Stage
@@ -184,6 +210,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                         onSelect: setSelectedIds,
                         onMove: moveDancers,
                         onBend: bendPath,
+                        ...(picking && { onPick: circling.pick }),
                       }
                     : undefined
                 }

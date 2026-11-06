@@ -10,6 +10,7 @@ import {
   deleteFigure,
   fetchFigures,
   moveFigurePositions,
+  savePath,
   updateFigure,
 } from '../api/figures.ts';
 import { DanceEditor } from './DanceEditor.tsx';
@@ -27,6 +28,7 @@ vi.mock('../api/figures.ts', () => ({
   updateFigure: vi.fn(),
   deleteFigure: vi.fn(),
   moveFigurePositions: vi.fn(),
+  savePath: vi.fn(),
 }));
 
 const kitri: Dance = {
@@ -846,5 +848,149 @@ describe('playback', () => {
     ]);
     await openKitri();
     expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
+  });
+});
+
+describe('circling another dancer', () => {
+  const both = [
+    { castMemberId: 'cast-1', x: 0.3, y: 0.5 },
+    { castMemberId: 'cast-2', x: 0.5, y: 0.5 },
+  ];
+  const aroundOdile = { castMemberId: 'cast-2', clockwise: true, turns: 0 };
+
+  beforeEach(() => {
+    Element.prototype.setPointerCapture = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+      DOMRect.fromRect({ width: 1500, height: 900 }),
+    );
+    vi.mocked(savePath).mockReset().mockResolvedValue();
+    vi.mocked(fetchCast).mockResolvedValue([
+      { id: 'cast-1', dancer: { id: 'dancer-1', name: 'Clara', color: 3 }, role: null },
+      { id: 'cast-2', dancer: { id: 'dancer-2', name: 'Odile', color: 6 }, role: null },
+    ]);
+    vi.mocked(fetchFigures).mockResolvedValue([
+      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: both, paths: [] },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: 'Entrance',
+        transitionMs: 4000,
+        positions: both,
+        paths: [],
+      },
+    ]);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function tap(name: string) {
+    const hit = screen.getByRole('button', { name });
+    fireEvent.pointerDown(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(hit, { pointerId: 1, clientX: 100, clientY: 100 });
+  }
+
+  async function claraOnEntrance() {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Entrance' }));
+    tap('Clara');
+    return user;
+  }
+
+  async function claraAroundOdile() {
+    const user = await claraOnEntrance();
+    await user.click(screen.getByRole('button', { name: 'Circle around' }));
+    tap('Odile');
+    return user;
+  }
+
+  test('offers Circle around with one dancer selected', async () => {
+    await claraOnEntrance();
+    expect(screen.getByRole('button', { name: 'Circle around' })).toBeEnabled();
+  });
+
+  test('offers no Circle around on the first figure', async () => {
+    await openKitri();
+    tap('Clara');
+    expect(screen.getByRole('button', { name: 'Circle around' })).toBeDisabled();
+  });
+
+  test('asks for the dancer to circle around', async () => {
+    const user = await claraOnEntrance();
+    await user.click(screen.getByRole('button', { name: 'Circle around' }));
+    expect(screen.getByText('Tap the dancer to circle around')).toHaveAttribute('role', 'status');
+  });
+
+  test('saves a clockwise circle around the dancer tapped', async () => {
+    await claraAroundOdile();
+    expect(savePath).toHaveBeenCalledWith('school-1', 'dance-1', 'figure-2', {
+      castMemberId: 'cast-1',
+      points: [],
+      around: aroundOdile,
+    });
+  });
+
+  test('keeps the circling dancer selected', async () => {
+    await claraAroundOdile();
+    expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('says whom she circles', async () => {
+    await claraAroundOdile();
+    expect(screen.getByRole('region', { name: 'Circling' })).toHaveTextContent('Around Odile');
+  });
+
+  test('turns the circle counterclockwise', async () => {
+    const user = await claraAroundOdile();
+    await user.click(screen.getByRole('button', { name: 'Counterclockwise' }));
+    expect(vi.mocked(savePath).mock.calls.at(-1)![3].around).toEqual({
+      ...aroundOdile,
+      clockwise: false,
+    });
+  });
+
+  test('adds an extra turn', async () => {
+    const user = await claraAroundOdile();
+    await user.click(screen.getByRole('button', { name: 'One turn more' }));
+    expect(vi.mocked(savePath).mock.calls.at(-1)![3].around?.turns).toBe(1);
+  });
+
+  test('takes no turn away below none', async () => {
+    await claraAroundOdile();
+    expect(screen.getByRole('button', { name: 'One turn fewer' })).toBeDisabled();
+  });
+
+  test('stops circling and walks straight again', async () => {
+    const user = await claraAroundOdile();
+    await user.click(screen.getByRole('button', { name: 'Stop circling' }));
+    expect(vi.mocked(savePath).mock.calls.at(-1)![3]).toEqual({
+      castMemberId: 'cast-1',
+      points: [],
+      around: null,
+    });
+  });
+
+  test('saves nothing when the floor is tapped instead', async () => {
+    const user = await claraOnEntrance();
+    await user.click(screen.getByRole('button', { name: 'Circle around' }));
+    const plan = screen.getByRole('group', { name: /Stage seen from above/ }).firstElementChild!;
+    fireEvent.pointerDown(plan, { pointerId: 1, clientX: 700, clientY: 800 });
+    expect(savePath).not.toHaveBeenCalled();
+  });
+
+  test('keeps the selection when picking is cancelled with Escape', async () => {
+    const user = await claraOnEntrance();
+    await user.click(screen.getByRole('button', { name: 'Circle around' }));
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('saves nothing when she is tapped herself', async () => {
+    const user = await claraOnEntrance();
+    await user.click(screen.getByRole('button', { name: 'Circle around' }));
+    tap('Clara');
+    expect(savePath).not.toHaveBeenCalled();
   });
 });
