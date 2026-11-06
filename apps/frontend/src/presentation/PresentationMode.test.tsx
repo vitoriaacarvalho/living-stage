@@ -156,3 +156,137 @@ test('leaves when the browser leaves full screen', () => {
   fireEvent(document, new Event('fullscreenchange'));
   expect(onLeave).toHaveBeenCalledWith('figure-1');
 });
+
+const button = (name: string) => screen.getByRole('button', { name });
+
+test('says when the next figure comes', () => {
+  present();
+  expect(screen.getByText(/^Next in 00:04/)).toBeInTheDocument();
+});
+
+test('names the next figure', () => {
+  present();
+  expect(screen.getByText('Figure 2 · Diagonal')).toBeInTheDocument();
+});
+
+test('numbers a next figure with no name', () => {
+  present('figure-1', [figure(0, 'Start', 0.5), figure(1, null, 0.25)]);
+  expect(screen.getByText('Figure 2')).toBeInTheDocument();
+});
+
+test('counts down to the next figure while moving', async () => {
+  const { user } = present();
+  await user.click(button('Play'));
+  advance(1500);
+  expect(screen.getByText(/^Next in 00:03/)).toBeInTheDocument();
+});
+
+test('says nothing comes after the last figure', () => {
+  present('figure-3');
+  expect(screen.queryByText(/^Next in/)).not.toBeInTheDocument();
+});
+
+test('plays the move into the next figure', async () => {
+  const { user } = present();
+  await user.click(button('Next figure'));
+  advance(2000);
+  expect(button('Pause')).toBeInTheDocument();
+});
+
+test('stops at the next figure', async () => {
+  const { user } = present();
+  await user.click(button('Next figure'));
+  advance(4100);
+  expect(screen.getByRole('heading', { name: 'Diagonal' })).toBeInTheDocument();
+});
+
+test('stops playing once the next figure is reached', async () => {
+  const { user } = present();
+  await user.click(button('Next figure'));
+  advance(4100);
+  expect(button('Play')).toBeInTheDocument();
+});
+
+test('stops at the figure being reached when Next is pressed while playing', async () => {
+  const { user } = present();
+  await user.click(button('Play'));
+  advance(1000);
+  await user.click(button('Next figure'));
+  advance(3100);
+  expect(button('Play')).toBeInTheDocument();
+});
+
+test('cannot go on from the last figure', () => {
+  present('figure-3');
+  expect(button('Next figure')).toBeDisabled();
+});
+
+test('goes back to the figure before', async () => {
+  const { user } = present('figure-3');
+  await user.click(button('Previous figure'));
+  expect(screen.getByRole('heading', { name: 'Diagonal' })).toBeInTheDocument();
+});
+
+test('goes back at once, without playing', async () => {
+  const { user } = present('figure-3');
+  await user.click(button('Previous figure'));
+  expect(button('Play')).toBeInTheDocument();
+});
+
+test('goes back to where the move started when part way through it', async () => {
+  const { user } = present('figure-2');
+  await user.click(button('Play'));
+  advance(1500);
+  await user.click(button('Previous figure'));
+  expect(screen.getByText('00:04')).toBeInTheDocument();
+});
+
+test('cannot go back from the first figure', () => {
+  present();
+  expect(button('Previous figure')).toBeDisabled();
+});
+
+test('can go back to the first figure while moving out of it', async () => {
+  const { user } = present();
+  await user.click(button('Play'));
+  advance(1000);
+  expect(button('Previous figure')).toBeEnabled();
+});
+
+test('steps on with the right arrow', () => {
+  present();
+  fireEvent.keyDown(document, { key: 'ArrowRight' });
+  advance(4100);
+  expect(screen.getByRole('heading', { name: 'Diagonal' })).toBeInTheDocument();
+});
+
+test('steps back with the left arrow', () => {
+  present('figure-2');
+  fireEvent.keyDown(document, { key: 'ArrowLeft' });
+  expect(screen.getByRole('heading', { name: 'Figure 1' })).toBeInTheDocument();
+});
+
+test('does nothing on the left arrow at the first figure', () => {
+  present();
+  fireEvent.keyDown(document, { key: 'ArrowLeft' });
+  expect(screen.getByRole('heading', { name: 'Figure 1' })).toBeInTheDocument();
+});
+
+test('plays with Space', () => {
+  present();
+  fireEvent.keyDown(document, { key: ' ' });
+  expect(button('Pause')).toBeInTheDocument();
+});
+
+test('pauses with Space', () => {
+  present();
+  fireEvent.keyDown(document, { key: ' ' });
+  fireEvent.keyDown(document, { key: ' ' });
+  expect(button('Play')).toBeInTheDocument();
+});
+
+test('leaves Space on a focused button to the button', () => {
+  present();
+  fireEvent.keyDown(button('Next figure'), { key: ' ' });
+  expect(button('Play')).toBeInTheDocument();
+});

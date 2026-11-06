@@ -1,19 +1,22 @@
 import {
   figureIndexAt,
+  figureTimeMs,
   stageAt,
   type CastMember,
   type Dance,
   type Figure,
 } from '@living-stage/shared';
-import { type CSSProperties, useEffect, useEffectEvent, useState } from 'react';
+import { type CSSProperties, useState } from 'react';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { figureLabel } from '../figures/figure-label.ts';
-import { clockTime } from '../playback/clock-time.ts';
+import { countdownTime } from '../playback/clock-time.ts';
 import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { leaveFullScreen, useFullScreenExit } from './full-screen.ts';
+import { PresentationControls, type Steps } from './PresentationControls.tsx';
 import styles from './PresentationMode.module.css';
+import { usePresentationKeys } from './usePresentationKeys.ts';
 
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
 
@@ -34,13 +37,27 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
   );
   const playback = usePlayback({ figures, selectedIndex, onFinish: setFigureId });
   const moving = playback.status !== 'stopped';
+  // The figure last reached: while a move plays, the one being left.
   const currentIndex = moving ? figureIndexAt(figures, playback.timeMs) : selectedIndex;
   const current = figures[currentIndex];
   const positions =
     (moving ? stageAt(figures, playback.timeMs)?.positions : current?.positions) ?? [];
-  const playing = playback.status === 'playing';
+  const nextIndex = currentIndex + 1;
+  const next = figures[nextIndex];
+  // Part way through a move, Previous goes back to where it started.
+  const previousIndex = moving ? currentIndex : selectedIndex - 1;
+  const previous = figures[previousIndex];
 
-  // Back in the editor, the figure last reached is selected.
+  const steps: Steps = {
+    ...(previous && {
+      previous: () => {
+        playback.stop();
+        setFigureId(previous.id);
+      },
+    }),
+    ...(next && { next: () => playback.playTo(nextIndex) }),
+  };
+
   const leaveTo = () => onLeave(current?.id ?? figureId);
 
   function leave() {
@@ -49,7 +66,11 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
   }
 
   useFullScreenExit(leaveTo);
-  useEscape(leave);
+  usePresentationKeys({
+    ...steps,
+    leave,
+    toggle: playback.status === 'playing' ? playback.pause : playback.play,
+  });
 
   return (
     <main className={styles.presentation} aria-label={`Presenting ${dance.title}`}>
@@ -68,38 +89,22 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
           </p>
           {current && <h1 className={styles.name}>{figureLabel(current, currentIndex)}</h1>}
         </div>
+        {next && (
+          <p className={styles.next}>
+            Next in {countdownTime(figureTimeMs(figures, nextIndex) - playback.timeMs)}
+            <b className={styles.nextName}>
+              Figure {nextIndex + 1}
+              {next.name && ` · ${next.name}`}
+            </b>
+          </p>
+        )}
       </header>
       <div className={styles.stageArea} style={stageFit}>
         <div className={styles.stageFit}>
           <Stage showGuides={dance.showGuides} dancers={stageDancers(cast, positions, dance)} />
         </div>
       </div>
-      <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.play}
-          aria-label={playing ? 'Pause' : 'Play'}
-          disabled={playback.lengthMs === 0}
-          onClick={playing ? playback.pause : playback.play}
-        >
-          <Icon name={playing ? 'pause' : 'play'} />
-        </button>
-        <p className={styles.time}>
-          {clockTime(playback.timeMs)}{' '}
-          <span className={styles.length}>/ {clockTime(playback.lengthMs)}</span>
-        </p>
-      </div>
+      <PresentationControls playback={playback} steps={steps} />
     </main>
   );
-}
-
-function useEscape(onEscape: () => void) {
-  const escape = useEffectEvent(onEscape);
-  useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') escape();
-    }
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
 }
