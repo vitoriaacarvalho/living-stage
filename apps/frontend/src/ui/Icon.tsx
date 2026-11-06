@@ -51,6 +51,12 @@ const paths = {
       <path d="M16.5 14.8l2.6-.9.4 2.8" />
     </>
   ),
+  next: (
+    <>
+      <path d="M6 5l9 7-9 7z" fill="currentColor" />
+      <path d="M18 5v14" />
+    </>
+  ),
   pause: (
     <>
       <rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" stroke="none" />
@@ -66,6 +72,19 @@ const paths = {
   ),
   play: <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  present: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+      <path d="M10.5 7.8v4.4l3.8-2.2z" fill="currentColor" />
+    </>
+  ),
+  previous: (
+    <>
+      <path d="M18 19L9 12l9-7z" fill="currentColor" />
+      <path d="M6 5v14" />
+    </>
+  ),
   school: (
     <>
       <path d="M2.5 9L12 4.5 21.5 9 12 13.5z" />

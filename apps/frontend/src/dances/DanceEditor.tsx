@@ -18,6 +18,8 @@ import { CirclingRow } from '../paths/CirclingRow.tsx';
 import circlingStyles from '../paths/CirclingRow.module.css';
 import { useCircling } from '../paths/useCircling.ts';
 import { Transport } from '../playback/Transport.tsx';
+import { enterFullScreen } from '../presentation/full-screen.ts';
+import { PresentationMode } from '../presentation/PresentationMode.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
@@ -49,6 +51,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [figurePanelOpen, setFigurePanelOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [snap, setSnap] = useState(false);
+  const [presenting, setPresenting] = useState(false);
   // Snapping is only on while guides are shown, since nobody can aim at hidden lines.
   const snapping = snap && dance.showGuides;
   const castIds = cast.status === 'ready' ? cast.cast.map(({ id }) => id) : [];
@@ -80,7 +83,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
 
   // Escape first stops picking a dancer to circle, then clears the selection.
   useEffect(() => {
-    if (selection.length === 0) return;
+    if (selection.length === 0 || presenting) return;
     function onEscape(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
       if (picking) cancelPicking();
@@ -88,7 +91,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     }
     document.addEventListener('keydown', onEscape);
     return () => document.removeEventListener('keydown', onEscape);
-  }, [selection.length, picking, cancelPicking]);
+  }, [selection.length, picking, cancelPicking, presenting]);
 
   // A failed save puts the dancers back, which is the only feedback needed.
   function moveDancers(positions: Position[]) {
@@ -135,6 +138,18 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     return castActions.reorderFigures(figureIds);
   }
 
+  function present() {
+    playback.stop();
+    cancelPicking();
+    enterFullScreen();
+    setPresenting(true);
+  }
+
+  function leavePresentation(figureId: string) {
+    setSelectedFigureId(figureId);
+    setPresenting(false);
+  }
+
   // Shown right away; put back if saving fails.
   function saveView<K extends ViewSetting>(setting: K, value: Dance[K]) {
     const previous = dance[setting];
@@ -144,6 +159,15 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     );
   }
 
+  if (presenting && cast.status === 'ready' && figure) {
+    return (
+      <PresentationMode
+        presented={{ dance, cast: cast.cast, figures }}
+        startFigureId={figure.id}
+        onLeave={leavePresentation}
+      />
+    );
+  }
   return (
     <div className={styles.editor}>
       <header className={styles.appBar}>
@@ -189,7 +213,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               Snap
             </button>
           </div>
-          <FigureToolbar disabled={!figure} onCopy={copyFigure} circle={circling.tool} />
+          <FigureToolbar
+            disabled={!figure}
+            actions={{ copy: copyFigure, present }}
+            circle={circling.tool}
+          />
           {picking && (
             <p role="status" className={circlingStyles.hint}>
               Tap the dancer to circle around

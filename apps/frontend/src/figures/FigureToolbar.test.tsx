@@ -5,9 +5,12 @@ import { FigureToolbar } from './FigureToolbar.tsx';
 
 const noCircle = { available: false, picking: false, onToggle: vi.fn() };
 
+const noActions = { copy: vi.fn(), present: vi.fn() };
+
 function renderToolbar(onCopy = vi.fn().mockResolvedValue(undefined)) {
-  render(<FigureToolbar disabled={false} onCopy={onCopy} circle={noCircle} />);
-  return { onCopy, user: userEvent.setup() };
+  const present = vi.fn();
+  render(<FigureToolbar disabled={false} actions={{ copy: onCopy, present }} circle={noCircle} />);
+  return { onCopy, present, user: userEvent.setup() };
 }
 
 test('adds a new figure at the end', async () => {
@@ -29,8 +32,19 @@ test('says when the figure cannot be added', async () => {
 });
 
 test('turns the tools off while the dance is loading', () => {
-  render(<FigureToolbar disabled onCopy={vi.fn()} circle={noCircle} />);
+  render(<FigureToolbar disabled actions={noActions} circle={noCircle} />);
   expect(screen.getByRole('button', { name: 'Duplicate' })).toBeDisabled();
+});
+
+test('presents the dance', async () => {
+  const { present, user } = renderToolbar();
+  await user.click(screen.getByRole('button', { name: 'Present' }));
+  expect(present).toHaveBeenCalled();
+});
+
+test('cannot present while the dance is loading', () => {
+  render(<FigureToolbar disabled actions={noActions} circle={noCircle} />);
+  expect(screen.getByRole('button', { name: 'Present' })).toBeDisabled();
 });
 
 test('offers Circle around only when a dancer can circle', () => {
@@ -40,14 +54,14 @@ test('offers Circle around only when a dancer can circle', () => {
 
 test('starts picking the dancer to circle around', async () => {
   const circle = { available: true, picking: false, onToggle: vi.fn() };
-  render(<FigureToolbar disabled={false} onCopy={vi.fn()} circle={circle} />);
+  render(<FigureToolbar disabled={false} actions={noActions} circle={circle} />);
   await userEvent.setup().click(screen.getByRole('button', { name: 'Circle around' }));
   expect(circle.onToggle).toHaveBeenCalled();
 });
 
 test('shows Circle around pressed while picking', () => {
   const circle = { available: true, picking: true, onToggle: vi.fn() };
-  render(<FigureToolbar disabled={false} onCopy={vi.fn()} circle={circle} />);
+  render(<FigureToolbar disabled={false} actions={noActions} circle={circle} />);
   expect(screen.getByRole('button', { name: 'Circle around' })).toHaveAttribute(
     'aria-pressed',
     'true',

@@ -12,13 +12,18 @@ const tools: { placement: Placement; icon: IconName; label: string }[] = [
   { placement: 'after', icon: 'copy', label: 'Duplicate' },
 ];
 
+type FigureActions = {
+  copy: (placement: Placement) => Promise<void>;
+  present: () => void;
+};
+
 type FigureToolbarProps = {
   disabled: boolean;
-  onCopy: (placement: Placement) => Promise<void>;
+  actions: FigureActions;
   circle: CircleTool;
 };
 
-export function FigureToolbar({ disabled, onCopy, circle }: FigureToolbarProps) {
+export function FigureToolbar({ disabled, actions, circle }: FigureToolbarProps) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -26,7 +31,7 @@ export function FigureToolbar({ disabled, onCopy, circle }: FigureToolbarProps) 
     setFailed(false);
     setPending(true);
     try {
-      await onCopy(placement);
+      await actions.copy(placement);
     } catch {
       setFailed(true);
     } finally {
@@ -64,6 +69,19 @@ export function FigureToolbar({ disabled, onCopy, circle }: FigureToolbarProps) 
           <Icon name="path" />
           <span className={styles.label} aria-hidden="true">
             Circle around
+          </span>
+        </button>
+        <span className={styles.divider} aria-hidden="true" />
+        <button
+          type="button"
+          className={`${styles.tool} ${styles.present}`}
+          aria-label="Present"
+          disabled={disabled}
+          onClick={actions.present}
+        >
+          <Icon name="present" />
+          <span className={styles.label} aria-hidden="true">
+            Present
           </span>
         </button>
       </div>

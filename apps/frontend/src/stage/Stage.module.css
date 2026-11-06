@@ -129,12 +129,14 @@
   pointer-events: none;
 }
 
+/* A page around the stage may set --stage-dot and the label fonts to draw dancers larger. */
 .dot {
+  --size: var(--stage-dot, var(--dancer-dot-ipad));
   position: relative;
   flex: none;
-  width: var(--dancer-dot-ipad);
-  height: var(--dancer-dot-ipad);
-  margin-top: calc(var(--dancer-dot-ipad) / -2);
+  width: var(--size);
+  height: var(--size);
+  margin-top: calc(var(--size) / -2);
   border-radius: 50%;
   background: var(--dot);
   box-shadow: 0 0 0 2px var(--stage-ink);
@@ -154,14 +156,14 @@
 
 .label {
   color: var(--stage-ink);
-  font: var(--text-caption);
+  font: var(--stage-label-font, var(--text-caption));
   font-weight: 600;
   white-space: nowrap;
 }
 
 .role {
   color: var(--stage-ink-muted);
-  font: var(--text-caption);
+  font: var(--stage-label-font, var(--text-caption));
   white-space: nowrap;
 }
 
@@ -181,9 +183,7 @@
 
 @media (max-width: 599px) {
   .dot {
-    width: var(--dancer-dot-phone);
-    height: var(--dancer-dot-phone);
-    margin-top: calc(var(--dancer-dot-phone) / -2);
+    --size: var(--stage-dot, var(--dancer-dot-phone));
   }
 }
 

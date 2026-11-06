@@ -1,0 +1,138 @@
+.presentation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100dvh;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--stage-wing);
+  color: var(--stage-ink);
+}
+
+.presentation :focus-visible {
+  outline-color: var(--stage-accent);
+}
+
+.top {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.round {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-tool);
+  height: var(--touch-tool);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--stage-ink) 8%, transparent);
+  color: var(--stage-ink);
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.round:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--stage-ink) 16%, transparent);
+}
+
+.round:disabled,
+.play:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--stage-ink-muted);
+  font: var(--text-overline);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.name {
+  margin: 0;
+  font: var(--text-title-1);
+  overflow-wrap: anywhere;
+}
+
+.stageArea {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  container-type: size;
+}
+
+/* The largest stage that fits both ways; 30px is the Stage's audience strip. The stage is
+   also the container its dots and names scale with. */
+.stageFit {
+  width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
+  container-type: inline-size;
+  --stage-dot: clamp(var(--dancer-dot-phone), 4.5cqw, 96px);
+  --stage-label-font: 400 clamp(12px, 1.45cqw, 32px) / 1.25 var(--font-sans);
+}
+
+.controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.play {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--touch-tool) + var(--space-4));
+  height: calc(var(--touch-tool) + var(--space-4));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--stage-accent);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.play svg {
+  width: 28px;
+  height: 28px;
+}
+
+.time {
+  margin: 0 0 0 var(--space-2);
+  font: var(--text-numeric);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.length {
+  color: var(--stage-ink-muted);
+  font: var(--text-label);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .presentation {
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  .name {
+    font: var(--text-display);
+    letter-spacing: var(--text-display-tracking);
+  }
+}

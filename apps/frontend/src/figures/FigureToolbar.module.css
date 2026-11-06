@@ -44,6 +44,10 @@
   color: var(--primary-strong);
 }
 
+.present {
+  color: var(--primary);
+}
+
 .divider {
   flex: none;
   align-self: stretch;

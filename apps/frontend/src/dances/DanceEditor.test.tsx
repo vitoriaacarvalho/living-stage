@@ -612,6 +612,14 @@ describe('dragging on the 2D plan', () => {
     expect(claraDot()).not.toHaveClass(/selected/);
   });
 
+  test('keeps the selection when presentation mode is left with Escape', async () => {
+    const user = await openPlan();
+    tapClara();
+    await user.click(screen.getByRole('button', { name: 'Present' }));
+    await user.keyboard('{Escape}');
+    expect(claraDot()).toHaveClass(/selected/);
+  });
+
   test('keeps the selection on another figure', async () => {
     const user = await openPlan();
     tapClara();
@@ -848,6 +856,29 @@ describe('playback', () => {
     ]);
     await openKitri();
     expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
+  });
+});
+
+describe('presenting', () => {
+  async function presentKitri() {
+    await openKitri();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Present' }));
+  }
+
+  test('opens presentation mode', async () => {
+    await presentKitri();
+    expect(screen.getByRole('main', { name: 'Presenting Kitri variation' })).toBeInTheDocument();
+  });
+
+  test('shows presentation mode instead of the editor', async () => {
+    await presentKitri();
+    expect(screen.queryByRole('toolbar', { name: 'Figure tools' })).not.toBeInTheDocument();
+  });
+
+  test('goes back to the editor on leaving', async () => {
+    await presentKitri();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.getByRole('toolbar', { name: 'Figure tools' })).toBeInTheDocument();
   });
 });
 
