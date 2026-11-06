@@ -161,7 +161,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part D — Paths and animation
 
 - ✅ **D1.** Each dancer's move between two figures is a straight line by default.
-- **D2.** A path can be bent into a curve by dragging handles, or given waypoints.
+- ✅ **D2.** A path can be bent into a curve by dragging handles, or given waypoints.
 - **D3.** A path can follow a circle or arc (e.g. circling around another dancer).
 - ✅ **D4.** Playback animates every dancer smoothly along her path from one figure to the next, with easing.
 - ✅ **D5.** Playback can run without music too, with a default duration per transition.
@@ -402,7 +402,7 @@ First milestone to show real teachers.
   - Done when: Drag handles to bend a path; playback follows it
   - Requirements: D2 (curves) · Screens: `Stage`
   - Note: a selected dancer shows her path from her faint spot in the figure before; the handle sits on the curve, the bend follows when either end moves, and letting go near the straight line straightens it
-- 🟨 **3.2 Waypoints** · after 3.1
+- ✅ **3.2 Waypoints** · after 3.1
   - Done when: Add and move waypoints on a path
   - Requirements: D2 (waypoints) · Screens: `Stage`
   - Note: tap the selected path's line to add a point, up to 5; drag a point back near the line between its neighbours to remove it
