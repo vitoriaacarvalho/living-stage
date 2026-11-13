@@ -25,6 +25,7 @@ import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
 import { Button } from '../ui/Button.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
+import { usePhone } from '../ui/usePhone.ts';
 import styles from './DanceEditor.module.css';
 
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
@@ -52,6 +53,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [snap, setSnap] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const phone = usePhone();
   // Snapping is only on while guides are shown, since nobody can aim at hidden lines.
   const snapping = snap && dance.showGuides;
   const castIds = cast.status === 'ready' ? cast.cast.map(({ id }) => id) : [];
@@ -172,7 +174,27 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     <div className={styles.editor}>
       <header className={styles.appBar}>
         <Button variant="ghost" icon="back" aria-label="Back to dances" onClick={onBack} />
-        <h1 className={styles.title}>{dance.title}</h1>
+        {phone ? (
+          <>
+            <div className={styles.phoneTitle}>
+              <h1 className={styles.title}>{dance.title}</h1>
+              {figure && (
+                <p className={styles.figureCount}>
+                  Figure {figures.indexOf(figure) + 1} of {figures.length}
+                </p>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              icon="present"
+              aria-label="Present"
+              disabled={!figure}
+              onClick={present}
+            />
+          </>
+        ) : (
+          <h1 className={styles.title}>{dance.title}</h1>
+        )}
       </header>
       <div className={styles.body}>
         <main className={styles.main}>
@@ -215,7 +237,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           </div>
           <FigureToolbar
             disabled={!figure}
-            actions={{ copy: copyFigure, present }}
+            actions={phone ? { copy: copyFigure } : { copy: copyFigure, present }}
             circle={circling.tool}
           />
           {picking && (

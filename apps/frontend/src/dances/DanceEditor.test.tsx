@@ -1025,3 +1025,35 @@ describe('circling another dancer', () => {
     expect(savePath).not.toHaveBeenCalled();
   });
 });
+
+describe('on iPhone', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: true,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('says which figure is shown under the title', async () => {
+    await openKitri();
+    expect(screen.getByText('Figure 1 of 1')).toBeInTheDocument();
+  });
+
+  test('leaves Present out of the figure tools', async () => {
+    await openKitri();
+    const tools = screen.getByRole('toolbar', { name: 'Figure tools' });
+    expect(within(tools).queryByRole('button', { name: 'Present' })).not.toBeInTheDocument();
+  });
+
+  test('presents from the title bar', async () => {
+    await openKitri();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Present' }));
+    expect(screen.getByRole('main', { name: 'Presenting Kitri variation' })).toBeInTheDocument();
+  });
+});

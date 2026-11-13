@@ -14,7 +14,8 @@ const tools: { placement: Placement; icon: IconName; label: string }[] = [
 
 type FigureActions = {
   copy: (placement: Placement) => Promise<void>;
-  present: () => void;
+  // Left out on iPhone, where Present sits in the title bar.
+  present?: () => void;
 };
 
 type FigureToolbarProps = {
@@ -71,19 +72,23 @@ export function FigureToolbar({ disabled, actions, circle }: FigureToolbarProps)
             Circle around
           </span>
         </button>
-        <span className={styles.divider} aria-hidden="true" />
-        <button
-          type="button"
-          className={`${styles.tool} ${styles.present}`}
-          aria-label="Present"
-          disabled={disabled}
-          onClick={actions.present}
-        >
-          <Icon name="present" />
-          <span className={styles.label} aria-hidden="true">
-            Present
-          </span>
-        </button>
+        {actions.present && (
+          <>
+            <span className={styles.divider} aria-hidden="true" />
+            <button
+              type="button"
+              className={`${styles.tool} ${styles.present}`}
+              aria-label="Present"
+              disabled={disabled}
+              onClick={actions.present}
+            >
+              <Icon name="present" />
+              <span className={styles.label} aria-hidden="true">
+                Present
+              </span>
+            </button>
+          </>
+        )}
       </div>
       {failed && (
         <p role="alert" className={formStyles.error}>
