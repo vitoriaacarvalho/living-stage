@@ -22,9 +22,10 @@ Living Stage is a responsive web app where dance schools plan group choreography
 The first release is about choreography and shows, and it should ship fast:
 
 - **In:** create shows with acts and dances, manage the school's dances, cast dancers into each dance (with how many there are), place them in formations on a top-down 2D stage plan as colored circles, animate them from one formation to the next (straight, curved and circular paths), show it full screen in rehearsal, and quick edits on iPhone.
-- **Out, for later:** music and the timeline, costume photos, live viewing and the edit lock, PDF export, Portuguese, email invites, installing as an app, layout tools, ghost view, and undo and redo.
+- **Out, for later:** music and the timeline, undo and redo, and PDF export.
+- **Dropped (Nov 2026):** costume photos, live viewing and the edit lock, Portuguese, email invites, installing as an app, layout tools and the ghost view.
 
-Section 7 lists the MVP plans in build order and keeps the rest under "After the MVP".
+Section 7 lists the MVP plans in build order and the three features after it under "After the MVP".
 
 **Name.** Working name: **Living Stage**. No app or dance software with this name was found, but a former theater company and an eco-theater project used it, so the exact domain is likely taken. Options: livingstage.app, "LivingStage" as one word, or a suffix like "Studio". Domain (Registro.br) and trademark (INPI, USPTO) checks are still to do.
 
@@ -34,14 +35,14 @@ Section 7 lists the MVP plans in build order and keeps the rest under "After the
 | Users | Ballet teachers and school managers; dancers have no accounts |
 | Permissions | All members of a school have the same rights |
 | School required | A signed-in user with no school must create one or join one with an invitation code before using the app. With one school she goes straight into it; with several she picks one at sign-in and can switch inside the app |
-| Invitations | One reusable code per school, valid 7 days; any teacher can make a new one, which replaces the old. Shared as a short code to type (8 letters and digits without look-alikes, shown as `ABCD-2345`) or as a link carrying it (`/join/<code>`, kept through sign-in). Joining shows the school's name before confirming. Schools are never listed or searchable. Email invites come later |
+| Invitations | One reusable code per school, valid 7 days; any teacher can make a new one, which replaces the old. Shared as a short code to type (8 letters and digits without look-alikes, shown as `ABCD-2345`) or as a link carrying it (`/join/<code>`, kept through sign-in). Joining shows the school's name before confirming. Schools are never listed or searchable. There are no email invites |
 | Tenancy | Many schools, each a private space; several teachers share one school's environment. Every route for a school's data lives under `/api/schools/:schoolId`, where one membership check answers 404 to non-members, so another school's data looks like it does not exist. No route checks who created the school |
 | MVP scope | Shows, dances, casting, formations and movement first; everything else waits (see §1, MVP) |
-| Editing model | One person edits a dance at a time; others watch changes live. Not in the MVP: until the edit lock ships, the last save wins |
+| Editing model | The last save wins. There is no edit lock or live viewing (dropped Nov 2026) |
 | Casts | One cast per dance |
 | Roles | Free text per dance; the teacher decides whether to show and color by role. Coloring by role is automatic: each distinct role takes the next color from `dancer-1` to `dancer-11` in the order roles first appear in the cast (starting over after 11), roles that differ only in case are one role, and dancers with no role are `dancer-12` (stone) |
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
-| Languages | English only in the MVP; Portuguese (pt-BR) added after it with i18n |
+| Languages | English only; Portuguese (pt-BR) was dropped in Nov 2026 |
 | Stage | Standard rectangular stage with wings; no custom proportions |
 | Music | Uploaded audio files, after the MVP; no Spotify (its API no longer supports this use). Until then playback runs on a time per move that the teacher sets (4 s by default), and a dance's duration is typed by hand |
 | Offline | Not required |
@@ -58,24 +59,22 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Layer | Choice | Notes |
 | Language | TypeScript | Frontend, backend and shared code |
 | Package manager | npm (workspaces) | Root `package.json` with `"workspaces": ["apps/*", "packages/*"]` |
-| Frontend | React + Vite | Single-page app, responsive, installable as a PWA |
+| Frontend | React + Vite | Single-page app, responsive |
 | Stage rendering | SVG rendered by React | The plan reads normalized stage coordinates and keeps a fixed `viewBox`. No WebGL or game engine |
 | Touch and gestures | Pointer Events + `@use-gesture/react` | Drag, multi-select, pinch-to-zoom, pan; finger, mouse and Apple Pencil |
 | Reorderable lists | `@dnd-kit/core` + `@dnd-kit/sortable` | Drag to reorder figures, and later acts and dances (H3); touch, mouse and keyboard |
 | Animation | Custom `requestAnimationFrame` loop | Cubic Bézier paths with easing; the audio's current time drives the frame |
 | Audio waveform | `wavesurfer.js` | Waveform, playhead, regions for loops |
 | Backend | Node + Express | REST API |
-| Realtime | WebSockets | Pushes a dance's changes to viewers; edit lock heartbeat |
 | Database | PostgreSQL + Prisma | Prisma chosen as the ORM |
-| File storage | S3-compatible (e.g. Cloudflare R2) | Audio files, costume photos |
+| File storage | S3-compatible (e.g. Cloudflare R2) | Audio files |
 | Auth | Better Auth | Email and password (no third-party sign-in for now); Prisma adapter; organization plugin can model schools and invites |
-| i18n | react-i18next | Added in plan 8.3, after the MVP; until then copy is plain English in the components. One JSON file per language and screen area, e.g. `locales/pt-BR/editor.json` |
 | Styling | CSS variables + CSS Modules | Design tokens are CSS variables in `styles/tokens.css`; each component has its own CSS Module; no CSS framework |
 | Fonts | Self-hosted with `@fontsource` | Instrument Sans and Cormorant Garamond ship with the app; no request to Google |
 | Icons | The design system's own line icons | Ported as React components, only the ones in use |
 | PDF export | In the browser: jsPDF + svg2pdf.js | The simpler option: no server rendering, reuses the SVG stage |
 
-The MVP does not use file storage, WebSockets, `wavesurfer.js`, jsPDF or react-i18next; they come with the features that need them.
+The MVP does not use file storage, `wavesurfer.js` or jsPDF; they come with the features that need them.
 
 ### Architecture
 
@@ -83,7 +82,7 @@ The web app talks to one API, which owns the data.
 
 ```
 Web app (React + Vite)  ──REST──▶  API (Node + Express)  ──▶  PostgreSQL (schools, dances, shows)
-SVG stage plan, timeline ◀─live updates─  REST + WebSockets, edit lock  ──▶  File storage / R2 (audio, photos)
+SVG stage plan, timeline                                    ──▶  File storage / R2 (audio)
 iPad, iPhone, desktop
 
         both import packages/shared: types, validation, animation math
@@ -107,7 +106,7 @@ living-stage/
 
 **Local development.** PostgreSQL 18 runs in Docker Compose (`compose.yaml` at the root) on port 5433, so it does not clash with a Postgres already installed on 5432. The connection string lives in `apps/backend/.env` (copy `.env.example`).
 
-**Hosting (proposed).** Web app on Cloudflare Pages; API and PostgreSQL on Railway (or Render / Fly.io), since WebSockets need a long-running server rather than serverless functions; files on Cloudflare R2.
+**Hosting (proposed).** Web app on Cloudflare Pages; API and PostgreSQL on Railway (or Render / Fly.io); files on Cloudflare R2.
 
 ## 4. Functional requirements
 
@@ -126,7 +125,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - ✅ **A1.** A user can sign up and sign in with email and password.
 - ✅ **A2.** A user can create a school and becomes its first member.
-- ✅ **A3.** A member can invite other teachers with an invitation code or link (valid 7 days), and later by email. Code and link done; email comes with plan 1.4 *(after the MVP)*.
+- ✅ **A3.** A member can invite other teachers with an invitation code or link (valid 7 days).
 - ✅ **A4.** A user can belong to more than one school and switch between them.
 - ✅ **A5.** All members of a school have equal rights over its dancers, dances and shows.
 - ✅ **A6.** A school's data is visible only to its members.
@@ -138,7 +137,6 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **B3.** The same roster is reused across all dances and shows; no retyping.
 - ✅ **B4.** The roster can be searched and sorted by name.
 - ✅ **B5.** Removing a dancer who is cast in dances keeps her spot as a placeholder until someone else is assigned.
-- **B6.** Costume photos are resized in the browser to 1600 px on the long edge before upload; originals up to 10 MB are accepted, including iPhone HEIC. *(after the MVP)*
 - ✅ **B7.** A member can add a new dancer, with a name and an optional color, from a dance's "Add to cast" panel; she joins the roster and the dance's cast at once.
 
 ### Part C — Formation editor
@@ -152,8 +150,6 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
 - ✅ **C8.** Dancers are placed by dragging; several can be selected and moved together.
 - ✅ **C9.** Optional snapping to guide lines.
-- **C10.** Layout tools for a selection: mirror left/right, align in a line, spread evenly, arrange in a circle. *(after the MVP)*
-- **C11.** A "ghost" view shows the previous figure's positions faintly while editing the current one, as dashed circles. *(after the MVP)*
 - **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - ✅ **C14.** A dance shows its cast list and how many dancers are in it.
@@ -179,14 +175,6 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
 - **E9.** Up to 40 dancers per dance, rendering and animating smoothly on an iPad.
 
-### Part F — Editing lock and live viewing *(after the MVP)*
-
-- **F1.** Only one member can edit a dance at a time; opening it while someone else edits shows it read-only.
-- **F2.** A banner shows who is editing.
-- **F3.** Viewers see the editor's changes live, without reloading.
-- **F4.** The lock is released when the editor leaves, and expires automatically if she closes the tab or loses connection.
-- **F5.** A viewer can ask to take over editing once the lock is free.
-
 ### Part G — Presentation mode
 
 - ✅ **G1.** Full-screen stage with playback controls, for showing dancers in rehearsal. Music controls join once music ships.
@@ -198,8 +186,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **H1.** A member can create a show with a name, date and optional venue.
 - ✅ **H2.** A show contains ordered acts; each act contains ordered dances.
 - ✅ **H3.** Acts and dances can be reordered by dragging.
-- ✅ **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song and costume photos are added after the MVP.
-- **H5.** A member can upload costume photos to a dance. *(after the MVP)*
+- ✅ **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song is added after the MVP.
 - ✅ **H6.** The show's total running time is calculated from the dance durations. In the MVP the teacher types each dance's duration; once music ships, it comes from the song.
 - ✅ **H7.** A dance belongs to the school and can appear in more than one show, or be duplicated as a starting point.
 
@@ -210,19 +197,15 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - **I3.** Layout suitable for printing and posting on the studio wall.
 - **I4.** The PDF is generated in the browser.
 
-### Part J — Languages *(after the MVP, except J4)*
+### Part J — Languages
 
-- **J1.** The whole interface is available in Portuguese (pt-BR) and English.
-- **J2.** Each user picks her language; the default follows the browser.
-- **J3.** User-entered content (names, roles, titles) is never translated.
-- ✅ **J4.** The interface is written in English first; Portuguese is added later through J1.
+- ✅ **J4.** The interface is in English. (J1–J3, Portuguese, were dropped in Nov 2026.)
 
 ### Part K — Responsiveness and devices
 
 - **K1.** Every screen works on iPad, iPhone and desktop.
 - ✅ **K2.** Touch targets are large enough for finger dragging on a tablet.
 - **K3.** On iPhone, the editor is optimized for viewing and quick edits; landscape is suggested for heavy editing.
-- **K4.** The app is installable to the home screen and opens full-screen (PWA). *(after the MVP)*
 - ✅ **K5.** The interface follows the Living Stage design system (tokens, fonts, icons, base components).
 
 ## 5. Data model (first draft)
@@ -231,7 +214,7 @@ Everything belongs to a school; dances live at school level and are linked into 
 
 ```
 School        id, name, createdAt, createdById, teachers[]   (teachers: many-to-many with User, equal rights)
-User          id, name, email, language
+User          id, name, email
 Invite        id, schoolId, code, expiresAt, createdById   (one active code per school; email invites later)
 
 Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
@@ -243,16 +226,13 @@ Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, points[], aroundId?, clockwise, turns  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before; a path with aroundId circles that cast member instead, turns 0–3 extra)
 
 AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
-CostumePhoto  id, danceId, url, caption?
 
 Show          id, schoolId, title, date, time?, venue?, intervalMs   (date is a calendar day and time a wall-clock time, kept as typed; intervalMs is the interval between acts, 0 by default)
 Act           id, showId, order, name?   (numbered "Act 1" with an optional name; a show keeps at least one)
 ActItem       id, showId, actId, danceId, order   (a dance is in a show at most once; showId is there for that check)
-
-EditLock      danceId, userId, expiresAt          (renewed by heartbeat)
 ```
 
-`AudioTrack`, `CostumePhoto` and `EditLock` are not built in the MVP.
+`AudioTrack` is not built in the MVP; it comes with plan 4.1.
 
 **Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The plan maps 0–1 onto a 12 × 8 m floor; guides, snapping and keyboard moves work in those metres.
 
@@ -421,17 +401,8 @@ First milestone to show real teachers.
 
 ### After the MVP
 
-Not ordered yet; plan it when the MVP ships.
+In build order: music first, then undo and redo, then PDF export. Each has its own file in `docs/features/`. Everything else that used to be here was dropped in Nov 2026 (see §1).
 
-- ⬜ **1.4 Email invites** · after 1.3
-  - Done when: An invited teacher joins from an email
-  - Requirements: A3 (email)
-- ⬜ **2.5 Layout tools and ghost view** · after 2.4
-  - Done when: Mirror, align, spread, circle; previous figure shown faintly
-  - Requirements: C10, C11 · Screens: `Toolbar`
-- ⬜ **2.6 Undo and redo** · after 2.4
-  - Done when: Undo/redo per figure
-  - Requirements: C12 · Screens: `Toolbar`
 - ⬜ **4.1 Audio upload** · after 2.3
   - Done when: Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song
   - Requirements: E1, E7
@@ -447,27 +418,12 @@ Not ordered yet; plan it when the MVP ships.
 - ⬜ **4.5 Figures on the timeline** · after 4.3, 4.4, 2.7
   - Done when: Stage stays in sync with the music at every speed and after scrubbing, in the editor and in presentation mode
   - Requirements: E4, E6 · Screens: `Timeline`, `PresentationMode`
-- ⬜ **5.1 Edit lock** · after 2.3
-  - Done when: Second teacher sees read-only with a banner; lock expires on tab close
-  - Requirements: F1, F2, F4 · Screens: `EditingBanner`
-- ⬜ **5.2 Live updates** · after 5.1
-  - Done when: Viewer sees edits without reloading
-  - Requirements: F3
-- ⬜ **5.3 Take over editing** · after 5.1
-  - Done when: Viewer takes over once the lock is free
-  - Requirements: F5 · Screens: `EditingBanner`
-- ⬜ **6.4 Costume photos** · after 6.1
-  - Done when: A HEIC costume photo from an iPhone uploads resized to 1600 px and shows in the show manager
-  - Requirements: H5, B6 · Screens: `ShowManager`
+- ⬜ **2.6 Undo and redo** · after 2.4
+  - Done when: Undo/redo per figure
+  - Requirements: C12 · Screens: `Toolbar`
 - ⬜ **7.2 PDF export** · after 2.3
   - Done when: Printable PDF, one figure per page, made in the browser
   - Requirements: I1, I2, I3, I4 · Screens: `PrintView`
-- ⬜ **8.1 Installable app** · after 1.6
-  - Done when: Add to home screen on iPad; opens full-screen
-  - Requirements: K4
-- ⬜ **8.3 Languages** · after 1.6
-  - Done when: Every screen works in pt-BR and English; default follows the browser
-  - Requirements: J1, J2, J3
 
 ### To do
 
@@ -477,7 +433,7 @@ Not ordered yet; plan it when the MVP ships.
 
 - [x] Auth: Better Auth with email and password; no third-party sign-in (Google, Apple) for now
 - [x] ORM: Prisma
-- [x] i18n: react-i18next, JSON per language and screen area; English first, pt-BR added in plan 8.3 (after the MVP)
+- [x] i18n: none; the app is English only (Portuguese dropped in Nov 2026)
 - [ ] Hosting: confirm the proposal in section 3
 - [x] Palette: "Pointe", light theme only
 - [x] Undo/redo: per figure
