@@ -167,8 +167,8 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 - **E1.** A member can upload an audio file (MP3, M4A, WAV) to a dance.
 - **E2.** The timeline shows the song's waveform and a playhead below the stage.
-- **E3.** Counts can be marked by tapping along, or generated from a BPM and start offset; the teacher chooses per song, and tapped counts handle tempo changes.
-- **E4.** Each figure is pinned to a moment in the song (a timestamp or a count); the transition fills the time before it.
+- **E3.** *(Dropped in Nov 2026: musical counts. Figures are placed by time in the song only.)*
+- **E4.** Each figure is pinned to a moment in the song, shown as a time such as `0:58`; the transition fills the time before it.
 - **E5.** Play, pause, scrub, loop a section, and play at 0.5×, 0.75× or 1×.
 - **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
 - **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
@@ -193,7 +193,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part I — PDF export *(after the MVP)*
 
 - **I1.** Export a dance as a PDF with one figure per page, showing the stage and dancer names.
-- **I2.** Each page shows the dance title, figure name and its count or time.
+- **I2.** Each page shows the dance title, figure name and its time.
 - **I3.** Layout suitable for printing and posting on the studio wall.
 - **I4.** The PDF is generated in the browser.
 
@@ -221,11 +221,11 @@ Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dance
 
 Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
-Figure        id, danceId, order, name?, transitionMs, timeMs?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs, the moment in the song the figure is reached, once music ships; counts are shown from the song, never stored on the figure)
+Figure        id, danceId, order, name?, transitionMs, timeMs?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs, the moment in the song the figure is reached, once music ships)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, points[], aroundId?, clockwise, turns  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before; a path with aroundId circles that cast member instead, turns 0–3 extra)
 
-AudioTrack    id, url, durationMs, bpm?, offsetMs?, beatMarks[]
+AudioTrack    id, schoolId, name, url, durationMs, peaks   (one song can serve several dances; peaks are the stored waveform)
 
 Show          id, schoolId, title, date, time?, venue?, intervalMs   (date is a calendar day and time a wall-clock time, kept as typed; intervalMs is the interval between acts, 0 by default)
 Act           id, showId, order, name?   (numbered "Act 1" with an optional name; a show keeps at least one)
@@ -414,10 +414,7 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
 - ⬜ **4.3 Transport controls** · after 4.2
   - Done when: Play, pause, scrub, loop, 0.5× / 0.75× / 1×
   - Requirements: E5 · Screens: `Timeline`
-- ⬜ **4.4 Counts** · after 4.2
-  - Done when: Tap counts or generate them from BPM and offset
-  - Requirements: E3 · Screens: `Timeline`
-- ⬜ **4.5 Figures on the timeline** · after 4.3, 4.4, 2.7
+- ⬜ **4.5 Figures on the timeline** · after 4.3, 2.7
   - Done when: Stage stays in sync with the music at every speed and after scrubbing, in the editor and in presentation mode
   - Requirements: E4, E6 · Screens: `Timeline`, `PresentationMode`
 - ⬜ **2.6 Undo and redo** · after 2.4
@@ -439,7 +436,7 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
 - [ ] Hosting: confirm the proposal in section 3
 - [x] Palette: "Pointe", light theme only
 - [x] Undo/redo: per figure
-- [x] Counts: the teacher chooses tapped counts or BPM per song
+- [x] Counts: dropped; figures are placed by time in the song only (Nov 2026)
 - [x] PDF export: in the browser
 - [x] Limits: 40 dancers (lowered from 60 in Nov 2026), 30 MB audio, 10 MB photos (resized before upload)
 - [x] Deleted dancers: kept as placeholders
