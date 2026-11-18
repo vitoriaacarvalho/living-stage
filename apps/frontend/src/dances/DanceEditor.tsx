@@ -29,6 +29,7 @@ import { Icon } from '../ui/Icon.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import { usePhone } from '../ui/usePhone.ts';
 import styles from './DanceEditor.module.css';
+import { LandscapeHint } from './LandscapeHint.tsx';
 
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
 
@@ -220,6 +221,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           <h1 className={styles.title}>{dance.title}</h1>
         )}
       </header>
+      {phone && <LandscapeHint />}
       <div className={styles.body}>
         <main className={styles.main}>
           <div className={styles.viewControls}>

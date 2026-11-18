@@ -1054,6 +1054,11 @@ describe('on iPhone', () => {
     expect(within(tools).queryByRole('button', { name: 'Present' })).not.toBeInTheDocument();
   });
 
+  test('suggests turning sideways to edit', async () => {
+    await openKitri();
+    expect(screen.getByRole('note')).toHaveTextContent('Turn sideways');
+  });
+
   test('puts the cast in a bottom sheet', async () => {
     await openKitri();
     expect(screen.getByRole('button', { name: 'Expand cast' })).toBeInTheDocument();
