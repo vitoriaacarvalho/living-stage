@@ -1054,6 +1054,18 @@ describe('on iPhone', () => {
     expect(within(tools).queryByRole('button', { name: 'Present' })).not.toBeInTheDocument();
   });
 
+  test('puts the cast in a bottom sheet', async () => {
+    await openKitri();
+    expect(screen.getByRole('button', { name: 'Expand cast' })).toBeInTheDocument();
+  });
+
+  test('puts the figure panel in the bottom sheet', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Figure 1' }));
+    expect(screen.getByRole('button', { name: 'Expand figure' })).toBeInTheDocument();
+  });
+
   test('presents from the title bar', async () => {
     await openKitri();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Present' }));

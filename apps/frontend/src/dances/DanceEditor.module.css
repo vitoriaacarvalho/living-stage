@@ -137,6 +137,15 @@
 
 /* iPhone: a compact title bar and a stage that runs edge to edge, sized by its width. */
 @media (max-width: 599px) {
+  .editor {
+    position: relative;
+    --sheet-top: 52px;
+  }
+
+  .main {
+    flex: none;
+  }
+
   .appBar {
     gap: var(--space-1);
     min-height: 52px;

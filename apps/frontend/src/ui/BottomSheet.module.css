@@ -1,0 +1,47 @@
+/* Peeks in the space left under the editor; expanded, it covers everything below --sheet-top. */
+.sheet {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+}
+
+.sheet[data-expanded='true'] {
+  position: absolute;
+  inset: var(--sheet-top, 0) 0 0;
+  z-index: 2;
+}
+
+.grab {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 100%;
+  min-height: var(--touch-min);
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.grab:focus-visible {
+  outline-offset: -4px;
+}
+
+.bar {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--border-control);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}

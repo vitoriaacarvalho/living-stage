@@ -23,6 +23,7 @@ import { PresentationMode } from '../presentation/PresentationMode.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
+import { BottomSheet } from '../ui/BottomSheet.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
@@ -171,6 +172,28 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       />
     );
   }
+  // The sidebar on iPad and desktop, the bottom sheet on iPhone.
+  const panel =
+    figurePanelOpen && figure ? (
+      <FigurePanel
+        key={figure.id}
+        figure={figure}
+        figures={figures}
+        actions={{
+          save: (update) => castActions.saveFigure(figure.id, update),
+          remove: () => deleteFigure(figure.id),
+        }}
+        onClose={() => setFigurePanelOpen(false)}
+      />
+    ) : (
+      <CastList
+        schoolId={schoolId}
+        state={cast}
+        actions={castActions}
+        colorMode={dance.colorMode}
+      />
+    );
+
   return (
     <div className={styles.editor}>
       <header className={styles.appBar}>
@@ -288,24 +311,10 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             </section>
           )}
         </main>
-        {figurePanelOpen && figure ? (
-          <FigurePanel
-            key={figure.id}
-            figure={figure}
-            figures={figures}
-            actions={{
-              save: (update) => castActions.saveFigure(figure.id, update),
-              remove: () => deleteFigure(figure.id),
-            }}
-            onClose={() => setFigurePanelOpen(false)}
-          />
+        {phone ? (
+          <BottomSheet label={figurePanelOpen && figure ? 'Figure' : 'Cast'}>{panel}</BottomSheet>
         ) : (
-          <CastList
-            schoolId={schoolId}
-            state={cast}
-            actions={castActions}
-            colorMode={dance.colorMode}
-          />
+          panel
         )}
       </div>
     </div>
