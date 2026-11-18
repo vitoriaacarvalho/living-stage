@@ -119,7 +119,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **S3.** Local PostgreSQL and Prisma, first migration.
 - ✅ **S4.** API skeleton with a health route.
 - ✅ **S5.** Web skeleton (React + Vite) that calls the API.
-- **S6.** CI: typecheck, lint, test on every push.
+- ✅ **S6.** CI: typecheck, lint, test on every push.
  
 ### Part A — Accounts and schools
 
@@ -301,7 +301,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 
 #### MVP 1 — Foundation
 
-- 🟨 **1.1 Monorepo and tooling**
+- ✅ **1.1 Monorepo and tooling**
   - Done when: `npm run dev` starts web and API; CI is green
   - Requirements: S1–S6
 - ✅ **1.2 Sign in** · after 1.1
@@ -313,9 +313,10 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 - ✅ **1.6a Design foundation and styled sign-in** · after 1.2
   - Done when: Design tokens are CSS variables, fonts and icons load, and the sign-in and sign-up forms match the design on iPhone, iPad and desktop
   - Requirements: K5 · Screens: `Access` (sign in, sign up), `Button`, `SegmentedControl`
-- 🟨 **1.3 Schools and data isolation** · after 1.6a
+- ✅ **1.3 Schools and data isolation** · after 1.6a
   - Done when: Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404
   - Requirements: A2, A3 (code and link), A4, A5, A6 · Screens: `Access` (create or join a school), school picker and switcher
+  - Checked on 18 Nov 2026 (driven): a school created on iPad; one teacher joined by typing the code on iPhone, another by opening the link before signing up; switching between two schools from the account menu; reading or deleting another school's dancers, dances, cast and shows gave 404
 - 🟨 **1.6 Responsive app shell** · after 1.6a
   - Done when: Navigation and layout work on iPhone, iPad and desktop
   - Requirements: K1, K2 · Screens: `Home` (shell, nav rail, dance cards with a stage thumbnail)
@@ -342,9 +343,10 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
 
 First milestone to show real teachers.
 
-- 🟨 **2.1 Stage** · after 2.0
+- ✅ **2.1 Stage** · after 2.0
   - Done when: Empty stage with wings and toggleable guide lines
   - Requirements: C1, C2, C3 · Screens: `Stage`, `DanceEditorIPad`
+  - Checked on 18 Nov 2026 (driven): an empty dance shows the floor with Upstage, both wings and Audience; Guides off hides the six guide lines and stays off after a reload
 - ✅ **2.2 Casting** · after 2.1, 1.7
   - Done when: Cast dancers with roles; the cast list shows how many dancers; label and color modes switch; a removed dancer's spot stays as a placeholder
   - Requirements: C4, C5, C6, C14, B5 · Screens: `CastList`
