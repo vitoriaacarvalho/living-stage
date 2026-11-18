@@ -44,12 +44,6 @@ const paths = {
       <path d="M5.5 9.5V20h13V9.5" />
     </>
   ),
-  lock: (
-    <>
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
-    </>
-  ),
   magnet: (
     <>
       <path d="M6 4v7a6 6 0 0 0 12 0V4" />

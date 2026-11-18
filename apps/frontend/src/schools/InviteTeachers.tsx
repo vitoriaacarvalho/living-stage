@@ -2,7 +2,6 @@ import { formatInviteCode, type Invite } from '@living-stage/shared';
 import { useState } from 'react';
 import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
-import { Icon } from '../ui/Icon.tsx';
 import styles from './InviteTeachers.module.css';
 import { inviteLink } from './join-link.ts';
 import { useSchoolInvite } from './useSchoolInvite.ts';
@@ -57,10 +56,6 @@ export function InviteTeachers({ schoolId, onDone }: InviteTeachersProps) {
           {error}
         </p>
       )}
-      <p className={styles.note}>
-        <Icon name="lock" />
-        <span>One person edits each dance at a time. The others watch the changes live.</span>
-      </p>
       <Button variant="secondary" width="full" onClick={onDone}>
         Done
       </Button>

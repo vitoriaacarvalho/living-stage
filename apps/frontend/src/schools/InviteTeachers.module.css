@@ -50,21 +50,3 @@
   font: var(--text-caption);
   color: var(--ink-muted);
 }
-
-.note {
-  display: flex;
-  gap: 10px;
-  margin: 0;
-  padding: 10px var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  font: var(--text-label);
-  font-weight: 400;
-}
-
-.note svg {
-  width: 18px;
-  height: 18px;
-  margin-top: 1px;
-  color: var(--ink-muted);
-}
