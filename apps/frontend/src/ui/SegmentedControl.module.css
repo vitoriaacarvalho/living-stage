@@ -29,7 +29,8 @@
 
 @media (max-width: 599px) {
   .segment {
-    padding: 0 var(--space-2);
+    min-width: var(--touch-min);
+    padding: 0 var(--space-1);
   }
 }
 
