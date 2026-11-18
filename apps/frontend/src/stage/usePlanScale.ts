@@ -7,8 +7,8 @@ export type PlanScale = { pxPerM: number; dotPx: number };
 
 const unmeasured: PlanScale = { pxPerM: 100, dotPx: 40 };
 
-// Matches the phone breakpoint in Stage.module.css.
-const phone = '(max-width: 599px)';
+// Matches the compact (phone) breakpoint in Stage.module.css.
+const phone = '(max-width: 599px), (max-height: 499px)';
 
 export function usePlanScale(
   svgRef: RefObject<SVGSVGElement | null>,

@@ -40,6 +40,14 @@
   padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
+.tools {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .stageArea {
   display: flex;
   flex: 1;
@@ -135,15 +143,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* iPhone: a compact title bar and a stage that runs edge to edge, sized by its width. */
-@media (max-width: 599px) {
+/* Phones, either way up: a compact title bar and icon-only toggles. */
+@media (max-width: 599px), (max-height: 499px) {
   .editor {
     position: relative;
     --sheet-top: 52px;
-  }
-
-  .main {
-    flex: none;
   }
 
   .appBar {
@@ -169,6 +173,13 @@
 
   .toggle svg {
     display: block;
+  }
+}
+
+/* iPhone portrait: the stage runs edge to edge, sized by its width; the sheet takes the rest. */
+@media (max-width: 599px) {
+  .main {
+    flex: none;
   }
 
   .stageArea {
@@ -201,5 +212,53 @@
   .timeline {
     margin: 0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5));
     padding: var(--space-3) var(--space-5) var(--space-4);
+  }
+}
+
+/* iPhone landscape: the stage at full height on the left, the tools and the sheet on the right.
+   Last, so it overrides the iPad padding above. */
+@media (min-width: 600px) and (max-height: 499px) {
+  .editor {
+    --side: 380px;
+    --sheet-left: calc(100% - var(--side));
+  }
+
+  .main {
+    display: grid;
+    grid-template-areas:
+      'stage controls'
+      'stage tools'
+      'stage timeline'
+      'stage sheet';
+    grid-template-columns: minmax(0, 1fr) var(--side);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 0;
+    padding: 0;
+  }
+
+  .stageArea {
+    grid-area: stage;
+    align-items: center;
+    background: var(--stage-wing);
+  }
+
+  .viewControls {
+    grid-area: controls;
+    padding: var(--space-2) var(--space-3) 0;
+    border-left: 1px solid var(--hairline);
+  }
+
+  .tools {
+    grid-area: tools;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-left: 1px solid var(--hairline);
+  }
+
+  .timeline {
+    grid-area: timeline;
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-left: 1px solid var(--hairline);
   }
 }

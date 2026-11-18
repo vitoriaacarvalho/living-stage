@@ -173,7 +173,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       />
     );
   }
-  // The sidebar on iPad and desktop, the bottom sheet on iPhone.
+  // The sidebar on iPad and desktop, the bottom sheet on a phone.
   const panel =
     figurePanelOpen && figure ? (
       <FigurePanel
@@ -194,6 +194,13 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
         colorMode={dance.colorMode}
       />
     );
+
+  // In phone landscape the sheet sits in the editor's right-hand column, inside main.
+  const side = phone ? (
+    <BottomSheet label={figurePanelOpen && figure ? 'Figure' : 'Cast'}>{panel}</BottomSheet>
+  ) : (
+    panel
+  );
 
   return (
     <div className={styles.editor}>
@@ -221,7 +228,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           <h1 className={styles.title}>{dance.title}</h1>
         )}
       </header>
-      {phone && <LandscapeHint />}
+      {phone === 'portrait' && <LandscapeHint />}
       <div className={styles.body}>
         <main className={styles.main}>
           <div className={styles.viewControls}>
@@ -269,17 +276,19 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               </span>
             </button>
           </div>
-          <FigureToolbar
-            disabled={!figure}
-            actions={phone ? { copy: copyFigure } : { copy: copyFigure, present }}
-            circle={circling.tool}
-          />
-          {picking && (
-            <p role="status" className={circlingStyles.hint}>
-              Tap the dancer to circle around
-            </p>
-          )}
-          {circling.row && <CirclingRow {...circling.row} />}
+          <div className={styles.tools}>
+            <FigureToolbar
+              disabled={!figure}
+              actions={phone ? { copy: copyFigure } : { copy: copyFigure, present }}
+              circle={circling.tool}
+            />
+            {picking && (
+              <p role="status" className={circlingStyles.hint}>
+                Tap the dancer to circle around
+              </p>
+            )}
+            {circling.row && <CirclingRow {...circling.row} />}
+          </div>
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
               <Stage
@@ -312,12 +321,9 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
               />
             </section>
           )}
+          {phone === 'landscape' && side}
         </main>
-        {phone ? (
-          <BottomSheet label={figurePanelOpen && figure ? 'Figure' : 'Cast'}>{panel}</BottomSheet>
-        ) : (
-          panel
-        )}
+        {phone !== 'landscape' && side}
       </div>
     </div>
   );

@@ -1082,3 +1082,34 @@ test('keeps a name on the icon-only Guides toggle', async () => {
   await openKitri();
   expect(guidesToggle()).toHaveAccessibleName('Guides');
 });
+
+describe('on iPhone in landscape', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(min-width: 600px) and (max-height: 499px)',
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('gives no hint to turn sideways', async () => {
+    await openKitri();
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
+  test('puts the cast in a sheet beside the stage', async () => {
+    await openKitri();
+    const main = screen.getByRole('main');
+    expect(within(main).getByRole('button', { name: 'Expand cast' })).toBeInTheDocument();
+  });
+
+  test('presents from the title bar', async () => {
+    await openKitri();
+    expect(screen.getAllByRole('button', { name: 'Present' })).toHaveLength(1);
+  });
+});

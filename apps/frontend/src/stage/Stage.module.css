@@ -181,7 +181,7 @@
   opacity: 0.8;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 599px), (max-height: 499px) {
   .dot {
     --size: var(--stage-dot, var(--dancer-dot-phone));
   }

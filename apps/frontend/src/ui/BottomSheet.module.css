@@ -1,4 +1,4 @@
-/* Peeks in the space left under the editor; expanded, it covers everything below --sheet-top. */
+/* Peeks in the space it is given; expanded, it covers the editor below --sheet-top and right of --sheet-left. */
 .sheet {
   display: flex;
   flex: 1;
@@ -11,7 +11,7 @@
 
 .sheet[data-expanded='true'] {
   position: absolute;
-  inset: var(--sheet-top, 0) 0 0;
+  inset: var(--sheet-top, 0) 0 0 var(--sheet-left, 0);
   z-index: 2;
 }
 

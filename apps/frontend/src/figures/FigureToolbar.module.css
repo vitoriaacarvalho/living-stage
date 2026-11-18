@@ -13,7 +13,7 @@
   scrollbar-width: none;
 }
 
-/* iPhone: icon-only tools at the touch minimum; the label stays as the aria-label. */
+/* Phones, either way up: icon-only tools at the touch minimum; the label stays as the aria-label. */
 .tool {
   display: inline-flex;
   flex-direction: column;
@@ -62,7 +62,7 @@
   white-space: nowrap;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 600px) and (min-height: 500px) {
   .tool {
     gap: 3px;
     width: auto;

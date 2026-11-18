@@ -136,8 +136,8 @@
   color: var(--primary-strong);
 }
 
-/* iPhone: the panel fills the bottom sheet, which scrolls and has its own edge. */
-@media (max-width: 599px) {
+/* Phones: the panel fills the bottom sheet, which scrolls and has its own edge. */
+@media (max-width: 599px), (max-height: 499px) {
   .panel {
     flex: 1;
     max-height: none;

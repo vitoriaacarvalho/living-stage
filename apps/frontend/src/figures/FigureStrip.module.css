@@ -37,7 +37,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 599px), (max-height: 499px) {
   .chip {
     justify-content: center;
     min-width: var(--touch-min);
