@@ -4,20 +4,20 @@ Requirements: **E1** (upload audio to a dance), **E2** (waveform and playhead), 
 
 Screens: `Timeline` (with its `compact` iPhone form and `theme: 'dark'` for presentation mode), `PresentationMode` (load the `living-stage-design` skill).
 
-Status: proposed. Confirm the decisions marked *open* before 4.1 starts.
+Status: decisions agreed on 18 Nov 2026.
 
-## Decisions (proposed)
+## Decisions
 
 - **Songs belong to the school**, as `AudioTrack` rows, so one song can serve several dances (E7). A dance points at one song or none (`Dance.audioId`).
-- **Uploads go straight to storage**, as §3 says: the API hands out a short-lived upload link, the browser sends the file with a progress bar, then tells the API it is done. Cloudflare R2 in production; MinIO in Docker Compose for local development, next to Postgres.
+- **Uploads go straight to storage**, as §3 says: the API hands out a short-lived upload link, the browser sends the file with a progress bar, then tells the API it is done. Cloudflare R2 in production; MinIO in Docker Compose for local development, next to Postgres, so local uploads take the same S3 code path.
 - **The browser reads the song once at upload** with the Web Audio API: its duration and the waveform peaks (E8). Both are sent with "done" and stored on the track, so the waveform opens at once on every later visit.
 - **A dance with a song takes its duration from it.** The typed duration on the show's dance row is replaced by the song's length, and the show's total follows (H6). Dances without a song keep their typed duration.
 - **The audio element is the clock.** While a song plays, the stage reads its current time; speeds use `playbackRate` with the pitch kept. Without a song, playback keeps today's clock.
 - **Waveform with `wavesurfer.js`**, drawn from the stored peaks, as in §3.
 - **Counts belong to the song** (E3): either tapped along (any tempo changes are kept), or generated from a BPM and a start offset. The teacher chooses per song.
-- **Figures are pinned by time.** A figure gets `timeMs`, the moment it is reached; its move fills the time since the figure before. With counts, a dragged marker snaps to the nearest count, and the count shows beside it. *Open:* store only `timeMs` (counts derived) or also `count`, as §5 sketches.
+- **Figures are pinned by time.** A figure gets `timeMs`, the moment it is reached; its move fills the time since the figure before. Only the time is saved. With counts, a dragged marker snaps to the nearest count, and the count shows beside it.
 - **Dances without music keep working**: until a song is attached, figures keep their `transitionMs` and nothing else changes.
-- **Loop repeats the selected figure's span** ("Repeat figure" in the design). *Open:* or a free section dragged on the waveform.
+- **Loop repeats the move into the selected figure** ("Repeat figure" in the design), not a free section dragged on the waveform.
 
 ## Plans and slices
 

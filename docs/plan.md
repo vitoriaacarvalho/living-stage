@@ -221,7 +221,7 @@ Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dance
 
 Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
-Figure        id, danceId, order, name?, transitionMs, timeMs? | count?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs or count once music ships)
+Figure        id, danceId, order, name?, transitionMs, timeMs?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs, the moment in the song the figure is reached, once music ships; counts are shown from the song, never stored on the figure)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, points[], aroundId?, clockwise, turns  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before; a path with aroundId circles that cast member instead, turns 0–3 extra)
 
