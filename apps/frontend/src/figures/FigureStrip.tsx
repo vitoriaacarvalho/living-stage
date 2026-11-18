@@ -107,6 +107,7 @@ export function FigureStrip({ figures, active, onSelect, onReorder }: FigureStri
                 key={figure.id}
                 figure={figure}
                 label={figureLabel(figure, index)}
+                short={`F${index + 1}`}
                 mark={figure.id !== active.id ? null : active.editable ? 'selected' : 'reached'}
                 onTap={() => {
                   if (!dragging.current) onSelect(figure.id);
@@ -128,11 +129,13 @@ export function FigureStrip({ figures, active, onSelect, onReorder }: FigureStri
 type FigureChipProps = {
   figure: Figure;
   label: string;
+  // Shown instead of the label on iPhone, as in the design's compact timeline.
+  short: string;
   mark: 'selected' | 'reached' | null;
   onTap: () => void;
 };
 
-function FigureChip({ figure, label, mark, onTap }: FigureChipProps) {
+function FigureChip({ figure, label, short, mark, onTap }: FigureChipProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: figure.id,
   });
@@ -148,10 +151,16 @@ function FigureChip({ figure, label, mark, onTap }: FigureChipProps) {
         {...attributes}
         {...listeners}
         aria-roledescription="draggable figure"
+        aria-label={label}
         aria-current={mark ? 'true' : undefined}
         onClick={onTap}
       >
-        {label}
+        <span className={styles.label} aria-hidden="true">
+          {label}
+        </span>
+        <span className={styles.short} aria-hidden="true">
+          {short}
+        </span>
         {mark === 'selected' && <Icon name="pencil" />}
       </button>
     </li>

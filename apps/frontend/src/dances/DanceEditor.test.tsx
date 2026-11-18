@@ -252,7 +252,10 @@ describe('figures', () => {
 
   test('lists the figures of the dance', async () => {
     await openKitri();
-    expect((await figureChips()).map((chip) => chip.textContent)).toEqual(['Figure 1', 'Entrance']);
+    expect((await figureChips()).map((chip) => chip.getAttribute('aria-label'))).toEqual([
+      'Figure 1',
+      'Entrance',
+    ]);
   });
 
   test('starts on the first figure', async () => {
@@ -318,7 +321,7 @@ describe('figure tools', () => {
     const strip = screen.getByRole('list', { name: 'Figures' });
     return within(strip)
       .getAllByRole('button')
-      .map((chip) => chip.textContent);
+      .map((chip) => chip.getAttribute('aria-label'));
   }
 
   test('copies the selected figure to the end as a new figure', async () => {
@@ -487,7 +490,7 @@ describe('deleting figures', () => {
     const strip = screen.getByRole('list', { name: 'Figures' });
     return within(strip)
       .getAllByRole('button')
-      .map((chip) => chip.textContent);
+      .map((chip) => chip.getAttribute('aria-label'));
   }
 
   test('deletes the figure', async () => {
@@ -1056,4 +1059,9 @@ describe('on iPhone', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Present' }));
     expect(screen.getByRole('main', { name: 'Presenting Kitri variation' })).toBeInTheDocument();
   });
+});
+
+test('keeps a name on the icon-only Guides toggle', async () => {
+  await openKitri();
+  expect(guidesToggle()).toHaveAccessibleName('Guides');
 });

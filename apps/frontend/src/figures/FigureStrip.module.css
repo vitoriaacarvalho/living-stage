@@ -32,6 +32,25 @@
   color: var(--primary-strong);
 }
 
+.short {
+  display: none;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 599px) {
+  .chip {
+    padding: 0 var(--space-3);
+  }
+
+  .label {
+    display: none;
+  }
+
+  .short {
+    display: inline;
+  }
+}
+
 .lifted {
   position: relative;
   z-index: 1;

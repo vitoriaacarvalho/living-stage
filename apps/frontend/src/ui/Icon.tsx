@@ -21,6 +21,13 @@ const paths = {
       <circle cx="12" cy="12" r="3" />
     </>
   ),
+  grid: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="2" />
+      <path d="M12 3.5v17M3.5 12h17" />
+      <path d="M7.75 3.5v17M16.25 3.5v17" strokeDasharray="1.5 2.5" />
+    </>
+  ),
   grip: (
     <g fill="currentColor" stroke="none">
       <circle cx="9" cy="6" r="1.5" />
@@ -41,6 +48,13 @@ const paths = {
     <>
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
+    </>
+  ),
+  magnet: (
+    <>
+      <path d="M6 4v7a6 6 0 0 0 12 0V4" />
+      <path d="M6 4h3.5v7a2.5 2.5 0 0 0 5 0V4H18" />
+      <path d="M6 8h3.5M14.5 8H18" />
     </>
   ),
   minus: <path d="M5 12h14" />,

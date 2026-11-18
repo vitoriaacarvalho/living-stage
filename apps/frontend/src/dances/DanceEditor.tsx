@@ -24,6 +24,7 @@ import { usePlayback } from '../playback/usePlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
 import { Button } from '../ui/Button.tsx';
+import { Icon } from '../ui/Icon.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
 import { usePhone } from '../ui/usePhone.ts';
 import styles from './DanceEditor.module.css';
@@ -220,19 +221,27 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             <button
               type="button"
               className={styles.toggle}
+              aria-label="Guides"
               aria-pressed={dance.showGuides}
               onClick={() => saveView('showGuides', !dance.showGuides)}
             >
-              Guides
+              <Icon name="grid" />
+              <span className={styles.toggleText} aria-hidden="true">
+                Guides
+              </span>
             </button>
             <button
               type="button"
               className={styles.toggle}
+              aria-label="Snap"
               aria-pressed={snapping}
               disabled={!dance.showGuides}
               onClick={() => setSnap(!snap)}
             >
-              Snap
+              <Icon name="magnet" />
+              <span className={styles.toggleText} aria-hidden="true">
+                Snap
+              </span>
             </button>
           </div>
           <FigureToolbar

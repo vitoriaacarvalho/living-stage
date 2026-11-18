@@ -81,6 +81,9 @@
 }
 
 .toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: var(--touch-min);
   padding: 0 var(--space-3);
   border: 1px solid var(--border-control);
@@ -93,6 +96,11 @@
   transition:
     background-color 150ms ease-out,
     color 150ms ease-out;
+}
+
+/* The icon is for iPhone, where the toggle has no room for its word. */
+.toggle svg {
+  display: none;
 }
 
 .toggle:disabled {
@@ -133,6 +141,25 @@
     gap: var(--space-1);
     min-height: 52px;
     padding: 0 var(--space-2);
+  }
+
+  .viewControls {
+    justify-content: flex-start;
+    gap: var(--space-1);
+  }
+
+  .controlLabel,
+  .toggleText {
+    display: none;
+  }
+
+  .toggle {
+    width: var(--touch-min);
+    padding: 0;
+  }
+
+  .toggle svg {
+    display: block;
   }
 
   .stageArea {

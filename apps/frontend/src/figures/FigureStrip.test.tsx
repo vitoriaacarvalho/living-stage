@@ -49,7 +49,11 @@ function chips() {
 
 test('shows the figures in order', () => {
   renderStrip();
-  expect(chips().map((chip) => chip.textContent)).toEqual(['Figure 1', 'Entrance', 'Finale']);
+  expect(chips().map((chip) => chip.getAttribute('aria-label'))).toEqual([
+    'Figure 1',
+    'Entrance',
+    'Finale',
+  ]);
 });
 
 test('marks the selected figure', () => {
@@ -108,4 +112,9 @@ test('says when the new order cannot be saved', async () => {
   screen.getByRole('button', { name: /Figure 1/ }).focus();
   await user.keyboard(' {ArrowRight} ');
   expect(await screen.findByRole('alert')).toHaveTextContent('Could not move the figure');
+});
+
+test('gives each figure a short marker for iPhone', () => {
+  renderStrip();
+  expect(within(chips()[1]!).getByText('F2')).toBeInTheDocument();
 });
