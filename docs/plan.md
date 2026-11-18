@@ -203,9 +203,9 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part K — Responsiveness and devices
 
-- **K1.** Every screen works on iPad, iPhone and desktop.
+- ✅ **K1.** Every screen works on iPad, iPhone and desktop.
 - ✅ **K2.** Touch targets are large enough for finger dragging on a tablet.
-- **K3.** On iPhone, the editor is optimized for viewing and quick edits; landscape is suggested for heavy editing.
+- ✅ **K3.** On iPhone, the editor is optimized for viewing and quick edits; landscape is suggested for heavy editing.
 - ✅ **K5.** The interface follows the Living Stage design system (tokens, fonts, icons, base components).
 
 ## 5. Data model (first draft)
@@ -317,7 +317,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done. When a requirement is d
   - Done when: Create a school, join one with a code or link, pick and switch schools from screens that match the design; another school's data returns 404
   - Requirements: A2, A3 (code and link), A4, A5, A6 · Screens: `Access` (create or join a school), school picker and switcher
   - Checked on 18 Nov 2026 (driven): a school created on iPad; one teacher joined by typing the code on iPhone, another by opening the link before signing up; switching between two schools from the account menu; reading or deleting another school's dancers, dances, cast and shows gave 404
-- 🟨 **1.6 Responsive app shell** · after 1.6a
+- ✅ **1.6 Responsive app shell** · after 1.6a
   - Done when: Navigation and layout work on iPhone, iPad and desktop
   - Requirements: K1, K2 · Screens: `Home` (shell, nav rail, dance cards with a stage thumbnail)
   - Note: only built destinations are in the shell (Home, Dancers, Team); Shows, search and Settings join with their plans
@@ -396,10 +396,10 @@ First milestone to show real teachers.
   - Done when: Full-screen stage readable on a TV; step or play continuously
   - Requirements: G1, G2, G3 · Screens: `PresentationMode`, `Toolbar`
   - Note: the toolbar's Present tool opens it full screen at the selected figure; X, Escape or leaving full screen goes back to the figure shown. Next plays the move into the next figure, Previous jumps back; dots and labels grow with the stage. Counts, speed, loop and the timeline wait for music
-- ⬜ **8.2 iPhone editor** · after 2.4
+- ✅ **8.2 iPhone editor** · after 2.4
   - Done when: Quick edits work on iPhone; landscape hint for heavy editing
   - Requirements: K3 · Screens: `DanceEditorIPhone`
-  - Note: today the editor squeezes the stage to about 205 px wide on a 393 px iPhone, so dancers and names overlap; the full-bleed stage fixes it. Dragging and the keyboard already work there; the circling row (3.3) wraps to two lines there and shrinks the stage further while a circling dancer is selected
+  - Note: a compact title bar, a full-bleed stage (393 px wide, was about 205), icon-only controls and the cast in a bottom sheet in portrait; in landscape the stage sits beside the tools; a dismissible hint suggests landscape for heavy editing. Details in `docs/features/8.2-iphone-editor.md`
 
 ### After the MVP
 
