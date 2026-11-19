@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "living-stage",
+      "credentials": [{ "accessKey": "living_stage", "secretKey": "living_stage_secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

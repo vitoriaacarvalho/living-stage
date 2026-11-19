@@ -10,5 +10,17 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
 
+  # S3-compatible storage for songs, standing in for Cloudflare R2 while developing.
+  storage:
+    image: chrislusf/seaweedfs:3.97
+    # Small 100 MB volumes, so it starts on a laptop disk instead of reserving 30 GB chunks.
+    command: server -dir=/data -master.volumeSizeLimitMB=100 -volume.max=50 -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - '8333:8333'
+    volumes:
+      - storage-data:/data
+      - ./docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+
 volumes:
   postgres-data:
+  storage-data:

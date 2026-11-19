@@ -67,7 +67,7 @@ TypeScript end to end, in one npm workspaces monorepo, with types and animation 
 | Audio waveform | `wavesurfer.js` | Waveform, playhead, regions for loops |
 | Backend | Node + Express | REST API |
 | Database | PostgreSQL + Prisma | Prisma chosen as the ORM |
-| File storage | S3-compatible (e.g. Cloudflare R2) | Audio files |
+| File storage | S3-compatible: Cloudflare R2 in production, SeaweedFS locally | Audio files, through `@aws-sdk/client-s3` and signed links |
 | Auth | Better Auth | Email and password (no third-party sign-in for now); Prisma adapter; organization plugin can model schools and invites |
 | Styling | CSS variables + CSS Modules | Design tokens are CSS variables in `styles/tokens.css`; each component has its own CSS Module; no CSS framework |
 | Fonts | Self-hosted with `@fontsource` | Instrument Sans and Cormorant Garamond ship with the app; no request to Google |
@@ -104,7 +104,7 @@ living-stage/
 
 **Uploads.** The browser asks the API for a short-lived upload link, sends the file straight to file storage with a progress bar, then tells the API it is done. Large files never pass through the API server.
 
-**Local development.** PostgreSQL 18 runs in Docker Compose (`compose.yaml` at the root) on port 5433, so it does not clash with a Postgres already installed on 5432. The connection string lives in `apps/backend/.env` (copy `.env.example`).
+**Local development.** PostgreSQL 18 runs in Docker Compose (`compose.yaml` at the root) on port 5433, so it does not clash with a Postgres already installed on 5432. The connection string lives in `apps/backend/.env` (copy `.env.example`). Songs go to SeaweedFS, an S3-compatible server in the same Compose file on port 8333 (MinIO no longer publishes Docker images); `npm run storage:setup -w @living-stage/backend` creates its bucket and CORS rule once. SeaweedFS refuses to write when the disk is under about 2 GB free.
 
 **Hosting (proposed).** Web app on Cloudflare Pages; API and PostgreSQL on Railway (or Render / Fly.io); files on Cloudflare R2.
 

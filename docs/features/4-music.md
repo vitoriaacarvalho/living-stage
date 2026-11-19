@@ -9,7 +9,8 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
 ## Decisions
 
 - **Songs belong to the school**, as `AudioTrack` rows, so one song can serve several dances (E7). A dance points at one song or none (`Dance.audioId`).
-- **Uploads go straight to storage**, as §3 says: the API hands out a short-lived upload link, the browser sends the file with a progress bar, then tells the API it is done. Cloudflare R2 in production; MinIO in Docker Compose for local development, next to Postgres, so local uploads take the same S3 code path.
+- **Uploads go straight to storage**, as §3 says: the API hands out a short-lived upload link, the browser sends the file with a progress bar, then tells the API it is done. Cloudflare R2 in production; SeaweedFS in Docker Compose for local development, next to Postgres, so local uploads take the same S3 code path. (MinIO was the first choice, but it no longer publishes Docker images.)
+- **Signed links.** An upload link lasts 10 minutes and is signed for one key and one content type, so the browser can't send anything else; a read link lasts 6 hours, long enough for a rehearsal. The SDK's default checksums are turned off, since a browser upload can't send them.
 - **The browser reads the song once at upload** with the Web Audio API: its duration and the waveform peaks (E8). Both are sent with "done" and stored on the track, so the waveform opens at once on every later visit.
 - **A dance with a song takes its duration from it.** The typed duration on the show's dance row is replaced by the song's length, and the show's total follows (H6). Dances without a song keep their typed duration.
 - **The audio element is the clock.** While a song plays, the stage reads its current time; speeds use `playbackRate` with the pitch kept. Without a song, playback keeps today's clock.
@@ -20,7 +21,7 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
 
 ## Plans and slices
 
-- **4.1 Audio upload** (E1, E7): MinIO in Compose and the storage client; `AudioTrack` and `Dance.audioId` migration; upload link and "done" routes; the "Add music" control in the editor with a progress bar and a list of the school's songs; durations from the song on show rows.
+- **4.1 Audio upload** (E1, E7): ✅ SeaweedFS in Compose and the storage client (slice 1); `AudioTrack` and `Dance.audioId` migration; upload link and "done" routes; the "Add music" control in the editor with a progress bar and a list of the school's songs; durations from the song on show rows.
 - **4.2 Waveform** (E2, E8): peaks read in the browser at upload and stored; the `Timeline` waveform and playhead under the stage, compact on iPhone.
 - **4.3 Transport** (E5): play and pause on the audio, scrubbing, speed, Repeat figure, the time as `00:58 / 03:40`.
 - **4.5 Figures on the timeline** (E4, E6): `Figure.timeMs` migration; markers dragged along the timeline; `stageAt` driven by figure times; presentation mode with the dark timeline and speed; checked in sync at every speed and after scrubbing.
