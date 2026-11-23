@@ -165,13 +165,13 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 
 ### Part E — Music timeline *(after the MVP, except E9)*
 
-- **E1.** A member can upload an audio file (MP3, M4A, WAV) to a dance.
+- ✅ **E1.** A member can upload an audio file (MP3, M4A, AAC, WAV) to a dance.
 - **E2.** The timeline shows the song's waveform and a playhead below the stage.
 - **E3.** *(Dropped in Nov 2026: musical counts. Figures are placed by time in the song only.)*
 - **E4.** Each figure is pinned to a moment in the song, shown as a time such as `0:58`; the transition fills the time before it.
 - **E5.** Play, pause, scrub, loop a section, and play at 0.5×, 0.75× or 1×.
 - **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
-- **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
+- ✅ **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
 - **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
 - **E9.** Up to 40 dancers per dance, rendering and animating smoothly on an iPad.
 
@@ -187,7 +187,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **H2.** A show contains ordered acts; each act contains ordered dances.
 - ✅ **H3.** Acts and dances can be reordered by dragging.
 - ✅ **H4.** Each dance in a show displays its cast, how many dancers it has and its duration; its song is added after the MVP.
-- ✅ **H6.** The show's total running time is calculated from the dance durations. In the MVP the teacher types each dance's duration; once music ships, it comes from the song.
+- ✅ **H6.** The show's total running time is calculated from the dance durations. A dance with a song lasts as long as its song; a dance without one keeps the time the teacher typed.
 - ✅ **H7.** A dance belongs to the school and can appear in more than one show, or be duplicated as a starting point.
 
 ### Part I — PDF export *(after the MVP)*
@@ -405,9 +405,10 @@ First milestone to show real teachers.
 
 In build order: music first, then undo and redo, then PDF export. Each has its own file in `docs/features/`. Everything else that used to be here was dropped in Nov 2026 (see §1).
 
-- ⬜ **4.1 Audio upload** · after 2.3
+- ✅ **4.1 Audio upload** · after 2.3
   - Done when: Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song
   - Requirements: E1, E7
+  - Checked on 23 Nov 2026 (driven, Chrome at iPad size): a 30.00 MB MP3 uploaded from the editor's Music panel and read as 13:06; a second dance picked the same song; on the show page both rows showed 13:06 from the song beside a typed 3:00, and the total was 29min 13s. Song files live in SeaweedFS locally (R2 in production); details in `docs/features/4-music.md`
 - ⬜ **4.2 Waveform** · after 4.1
   - Done when: Waveform and playhead open instantly on reload
   - Requirements: E2, E8 · Screens: `Timeline`

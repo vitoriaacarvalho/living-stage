@@ -34,7 +34,10 @@ export type ShowDance = {
   danceId: string;
   title: string;
   castCount: number;
+  // The song's length when the dance has a song, the typed time otherwise.
   durationMs: number | null;
+  // Set when the time comes from the dance's song, so it can't be typed over.
+  songName: string | null;
   cast: ShowCastMember[];
 };
 

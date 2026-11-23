@@ -367,6 +367,21 @@
   }
 }
 
+/* A time set by the dance's song reads as plain text: muted, nothing to tap. */
+.fromSong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .fromSong:hover {
+    background: transparent;
+  }
+}
+
 .durationForm {
   display: flex;
   flex-wrap: wrap;

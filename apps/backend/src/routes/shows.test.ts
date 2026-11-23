@@ -82,6 +82,7 @@ const kitri = {
   title: 'Kitri variation',
   colorMode: 'dancer' as const,
   durationMs: 220_000,
+  audio: null,
   cast: [
     {
       id: 'cast-1',
@@ -163,6 +164,17 @@ describe('GET /shows', () => {
     ] as never);
     const { shows } = (await (await fetch(`${baseUrl}/shows`)).json()) as ListShowsResponse;
     expect(shows[0]!.totalMs).toBe(220_000 + 15 * 60_000);
+  });
+
+  test('counts a dance with a song for the length of its song', async () => {
+    vi.mocked(prisma.show.findMany).mockResolvedValue([
+      {
+        ...gala,
+        acts: [{ items: [{ dance: { ...kitri, audio: { durationMs: 95_000 } } }] }],
+      },
+    ] as never);
+    const { shows } = (await (await fetch(`${baseUrl}/shows`)).json()) as ListShowsResponse;
+    expect(shows[0]!.totalMs).toBe(95_000);
   });
 
   test('previews an empty stage for a show with no dances', async () => {
@@ -247,6 +259,38 @@ describe('GET /shows/:showId', () => {
     items,
   });
 
+  describe('a dance with a song', () => {
+    async function songDance() {
+      vi.mocked(prisma.show.findFirst).mockResolvedValue({
+        ...gala,
+        acts: [
+          act('act-1', 0, [
+            {
+              id: 'item-1',
+              danceId: 'dance-1',
+              dance: {
+                title: 'Kitri variation',
+                durationMs: 220_000,
+                audio: { name: 'Swan theme', durationMs: 95_000 },
+                cast: [],
+              },
+            },
+          ]),
+        ],
+      } as never);
+      const { show } = (await (await get()).json()) as ShowDetailResponse;
+      return show.acts[0]!.dances[0]!;
+    }
+
+    test('lasts as long as its song, over the typed time', async () => {
+      expect((await songDance()).durationMs).toBe(95_000);
+    });
+
+    test('names the song its time comes from', async () => {
+      expect((await songDance()).songName).toBe('Swan theme');
+    });
+  });
+
   test('answers with the acts in order and their dances', async () => {
     vi.mocked(prisma.show.findFirst).mockResolvedValue({
       ...gala,
@@ -281,6 +325,7 @@ describe('GET /shows/:showId', () => {
             title: 'Kitri variation',
             castCount: 2,
             durationMs: 220_000,
+            songName: null,
             cast: [
               { id: 'cast-1', name: 'Clara', role: 'Kitri' },
               { id: 'cast-2', name: null, role: null },
@@ -545,6 +590,7 @@ describe('POST /shows/:showId/acts/:actId/dances', () => {
         title: 'Kitri variation',
         castCount: 0,
         durationMs: null,
+        songName: null,
         cast: [],
       },
     });

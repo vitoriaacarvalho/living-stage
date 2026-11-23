@@ -47,6 +47,7 @@ const gala: ShowDetail = {
           title: 'Kitri variation',
           castCount: 16,
           durationMs: null,
+          songName: null,
           cast: [],
         },
       ],
@@ -296,6 +297,7 @@ describe('dances in an act', () => {
     title: 'Waltz',
     castCount: 22,
     durationMs: null,
+    songName: null,
     cast: [],
   };
 
@@ -396,6 +398,7 @@ describe('running time', () => {
             title: 'Waltz',
             castCount: 22,
             durationMs: null,
+            songName: null,
             cast: [],
           },
         ],
@@ -406,6 +409,36 @@ describe('running time', () => {
   function total() {
     return screen.findByRole('region', { name: 'Total running time' });
   }
+
+  describe('a dance with a song', () => {
+    const withSong: ShowDetail = {
+      ...timed,
+      acts: [
+        {
+          ...timed.acts[0]!,
+          dances: [{ ...timed.acts[0]!.dances[0]!, durationMs: 95_000, songName: 'Swan theme' }],
+        },
+        timed.acts[1]!,
+      ],
+    };
+
+    test('shows the song time as text', async () => {
+      vi.mocked(fetchShow).mockResolvedValue(withSong);
+      renderPage();
+      expect(
+        await screen.findByLabelText(/Time of Kitri variation, 1:35, from the song Swan theme/),
+      ).not.toHaveRole('button');
+    });
+
+    test('offers no field to type over the song time', async () => {
+      vi.mocked(fetchShow).mockResolvedValue(withSong);
+      renderPage();
+      await screen.findByLabelText(/from the song Swan theme/);
+      expect(
+        screen.queryByRole('button', { name: /Time of Kitri variation/ }),
+      ).not.toBeInTheDocument();
+    });
+  });
 
   test('adds the dances and the interval into the total', async () => {
     vi.mocked(fetchShow).mockResolvedValue(timed);

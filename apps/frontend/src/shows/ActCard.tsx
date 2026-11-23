@@ -251,6 +251,19 @@ function Duration({ dance, onSave }: DurationProps) {
     setEditing(false);
   }
 
+  // The song sets the time, so there is nothing to type.
+  if (dance.songName !== null) {
+    return (
+      <span
+        className={`${styles.duration} ${styles.fromSong}`}
+        title={`From the song ${dance.songName}`}
+        aria-label={`Time of ${dance.title}, ${shown}, from the song ${dance.songName}`}
+      >
+        {shown}
+      </span>
+    );
+  }
+
   if (!editing) {
     return (
       <button

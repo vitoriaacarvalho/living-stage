@@ -28,6 +28,7 @@ export const schoolShowsRouter = Router();
 
 const previewDance = {
   include: {
+    audio: { select: { durationMs: true } },
     cast: { include: { dancer: true }, orderBy: { createdAt: 'asc' } },
     figures: {
       where: { order: 0 },
@@ -51,6 +52,7 @@ const detailActs = {
           select: {
             title: true,
             durationMs: true,
+            audio: { select: { name: true, durationMs: true } },
             cast: {
               orderBy: { createdAt: 'asc' },
               select: { id: true, role: true, dancer: { select: { name: true } } },
@@ -404,7 +406,9 @@ function toShowSummary({ acts, ...show }: SummaryRow): ShowSummary {
   const preview = first
     ? dancePreview(first.cast.map(toCastMember), first.figures[0]?.positions ?? [], first.colorMode)
     : [];
-  const timed = acts.map(({ items }) => ({ dances: items.map(({ dance }) => dance) }));
+  const timed = acts.map(({ items }) => ({
+    dances: items.map(({ dance }) => ({ durationMs: danceLength(dance) })),
+  }));
   return {
     ...toShow(show),
     actCount: acts.length,
@@ -418,13 +422,19 @@ type DetailRow = ShowRow & Prisma.ShowGetPayload<{ include: { acts: typeof detai
 
 type ItemRow = DetailRow['acts'][number]['items'][number];
 
+// A dance with a song lasts as long as the song; without one, its typed time counts.
+function danceLength(dance: { durationMs: number | null; audio: { durationMs: number } | null }) {
+  return dance.audio?.durationMs ?? dance.durationMs;
+}
+
 function toShowDance({ id, danceId, dance }: ItemRow): ShowDance {
   return {
     id,
     danceId,
     title: dance.title,
     castCount: dance.cast.length,
-    durationMs: dance.durationMs,
+    durationMs: danceLength(dance),
+    songName: dance.audio?.name ?? null,
     cast: dance.cast.map((member) => ({
       id: member.id,
       name: member.dancer?.name ?? null,

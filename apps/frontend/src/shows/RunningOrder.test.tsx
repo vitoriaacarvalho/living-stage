@@ -11,6 +11,7 @@ const dance = (id: string) => ({
   title: `Dance ${id}`,
   castCount: 4,
   durationMs: null,
+  songName: null,
   cast: [],
 });
 

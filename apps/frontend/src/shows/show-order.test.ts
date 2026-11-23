@@ -72,6 +72,7 @@ const dance = (id: string) => ({
   title: id,
   castCount: 1,
   durationMs: null,
+  songName: null,
   cast: [],
 });
 const acts: Act[] = [
