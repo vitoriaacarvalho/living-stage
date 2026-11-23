@@ -12,6 +12,7 @@ import { invitesRouter, schoolInviteRouter } from './routes/invites.ts';
 import { meRouter } from './routes/me.ts';
 import { schoolsRouter } from './routes/schools.ts';
 import { schoolShowsRouter } from './routes/shows.ts';
+import { schoolSongsRouter } from './routes/songs.ts';
 
 export function createApp() {
   const app = express();
@@ -33,6 +34,7 @@ export function createApp() {
     schoolCastRouter,
     schoolFiguresRouter,
     schoolShowsRouter,
+    schoolSongsRouter,
   );
   return app;
 }

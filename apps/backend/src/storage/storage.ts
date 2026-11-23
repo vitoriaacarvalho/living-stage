@@ -1,5 +1,6 @@
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
@@ -77,6 +78,10 @@ export function createStorage(config: StorageConfig) {
           },
         }),
       );
+    },
+
+    remove: async (key: string) => {
+      await client.send(new DeleteObjectCommand({ ...object, Key: key }));
     },
 
     // The stored size in bytes, or null when nothing was uploaded under the key.

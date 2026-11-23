@@ -21,7 +21,7 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
 
 ## Plans and slices
 
-- **4.1 Audio upload** (E1, E7): ✅ SeaweedFS in Compose and the storage client (slice 1); ✅ the `AudioTrack` and `Dance.audioId` migration with shared types and validation: MP3, M4A, AAC or WAV, up to 30 MB, names up to 100 characters, lengths up to an hour (slice 2); upload link and "done" routes; the "Add music" control in the editor with a progress bar and a list of the school's songs; durations from the song on show rows.
+- **4.1 Audio upload** (E1, E7): ✅ SeaweedFS in Compose and the storage client (slice 1); ✅ the `AudioTrack` and `Dance.audioId` migration with shared types and validation: MP3, M4A, AAC or WAV, up to 30 MB, names up to 100 characters, lengths up to an hour (slice 2); ✅ upload link and "done" routes (slice 3: `POST songs/upload-link` hands out a key under the school's folder; `POST songs` checks the file is in storage and within 30 MB, deleting it if not, then saves the song; `GET songs` lists them with fresh play links); the "Add music" control in the editor with a progress bar and a list of the school's songs; durations from the song on show rows.
 - **4.2 Waveform** (E2, E8): peaks read in the browser at upload and stored; the `Timeline` waveform and playhead under the stage, compact on iPhone.
 - **4.3 Transport** (E5): play and pause on the audio, scrubbing, speed, Repeat figure, the time as `00:58 / 03:40`.
 - **4.5 Figures on the timeline** (E4, E6): `Figure.timeMs` migration; markers dragged along the timeline; `stageAt` driven by figure times; presentation mode with the dark timeline and speed; checked in sync at every speed and after scrubbing.
