@@ -62,6 +62,7 @@ function summary(id: string, title: string, castCount = 16) {
     showGuides: true,
     labelMode: 'name' as const,
     colorMode: 'dancer' as const,
+    audioId: null,
     createdAt: '2026-10-20T12:00:00.000Z',
     castCount,
     preview: [],

@@ -73,6 +73,22 @@ describe('parseDanceInput', () => {
 });
 
 describe('parseDanceUpdate', () => {
+  test('accepts a song', () => {
+    expect(parseDanceUpdate({ audioId: 'song-1' })).toEqual({ audioId: 'song-1' });
+  });
+
+  test('accepts taking the song away', () => {
+    expect(parseDanceUpdate({ audioId: null })).toEqual({ audioId: null });
+  });
+
+  test('rejects an empty song id', () => {
+    expect(parseDanceUpdate({ audioId: '' })).toBeNull();
+  });
+
+  test('rejects a song id that is not text', () => {
+    expect(parseDanceUpdate({ audioId: 7 })).toBeNull();
+  });
+
   test('accepts a title alone', () => {
     expect(parseDanceUpdate({ title: ' Kitri variation ' })).toEqual({ title: 'Kitri variation' });
   });

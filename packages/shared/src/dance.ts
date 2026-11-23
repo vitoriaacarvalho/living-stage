@@ -18,6 +18,8 @@ export type Dance = {
   showGuides: boolean;
   labelMode: LabelMode;
   colorMode: ColorMode;
+  // The song from the school's library, or null for a dance without music.
+  audioId: string | null;
   createdAt: string;
 };
 
@@ -29,6 +31,7 @@ export type DanceUpdate = {
   labelMode?: LabelMode;
   colorMode?: ColorMode;
   durationMs?: number | null;
+  audioId?: string | null;
 };
 
 function isOneOf<T extends string>(values: readonly T[], value: unknown): value is T {
@@ -95,6 +98,12 @@ export function parseDanceUpdate(value: unknown): DanceUpdate | null {
     const durationMs = parseDurationMs(body.durationMs);
     if (durationMs === undefined) return null;
     update.durationMs = durationMs;
+  }
+  if (body.audioId !== undefined) {
+    if (body.audioId !== null && (typeof body.audioId !== 'string' || body.audioId === '')) {
+      return null;
+    }
+    update.audioId = body.audioId;
   }
   return Object.keys(update).length > 0 ? update : null;
 }

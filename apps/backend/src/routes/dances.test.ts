@@ -26,6 +26,7 @@ vi.mock('../db.ts', () => ({
     figure: { createMany: vi.fn() },
     position: { createMany: vi.fn() },
     path: { createMany: vi.fn() },
+    audioTrack: { findFirst: vi.fn() },
   },
 }));
 
@@ -57,6 +58,7 @@ const kitriJson = {
   showGuides: true,
   labelMode: 'name' as const,
   colorMode: 'dancer' as const,
+  audioId: null,
   createdAt: '2026-10-27T12:00:00.000Z',
 };
 
@@ -79,6 +81,7 @@ beforeEach(() => {
   vi.mocked(prisma.dance.create).mockReset();
   vi.mocked(prisma.dance.updateManyAndReturn).mockReset();
   vi.mocked(prisma.dance.deleteMany).mockReset();
+  vi.mocked(prisma.audioTrack.findFirst).mockReset();
   vi.mocked(prisma.dance.findFirst).mockReset();
   vi.mocked(prisma.dance.findUniqueOrThrow).mockReset();
   vi.mocked(prisma.dance.create).mockReset();
@@ -291,6 +294,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
         showGuides: true,
         labelMode: 'name',
         colorMode: 'dancer',
+        audioId: null,
         createdAt: '2026-11-05T12:00:00.000Z',
         castCount: 1,
         preview: [{ x: 0.25, y: 0.5, color: 3, open: false }],
@@ -365,6 +369,53 @@ describe('POST /api/schools/:schoolId/dances/:danceId/copies', () => {
 
 describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
   const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
+
+  describe('choosing a song', () => {
+    test('looks for the song in the same school', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue({ id: 'song-1' } as never);
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+      await fetch(url(), send('PATCH', { audioId: 'song-1' }));
+      expect(prisma.audioTrack.findFirst).toHaveBeenCalledWith({
+        where: { id: 'song-1', schoolId: 'school-1' },
+      });
+    });
+
+    test('saves the song', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue({ id: 'song-1' } as never);
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+      await fetch(url(), send('PATCH', { audioId: 'song-1' }));
+      expect(prisma.dance.updateManyAndReturn).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { audioId: 'song-1' } }),
+      );
+    });
+
+    test('responds 404 for a song of another school', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(null);
+      const res = await fetch(url(), send('PATCH', { audioId: 'song-9' }));
+      expect(res.status).toBe(404);
+    });
+
+    test('saves nothing for a song of another school', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(null);
+      await fetch(url(), send('PATCH', { audioId: 'song-9' }));
+      expect(prisma.dance.updateManyAndReturn).not.toHaveBeenCalled();
+    });
+
+    test('takes the song away without looking it up', async () => {
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+      await fetch(url(), send('PATCH', { audioId: null }));
+      expect(prisma.audioTrack.findFirst).not.toHaveBeenCalled();
+    });
+
+    test('returns the song with the dance', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue({ id: 'song-1' } as never);
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([
+        { ...kitri, audioId: 'song-1' },
+      ]);
+      const body = await (await fetch(url(), send('PATCH', { audioId: 'song-1' }))).json();
+      expect((body as { dance: { audioId: string } }).dance.audioId).toBe('song-1');
+    });
+  });
 
   test('saves a typed duration', async () => {
     vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);

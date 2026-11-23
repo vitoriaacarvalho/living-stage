@@ -64,6 +64,11 @@ schoolDancesRouter.patch('/dances/:danceId', async (req, res) => {
     res.status(400).json({ error: 'invalid_dance' });
     return;
   }
+  // A song from another school looks like one that doesn't exist.
+  if (update.audioId && !(await isSongOf(update.audioId, res.locals.schoolId))) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
 
   const [dance] = await prisma.dance.updateManyAndReturn({
     where: { id: req.params.danceId, schoolId: res.locals.schoolId },
@@ -130,6 +135,19 @@ function toDanceSummary({ cast: rows, figures, showItems, ...dance }: SummaryRow
 }
 
 function toDance(dance: DanceRow): Dance {
-  const { id, title, showGuides, labelMode, colorMode, createdAt } = dance;
-  return { id, title, showGuides, labelMode, colorMode, createdAt: createdAt.toISOString() };
+  const { id, title, showGuides, labelMode, colorMode, audioId, createdAt } = dance;
+  return {
+    id,
+    title,
+    showGuides,
+    labelMode,
+    colorMode,
+    audioId,
+    createdAt: createdAt.toISOString(),
+  };
+}
+
+async function isSongOf(audioId: string, schoolId: string) {
+  const song = await prisma.audioTrack.findFirst({ where: { id: audioId, schoolId } });
+  return song !== null;
 }

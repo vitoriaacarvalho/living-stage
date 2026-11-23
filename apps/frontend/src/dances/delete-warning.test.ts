@@ -8,6 +8,7 @@ const kitri: DanceSummary = {
   showGuides: true,
   labelMode: 'name',
   colorMode: 'dancer',
+  audioId: null,
   createdAt: '2026-10-20T12:00:00.000Z',
   castCount: 0,
   preview: [],
