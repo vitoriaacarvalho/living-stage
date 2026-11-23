@@ -10,6 +10,7 @@ const kitri: DanceSource = {
   labelMode: 'role',
   colorMode: 'role',
   durationMs: 220_000,
+  audioId: 'song-1',
   cast: [
     { id: 'cast-1', dancerId: 'dancer-1', role: 'Kitri', createdAt: castCreatedAt },
     { id: 'cast-2', dancerId: null, role: null, createdAt: castCreatedAt },
@@ -59,6 +60,10 @@ describe('danceCopy', () => {
       colorMode: 'role',
       durationMs: 220_000,
     });
+  });
+
+  test('keeps the song', () => {
+    expect(danceCopy(kitri).dance.audioId).toBe('song-1');
   });
 
   test('gives the copy a new id', () => {

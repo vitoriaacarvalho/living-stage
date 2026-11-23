@@ -219,20 +219,20 @@ Invite        id, schoolId, code, expiresAt, createdById   (one active code per 
 
 Dancer        id, schoolId, name, color?   (color: 1–12, the number of a dancer-N token)
 
-Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
+Dance         id, schoolId, title, audioId?, durationMs?, labelMode, colorMode, showGuides   (audioId is cleared when its song is deleted, and kept when the dance is duplicated; durationMs typed by hand in the MVP; showGuides is shared by everyone in the school)
 CastMember    id, danceId, dancerId?, role?   (dancerId is set to null when the dancer is removed: the placeholder of B5; a dancer is cast at most once per dance, and a dance holds at most 40 (E9); a newly cast dancer waits in the left wing of every figure, one spot down the wing after another)
 Figure        id, danceId, order, name?, transitionMs, timeMs?   (every dance is created with a first figure, so cast dancers have saved positions before plan 2.3; transitionMs is the time to arrive from the figure before, 4000 by default, ignored on the first figure and replaced by timeMs, the moment in the song the figure is reached, once music ships)
 Position      figureId, castMemberId, x, y
 Path          figureId, castMemberId, points[], aroundId?, clockwise, turns  (route arriving into this figure; points are { along, side }, relative to the straight line from the figure before; a path with aroundId circles that cast member instead, turns 0–3 extra)
 
-AudioTrack    id, schoolId, name, url, durationMs, peaks   (one song can serve several dances; peaks are the stored waveform)
+AudioTrack    id, schoolId, name, storageKey, contentType, sizeBytes, durationMs, peaks?   (a song in the school's library, made once its file is in storage; one song can serve several dances; durationMs is read by the browser at upload; peaks, the stored waveform, come with plan 4.2)
 
 Show          id, schoolId, title, date, time?, venue?, intervalMs   (date is a calendar day and time a wall-clock time, kept as typed; intervalMs is the interval between acts, 0 by default)
 Act           id, showId, order, name?   (numbered "Act 1" with an optional name; a show keeps at least one)
 ActItem       id, showId, actId, danceId, order   (a dance is in a show at most once; showId is there for that check)
 ```
 
-`AudioTrack` is not built in the MVP; it comes with plan 4.1.
+`AudioTrack` is not in the MVP; it came with plan 4.1.
 
 **Coordinates.** `x` and `y` are stage units, not pixels: 0–1 is the visible stage (`x` left to right, `y` upstage to downstage). Values just outside that range are the wings. The plan maps 0–1 onto a 12 × 8 m floor; guides, snapping and keyboard moves work in those metres.
 

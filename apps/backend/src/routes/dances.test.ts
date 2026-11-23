@@ -47,6 +47,7 @@ const kitri = {
   labelMode: 'name' as const,
   colorMode: 'dancer' as const,
   durationMs: null,
+  audioId: null,
   createdAt: new Date('2026-10-27T12:00:00.000Z'),
 };
 

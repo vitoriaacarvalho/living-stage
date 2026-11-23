@@ -32,7 +32,7 @@ export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy 
   const danceId = randomUUID();
   const castIds = new Map(cast.map(({ id }) => [id, randomUUID()]));
   const figureIds = new Map(figures.map(({ id }) => [id, randomUUID()]));
-  const { schoolId, title, showGuides, labelMode, colorMode, durationMs } = source;
+  const { schoolId, title, showGuides, labelMode, colorMode, durationMs, audioId } = source;
 
   return {
     dance: {
@@ -43,6 +43,7 @@ export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy 
       labelMode,
       colorMode,
       durationMs,
+      audioId,
     },
     cast: cast.map(({ id, dancerId, role, createdAt }) => ({
       id: castIds.get(id)!,

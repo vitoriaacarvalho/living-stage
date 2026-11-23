@@ -74,16 +74,17 @@ model Verification {
 }
 
 model School {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   name        String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
   createdById String
-  createdBy   User     @relation("SchoolCreator", fields: [createdById], references: [id])
-  teachers    User[]   @relation("SchoolTeachers")
+  createdBy   User         @relation("SchoolCreator", fields: [createdById], references: [id])
+  teachers    User[]       @relation("SchoolTeachers")
   invite      Invite?
   dancers     Dancer[]
   dances      Dance[]
   shows       Show[]
+  audioTracks AudioTrack[]
 
   @@map("school")
 }
@@ -123,13 +124,34 @@ model Dance {
   labelMode  LabelMode    @default(name)
   colorMode  ColorMode    @default(dancer)
   durationMs Int?
+  audioId    String?
+  audio      AudioTrack?  @relation(fields: [audioId], references: [id], onDelete: SetNull)
   createdAt  DateTime     @default(now())
   cast       CastMember[]
   figures    Figure[]
   showItems  ActItem[]
 
   @@index([schoolId])
+  @@index([audioId])
   @@map("dance")
+}
+
+// A song in the school's library; dances point at it, so one song serves several dances.
+// storageKey is where the file lives in S3 storage; durationMs is read by the browser at upload.
+model AudioTrack {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name        String
+  storageKey  String   @unique
+  contentType String
+  sizeBytes   Int
+  durationMs  Int
+  createdAt   DateTime @default(now())
+  dances      Dance[]
+
+  @@index([schoolId])
+  @@map("audio_track")
 }
 
 enum LabelMode {

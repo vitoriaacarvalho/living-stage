@@ -1,6 +1,22 @@
 export const APP_NAME = 'Living Stage';
 
 export {
+  AUDIO_MAX_BYTES,
+  SONG_MAX_DURATION_MS,
+  SONG_NAME_MAX_LENGTH,
+  parseAudioTrackInput,
+  parseAudioUploadRequest,
+  parseSongName,
+  songExtension,
+  type AudioTrack,
+  type AudioTrackInput,
+  type AudioTrackResponse,
+  type AudioUploadLinkResponse,
+  type AudioUploadRequest,
+  type ListAudioTracksResponse,
+} from './audio.ts';
+
+export {
   CAST_MAX_SIZE,
   CAST_ROLE_MAX_LENGTH,
   parseCastMemberInput,
