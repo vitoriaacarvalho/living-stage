@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast, removeCastMember } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
+import { fetchSongs } from '../api/songs.ts';
 import {
   copyFigure,
   deleteFigure,
@@ -22,6 +23,12 @@ vi.mock('../api/cast.ts', () => ({
   removeCastMember: vi.fn(),
 }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
+vi.mock('../api/songs.ts', () => ({
+  fetchSongs: vi.fn(),
+  requestUploadLink: vi.fn(),
+  saveSong: vi.fn(),
+  uploadFile: vi.fn(),
+}));
 vi.mock('../api/figures.ts', () => ({
   fetchFigures: vi.fn(),
   copyFigure: vi.fn(),
@@ -42,6 +49,11 @@ const kitri: Dance = {
 };
 
 beforeEach(() => {
+  vi.mocked(fetchSongs)
+    .mockReset()
+    .mockResolvedValue([
+      { id: 'song-1', name: 'Kitri variation', durationMs: 220_000, url: 'https://storage.test/a' },
+    ]);
   vi.mocked(fetchCast)
     .mockReset()
     .mockResolvedValue([
@@ -1112,5 +1124,51 @@ describe('on iPhone in landscape', () => {
   test('presents from the title bar', async () => {
     await openKitri();
     expect(screen.getAllByRole('button', { name: 'Present' })).toHaveLength(1);
+  });
+});
+
+describe('music', () => {
+  test('offers to add music to a dance without a song', async () => {
+    await openKitri();
+    expect(screen.getByRole('button', { name: 'Add music' })).toBeInTheDocument();
+  });
+
+  test('names the dance song in the play row', async () => {
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    expect(
+      await screen.findByRole('button', { name: 'Music: Kitri variation' }),
+    ).toBeInTheDocument();
+  });
+
+  test('opens the music panel in place of the cast', async () => {
+    await openKitri();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Add music' }));
+    expect(screen.getByRole('complementary', { name: 'Music' })).toBeInTheDocument();
+  });
+
+  test('saves the song chosen for the dance', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Add music' }));
+    await user.click(await screen.findByRole('button', { name: /Kitri variation/ }));
+    expect(updateDance).toHaveBeenCalledWith('school-1', 'dance-1', { audioId: 'song-1' });
+  });
+
+  test('shows the chosen song in the play row', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Add music' }));
+    await user.click(await screen.findByRole('button', { name: /Kitri variation/ }));
+    expect(
+      await screen.findByRole('button', { name: 'Music: Kitri variation' }),
+    ).toBeInTheDocument();
+  });
+
+  test('goes back to the cast on closing the music panel', async () => {
+    await openKitri();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Add music' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
   });
 });

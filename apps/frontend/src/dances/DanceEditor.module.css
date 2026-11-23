@@ -122,6 +122,26 @@
   color: var(--primary-strong);
 }
 
+/* The play row with the dance's music at its far end. */
+.transportRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.music {
+  min-width: 0;
+  max-width: 50%;
+}
+
+.songName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .phoneTitle {
   flex: 1;
   min-width: 0;

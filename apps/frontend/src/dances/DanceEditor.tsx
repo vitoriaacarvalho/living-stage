@@ -12,6 +12,8 @@ import { CastList } from '../cast/CastList.tsx';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
+import { MusicPanel } from '../music/MusicPanel.tsx';
+import { useSongs } from '../music/useSongs.ts';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
 import { CirclingRow } from '../paths/CirclingRow.tsx';
@@ -46,13 +48,17 @@ const colorOptions = [
 
 type ViewSetting = 'showGuides' | 'labelMode' | 'colorMode';
 
+const sheetLabels = { cast: 'Cast', figure: 'Figure', music: 'Music' } as const;
+
 type DanceEditorProps = { schoolId: string; dance: Dance; onBack: () => void };
 
 export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProps) {
   const [dance, setDance] = useState(opened);
   const { state: cast, ...castActions } = useCast(schoolId, opened.id);
   const [selectedFigureId, setSelectedFigureId] = useState<string | null>(null);
-  const [figurePanelOpen, setFigurePanelOpen] = useState(false);
+  // What the sidebar (the bottom sheet on a phone) shows: the cast unless a panel is open.
+  const [panelView, setPanelView] = useState<'cast' | 'figure' | 'music'>('cast');
+  const songs = useSongs(schoolId);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [snap, setSnap] = useState(false);
   const [presenting, setPresenting] = useState(false);
@@ -116,7 +122,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   // Tapping the selected figure again opens its panel. The id is kept even then, since
   // the first figure is only selected by default and may be moved away from first place.
   function selectFigure(figureId: string) {
-    if (stopped && figureId === figure?.id) setFigurePanelOpen(true);
+    if (stopped && figureId === figure?.id) setPanelView('figure');
     playback.stop();
     setSelectedFigureId(figureId);
   }
@@ -135,7 +141,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     playback.stop();
     await castActions.deleteFigure(figureId);
     setSelectedFigureId(next?.id ?? null);
-    setFigurePanelOpen(false);
+    setPanelView('cast');
   }
 
   function reorderFigures(figureIds: string[]) {
@@ -164,6 +170,16 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     );
   }
 
+  async function chooseSong(audioId: string | null) {
+    const updated = await updateDance(schoolId, dance.id, { audioId });
+    setDance((current) => ({ ...current, audioId: updated.audioId }));
+  }
+
+  const song =
+    songs.state.status === 'ready'
+      ? (songs.state.songs.find(({ id }) => id === dance.audioId) ?? null)
+      : null;
+
   if (presenting && cast.status === 'ready' && figure) {
     return (
       <PresentationMode
@@ -174,8 +190,9 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     );
   }
   // The sidebar on iPad and desktop, the bottom sheet on a phone.
+  const showing = panelView === 'figure' && !figure ? 'cast' : panelView;
   const panel =
-    figurePanelOpen && figure ? (
+    showing === 'figure' && figure ? (
       <FigurePanel
         key={figure.id}
         figure={figure}
@@ -184,7 +201,13 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           save: (update) => castActions.saveFigure(figure.id, update),
           remove: () => deleteFigure(figure.id),
         }}
-        onClose={() => setFigurePanelOpen(false)}
+        onClose={() => setPanelView('cast')}
+      />
+    ) : showing === 'music' ? (
+      <MusicPanel
+        library={songs}
+        choice={{ audioId: dance.audioId, choose: chooseSong }}
+        onClose={() => setPanelView('cast')}
       />
     ) : (
       <CastList
@@ -196,11 +219,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     );
 
   // In phone landscape the sheet sits in the editor's right-hand column, inside main.
-  const side = phone ? (
-    <BottomSheet label={figurePanelOpen && figure ? 'Figure' : 'Cast'}>{panel}</BottomSheet>
-  ) : (
-    panel
-  );
+  const side = phone ? <BottomSheet label={sheetLabels[showing]}>{panel}</BottomSheet> : panel;
 
   return (
     <div className={styles.editor}>
@@ -312,7 +331,18 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           </div>
           {figure && (
             <section className={styles.timeline} aria-label="Timeline">
-              <Transport playback={playback} />
+              <div className={styles.transportRow}>
+                <Transport playback={playback} />
+                <Button
+                  variant="secondary"
+                  className={styles.music}
+                  aria-label={song ? `Music: ${song.name}` : undefined}
+                  aria-pressed={showing === 'music'}
+                  onClick={() => setPanelView(showing === 'music' ? 'cast' : 'music')}
+                >
+                  {song ? <span className={styles.songName}>{song.name}</span> : 'Add music'}
+                </Button>
+              </div>
               <FigureStrip
                 figures={figures}
                 active={{ id: moment?.to.id ?? figure.id, editable: stopped }}
