@@ -1,3 +1,5 @@
+import type { Figure } from './figure.ts';
+
 // A pin is the moment in the song, in ms, when a figure is reached. The pins of a dance
 // rise with the figures' order; moving one pin never moves another.
 
@@ -66,4 +68,19 @@ export function pinRange(pins: number[], index: number, songMs: number) {
 export function isInPinRange(pins: number[], index: number, songMs: number, timeMs: number) {
   const { minMs, maxMs } = pinRange(pins, index, songMs);
   return timeMs >= minMs && timeMs <= maxMs;
+}
+
+// Whether every figure has its moment, so the song can drive the stage.
+export function isPinned(figures: Figure[]): boolean {
+  return figures.length > 0 && figures.every(({ timeMs }) => timeMs !== null);
+}
+
+// The figures timed by the song: each move lasts from one pin to the next. With the
+// first pin as the start, the move math of a dance without a song applies as it is.
+export function songTimed(figures: Figure[]): Figure[] {
+  return figures.map((figure, index) =>
+    index === 0
+      ? figure
+      : { ...figure, transitionMs: figure.timeMs! - figures[index - 1]!.timeMs! },
+  );
 }

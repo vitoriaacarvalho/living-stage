@@ -36,6 +36,8 @@ export type CastActions = {
   saveFigure: (figureId: string, update: FigureUpdate) => Promise<void>;
   reorderFigures: (figureIds: string[]) => Promise<void>;
   deleteFigure: (figureId: string) => Promise<void>;
+  // Fetches the figures again, for changes the server makes to several at once (pins).
+  reloadFigures: () => Promise<void>;
   movePositions: (figureId: string, positions: Position[]) => Promise<void>;
   setPath: (figureId: string, path: Path) => Promise<void>;
 };
@@ -137,6 +139,11 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     }));
   }
 
+  async function reloadFigures() {
+    const figures = await fetchFigures(schoolId, danceId, new AbortController().signal);
+    change(({ cast }) => ({ cast, figures }));
+  }
+
   // Shown right away; only the moved dancers go back if saving fails.
   async function movePositions(figureId: string, positions: Position[]) {
     const figure =
@@ -178,6 +185,7 @@ export function useCast(schoolId: string, danceId: string): { state: CastState }
     saveFigure,
     reorderFigures,
     deleteFigure,
+    reloadFigures,
     movePositions,
     setPath,
   };

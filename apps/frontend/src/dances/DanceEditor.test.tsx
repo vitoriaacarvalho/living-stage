@@ -1276,3 +1276,57 @@ describe('waveform', () => {
     expect(screen.queryByRole('img', { name: /Waveform/ })).not.toBeInTheDocument();
   });
 });
+
+describe('playing to the song', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: 0,
+        paths: [],
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: null,
+        transitionMs: 4000,
+        timeMs: 58_000,
+        paths: [],
+        positions: [{ castMemberId: 'cast-1', x: 0.2, y: 0.2 }],
+      },
+    ]);
+  });
+
+  test('times the dance by its song', async () => {
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    expect(await screen.findByText('/ 03:40')).toBeInTheDocument();
+  });
+
+  test('stands at the moment of the selected figure', async () => {
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    await screen.findByText('/ 03:40');
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Figure 2' }));
+    expect(screen.getByText(/00:58/)).toBeInTheDocument();
+  });
+
+  test('keeps the move times for a dance whose figures have no moments yet', async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        paths: [],
+        positions: [],
+      },
+    ]);
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    await screen.findByRole('img', { name: /Waveform/ });
+    expect(screen.queryByText('/ 03:40')).not.toBeInTheDocument();
+  });
+});

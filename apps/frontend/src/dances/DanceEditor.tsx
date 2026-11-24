@@ -1,4 +1,6 @@
 import {
+  isPinned,
+  songTimed,
   stageAt,
   type Dance,
   type FigureCopy,
@@ -25,6 +27,7 @@ import { Transport } from '../playback/Transport.tsx';
 import { enterFullScreen } from '../presentation/full-screen.ts';
 import { PresentationMode } from '../presentation/PresentationMode.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
+import { useSongPlayback } from '../playback/useSongPlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
 import { BottomSheet } from '../ui/BottomSheet.tsx';
@@ -73,14 +76,27 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const selection = selectedIds.every((id) => castIds.includes(id)) ? selectedIds : [];
   const figures = cast.status === 'ready' ? cast.figures : [];
   const figure = figures.find(({ id }) => id === selectedFigureId) ?? figures[0];
-  const playback = usePlayback({
-    figures,
-    selectedIndex: figure ? figures.indexOf(figure) : 0,
-    onFinish: setSelectedFigureId,
-  });
+  const selectedIndex = figure ? figures.indexOf(figure) : 0;
+  const movesPlayback = usePlayback({ figures, selectedIndex, onFinish: setSelectedFigureId });
+  const [audio] = useState(() => new Audio());
+  const songPlayback = useSongPlayback(
+    audio,
+    {
+      figures,
+      selectedIndex,
+      songMs: songWithWaveform?.durationMs ?? 0,
+      url: songWithWaveform?.url ?? null,
+    },
+    setSelectedFigureId,
+  );
+  // With a song and every figure pinned, the song is the clock; otherwise the move times are.
+  const onSong = songWithWaveform !== null && isPinned(figures);
+  const playback = onSong ? songPlayback : movesPlayback;
+  const timed = onSong ? songTimed(figures) : figures;
+  const startMs = onSong ? (figures[0]?.timeMs ?? 0) : 0;
   // Editing is only on while playback is stopped at a figure.
   const stopped = playback.status === 'stopped';
-  const moment = stopped ? null : stageAt(figures, playback.timeMs);
+  const moment = stopped ? null : stageAt(timed, playback.timeMs - startMs);
   const positions = moment?.positions ?? figure?.positions;
   const dancers =
     cast.status === 'ready' && positions ? stageDancers(cast.cast, positions, dance) : [];
@@ -134,6 +150,8 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     if (!figure) return;
     playback.stop();
     const copy = await castActions.copyFigure({ copyOf: figure.id, placement });
+    // A new last figure past the song's end squeezes the other pins on the server.
+    if (onSong) await castActions.reloadFigures();
     setSelectedFigureId(copy.id);
   }
 
@@ -174,8 +192,11 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   }
 
   async function chooseSong(audioId: string | null) {
+    playback.stop();
     const updated = await updateDance(schoolId, dance.id, { audioId });
     setDance((current) => ({ ...current, audioId: updated.audioId }));
+    // The server pins the figures to the new song.
+    if (audioId) await castActions.reloadFigures();
   }
 
   const song =

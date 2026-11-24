@@ -224,7 +224,9 @@ export {
   fillPins,
   fitPins,
   isInPinRange,
+  isPinned,
   newPin,
   pinRange,
   pinsFromMoves,
+  songTimed,
 } from './pins.ts';

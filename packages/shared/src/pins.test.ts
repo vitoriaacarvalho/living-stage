@@ -7,7 +7,10 @@ import {
   newPin,
   pinRange,
   pinsFromMoves,
+  isPinned,
+  songTimed,
 } from './pins.ts';
+import type { Figure } from './figure.ts';
 
 const SONG = 60_000;
 
@@ -118,5 +121,36 @@ describe('isInPinRange', () => {
 
   test('takes no time past the song end', () => {
     expect(isInPinRange(pins, 2, SONG, 60_001)).toBe(false);
+  });
+});
+
+const figure = (id: string, timeMs: number | null): Figure => ({
+  id,
+  order: 0,
+  name: null,
+  transitionMs: 4000,
+  timeMs,
+  positions: [],
+  paths: [],
+});
+
+describe('isPinned', () => {
+  test('is pinned when every figure has a moment', () => {
+    expect(isPinned([figure('a', 0), figure('b', 9000)])).toBe(true);
+  });
+
+  test('is not pinned while a figure has no moment', () => {
+    expect(isPinned([figure('a', 0), figure('b', null)])).toBe(false);
+  });
+
+  test('is not pinned without figures', () => {
+    expect(isPinned([])).toBe(false);
+  });
+});
+
+describe('songTimed', () => {
+  test('makes each move last from one pin to the next', () => {
+    const timed = songTimed([figure('a', 2000), figure('b', 9000), figure('c', 9500)]);
+    expect(timed.map(({ transitionMs }) => transitionMs)).toEqual([4000, 7000, 500]);
   });
 });
