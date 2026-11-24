@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "audio_track" ADD COLUMN     "peaks" DOUBLE PRECISION[] DEFAULT ARRAY[]::DOUBLE PRECISION[];

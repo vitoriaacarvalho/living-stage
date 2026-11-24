@@ -137,7 +137,8 @@ model Dance {
 }
 
 // A song in the school's library; dances point at it, so one song serves several dances.
-// storageKey is where the file lives in S3 storage; durationMs is read by the browser at upload.
+// storageKey is where the file lives in S3 storage; durationMs and peaks (the waveform, 20 a second)
+// are read by the browser at upload. Songs saved before the waveform came have no peaks.
 model AudioTrack {
   id          String   @id @default(cuid())
   schoolId    String
@@ -147,6 +148,7 @@ model AudioTrack {
   contentType String
   sizeBytes   Int
   durationMs  Int
+  peaks       Float[]  @default([])
   createdAt   DateTime @default(now())
   dances      Dance[]
 

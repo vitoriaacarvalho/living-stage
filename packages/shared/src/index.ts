@@ -2,6 +2,7 @@ export const APP_NAME = 'Living Stage';
 
 export {
   AUDIO_MAX_BYTES,
+  PEAKS_PER_SECOND,
   SONG_MAX_DURATION_MS,
   SONG_NAME_MAX_LENGTH,
   parseAudioTrackInput,
@@ -9,6 +10,8 @@ export {
   parseSongName,
   songExtension,
   type AudioTrack,
+  type AudioTrackDetail,
+  type AudioTrackDetailResponse,
   type AudioTrackInput,
   type AudioTrackResponse,
   type AudioUploadLinkResponse,

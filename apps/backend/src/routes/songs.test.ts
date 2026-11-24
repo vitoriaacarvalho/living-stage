@@ -19,7 +19,7 @@ vi.mock('../auth/auth.ts', () => ({
 vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
-    audioTrack: { findMany: vi.fn(), create: vi.fn() },
+    audioTrack: { findMany: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
   },
 }));
 
@@ -47,6 +47,7 @@ const kitri = {
   contentType: 'audio/mpeg',
   sizeBytes: 5_000_000,
   durationMs: 220_000,
+  peaks: [0.1, 0.5, 0.3],
   createdAt: new Date('2026-11-23T12:00:00.000Z'),
 };
 
@@ -115,6 +116,36 @@ describe('GET /api/schools/:schoolId/songs', () => {
   });
 });
 
+describe('GET /api/schools/:schoolId/songs/:songId', () => {
+  const get = () => fetch(`${baseUrl}/api/schools/school-1/songs/song-1`);
+
+  test('looks for the song in this school only', async () => {
+    vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(kitri);
+    await get();
+    expect(prisma.audioTrack.findFirst).toHaveBeenCalledWith({
+      where: { id: 'song-1', schoolId: 'school-1' },
+    });
+  });
+
+  test('responds 404 for a song of another school', async () => {
+    vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(null);
+    expect((await get()).status).toBe(404);
+  });
+
+  test('answers with the song, its play link and its waveform', async () => {
+    vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(kitri);
+    expect(await (await get()).json()).toEqual({
+      audioTrack: {
+        id: 'song-1',
+        name: 'Kitri variation',
+        durationMs: 220_000,
+        url: `https://storage.test/read/${key}`,
+        peaks: [0.1, 0.5, 0.3],
+      },
+    });
+  });
+});
+
 describe('POST /api/schools/:schoolId/songs/upload-link', () => {
   const request = { name: 'Kitri variation', contentType: 'audio/mpeg', sizeBytes: 5_000_000 };
 
@@ -156,7 +187,15 @@ describe('POST /api/schools/:schoolId/songs/upload-link', () => {
 });
 
 describe('POST /api/schools/:schoolId/songs', () => {
-  const input = { key, name: 'Kitri variation', contentType: 'audio/mpeg', durationMs: 220_000 };
+  // 220 s at 20 peaks a second.
+  const peaks = Array<number>(4400).fill(0.4);
+  const input = {
+    key,
+    name: 'Kitri variation',
+    contentType: 'audio/mpeg',
+    durationMs: 220_000,
+    peaks,
+  };
 
   test('responds 404 for a school the user does not teach at', async () => {
     vi.mocked(prisma.school.findFirst).mockResolvedValue(null);
@@ -209,6 +248,7 @@ describe('POST /api/schools/:schoolId/songs', () => {
         contentType: 'audio/mpeg',
         sizeBytes: 4_321_000,
         durationMs: 220_000,
+        peaks,
       },
     });
   });

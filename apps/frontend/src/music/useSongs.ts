@@ -1,12 +1,13 @@
 import type { AudioTrack } from '@living-stage/shared';
 import { useEffect, useState } from 'react';
 import { fetchSongs, requestUploadLink, saveSong, uploadFile } from '../api/songs.ts';
-import { readDurationMs, songNameOf, songTypeOf } from './song-file.ts';
+import { readSong } from './peaks.ts';
+import { songNameOf, songTypeOf } from './song-file.ts';
 
 export type SongsState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; songs: AudioTrack[] };
 
-// Thrown when the browser can't read the song's length, so the panel can say so.
+// Thrown when the browser can't decode the song, so the panel can say so.
 export class UnreadableSongError extends Error {}
 
 export type SongLibrary = {
@@ -31,11 +32,11 @@ export function useSongs(schoolId: string): SongLibrary {
     return () => controller.abort();
   }, [schoolId]);
 
-  // Read the length, get a link, send the file, then save the song to the library.
+  // Read the length and waveform, get a link, send the file, then save the song to the library.
   async function upload(file: File, onProgress: (sent: number) => void) {
     const contentType = songTypeOf(file)!;
     const name = songNameOf(file.name);
-    const durationMs = await readDurationMs(file).catch(() => {
+    const { durationMs, peaks } = await readSong(file).catch(() => {
       throw new UnreadableSongError();
     });
     const { key, uploadUrl } = await requestUploadLink(schoolId, {
@@ -44,7 +45,7 @@ export function useSongs(schoolId: string): SongLibrary {
       sizeBytes: file.size,
     });
     await uploadFile(uploadUrl, file, { contentType, onProgress });
-    const song = await saveSong(schoolId, { key, name, contentType, durationMs });
+    const song = await saveSong(schoolId, { key, name, contentType, durationMs, peaks });
     setState((current) =>
       current.status === 'ready'
         ? { status: 'ready', songs: [...current.songs, song].sort(byName) }

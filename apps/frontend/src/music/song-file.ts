@@ -34,24 +34,3 @@ export function songFileProblem(file: { name: string; type: string; size: number
   if (file.size === 0) return 'That file is empty.';
   return null;
 }
-
-// Read from the file's own header by an audio element, without decoding the whole song.
-export function readDurationMs(file: Blob): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const audio = new Audio();
-    const done = () => URL.revokeObjectURL(url);
-    audio.preload = 'metadata';
-    audio.onloadedmetadata = () => {
-      done();
-      const ms = Math.round(audio.duration * 1000);
-      if (Number.isFinite(ms) && ms > 0) resolve(ms);
-      else reject(new Error('The song has no length'));
-    };
-    audio.onerror = () => {
-      done();
-      reject(new Error('The song could not be read'));
-    };
-    audio.src = url;
-  });
-}

@@ -74,12 +74,35 @@ describe('parseAudioUploadRequest', () => {
 });
 
 describe('parseAudioTrackInput', () => {
+  // 220 s at 20 peaks a second.
+  const peaks = Array<number>(4400).fill(0.5);
   const input = {
     key: 'schools/s1/songs/a.mp3',
     name: 'Kitri',
     contentType: 'audio/mpeg',
     durationMs: 220_000,
+    peaks,
   };
+
+  test('takes no song without a waveform', () => {
+    expect(parseAudioTrackInput({ ...input, peaks: undefined })).toBeNull();
+  });
+
+  test('takes a waveform two peaks off the length', () => {
+    expect(parseAudioTrackInput({ ...input, peaks: peaks.slice(2) })).not.toBeNull();
+  });
+
+  test('takes no waveform that does not match the length', () => {
+    expect(parseAudioTrackInput({ ...input, peaks: peaks.slice(3) })).toBeNull();
+  });
+
+  test('takes no peak past 1', () => {
+    expect(parseAudioTrackInput({ ...input, peaks: [1.5, ...peaks.slice(1)] })).toBeNull();
+  });
+
+  test('takes no peak below 0', () => {
+    expect(parseAudioTrackInput({ ...input, peaks: [-0.1, ...peaks.slice(1)] })).toBeNull();
+  });
 
   test('takes an uploaded song', () => {
     expect(parseAudioTrackInput(input)).toEqual(input);
@@ -94,7 +117,12 @@ describe('parseAudioTrackInput', () => {
   });
 
   test('takes a song of exactly an hour', () => {
-    expect(parseAudioTrackInput({ ...input, durationMs: SONG_MAX_DURATION_MS })).not.toBeNull();
+    const hour = {
+      ...input,
+      durationMs: SONG_MAX_DURATION_MS,
+      peaks: Array<number>(72_000).fill(0),
+    };
+    expect(parseAudioTrackInput(hour)).not.toBeNull();
   });
 
   test('takes no song past an hour', () => {

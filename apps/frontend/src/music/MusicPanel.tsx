@@ -109,7 +109,7 @@ export function MusicPanel({ library, choice, onClose }: MusicPanelProps) {
             <div className={styles.progress}>
               <progress value={progress} max={1} aria-label="Upload progress" />
               <span role="status" className={styles.percent}>
-                Uploading {Math.round(progress * 100)}%
+                {progress === 0 ? 'Reading the song…' : `Uploading ${Math.round(progress * 100)}%`}
               </span>
             </div>
           )}

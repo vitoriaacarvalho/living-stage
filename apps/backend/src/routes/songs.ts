@@ -5,6 +5,7 @@ import {
   parseAudioUploadRequest,
   songExtension,
   type AudioTrack,
+  type AudioTrackDetailResponse,
   type AudioTrackResponse,
   type AudioUploadLinkResponse,
   type ListAudioTracksResponse,
@@ -24,6 +25,21 @@ schoolSongsRouter.get('/songs', async (_req, res) => {
 
   const audioTracks = await Promise.all(songs.map(toAudioTrack));
   res.json({ audioTracks } satisfies ListAudioTracksResponse);
+});
+
+// One song with its waveform, for the dance that plays it.
+schoolSongsRouter.get('/songs/:songId', async (req, res) => {
+  const song = await prisma.audioTrack.findFirst({
+    where: { id: req.params.songId, schoolId: res.locals.schoolId },
+  });
+  if (!song) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  res.json({
+    audioTrack: { ...(await toAudioTrack(song)), peaks: song.peaks },
+  } satisfies AudioTrackDetailResponse);
 });
 
 // The first step of an upload: a link the browser sends the file to, under a key of our making.
@@ -70,6 +86,7 @@ schoolSongsRouter.post('/songs', async (req, res) => {
         contentType: input.contentType,
         sizeBytes,
         durationMs: input.durationMs,
+        peaks: input.peaks,
       },
     });
     res.status(201).json({ audioTrack: await toAudioTrack(song) } satisfies AudioTrackResponse);

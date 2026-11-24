@@ -5,6 +5,9 @@ export const SONG_NAME_MAX_LENGTH = 100;
 // Longer than any dance; a bigger number is a bad reading, not a song.
 export const SONG_MAX_DURATION_MS = 60 * 60 * 1000;
 
+// The waveform keeps the loudest point of every twentieth of a second, from 0 to 1.
+export const PEAKS_PER_SECOND = 20;
+
 // Browsers name the same format differently (an M4A comes as audio/mp4 or audio/x-m4a).
 const EXTENSIONS: Record<string, string> = {
   'audio/mpeg': 'mp3',
@@ -31,7 +34,13 @@ export type AudioTrackInput = {
   name: string;
   contentType: string;
   durationMs: number;
+  peaks: number[];
 };
+
+// One song with its waveform, fetched only for the dance that plays it.
+export type AudioTrackDetail = AudioTrack & { peaks: number[] };
+
+export type AudioTrackDetailResponse = { audioTrack: AudioTrackDetail };
 
 export type ListAudioTracksResponse = { audioTracks: AudioTrack[] };
 
@@ -67,13 +76,22 @@ export function parseAudioUploadRequest(value: unknown): AudioUploadRequest | nu
   return { name, contentType, sizeBytes };
 }
 
+// One peak per twentieth of a second of the song, give or take one, each from 0 to 1.
+function isPeaksFor(value: unknown, durationMs: number): value is number[] {
+  if (!Array.isArray(value)) return false;
+  const expected = (durationMs / 1000) * PEAKS_PER_SECOND;
+  if (Math.abs(value.length - expected) > 2) return false;
+  return value.every((peak) => typeof peak === 'number' && peak >= 0 && peak <= 1);
+}
+
 export function parseAudioTrackInput(value: unknown): AudioTrackInput | null {
   if (typeof value !== 'object' || value === null) return null;
-  const { key, name: rawName, contentType, durationMs } = value as Record<string, unknown>;
+  const { key, name: rawName, contentType, durationMs, peaks } = value as Record<string, unknown>;
   const name = parseSongName(rawName);
   if (typeof key !== 'string' || key.length === 0 || !name || !isSongType(contentType)) {
     return null;
   }
   if (!isWholeNumberIn(durationMs, SONG_MAX_DURATION_MS)) return null;
-  return { key, name, contentType, durationMs };
+  if (!isPeaksFor(peaks, durationMs)) return null;
+  return { key, name, contentType, durationMs, peaks };
 }
