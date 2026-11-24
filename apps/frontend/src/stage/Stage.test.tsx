@@ -430,6 +430,13 @@ describe('editing', () => {
     expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.75, y: 0.5 }]);
   });
 
+  test('snaps the dragged dancer onto a metre line of the grid', () => {
+    const edit = { ...editing(['cast-1']), snap: true };
+    render(<Stage guides="grid" dancers={[clara]} edit={edit} />);
+    dragBy(hitOf('Clara'), 102, 0);
+    expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 7 / 12, y: 0.5 }]);
+  });
+
   test('leaves the dragged dancer where she is dropped when snapping is off', () => {
     const edit = editing(['cast-1']);
     render(<Stage guides="lines" dancers={[clara]} edit={edit} />);

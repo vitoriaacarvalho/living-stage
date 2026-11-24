@@ -68,7 +68,7 @@ export function Stage({ guides, dancers = [], paths = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const scale = usePlanScale(svgRef, planWidth);
-  const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, edit, planRef });
+  const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, guides, edit, planRef });
   const { drawn, handles } = usePathHandles({ paths, dancers: shown, edit, planRef });
 
   return (

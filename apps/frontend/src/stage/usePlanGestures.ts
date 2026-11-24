@@ -7,6 +7,7 @@ import {
   snapToGuides,
   type PathPoint,
   type Position,
+  type StageGuides,
   type StagePoint,
 } from '@living-stage/shared';
 import { type KeyboardEvent, type PointerEvent, type RefObject, useState } from 'react';
@@ -43,6 +44,7 @@ export type SelectionBox = { left: number; top: number; right: number; bottom: n
 
 type GestureSetup = {
   dancers: StageDancer[];
+  guides: StageGuides;
   edit: StageEditing | undefined;
   planRef: RefObject<HTMLElement | null>;
 };
@@ -70,9 +72,10 @@ function inBox({ x, y }: StagePoint, box: SelectionBox) {
 function snapped(
   { origins, dancerId }: Pick<DragGesture, 'origins' | 'dancerId'>,
   delta: StagePoint,
+  guides: StageGuides,
 ) {
   const origin = origins.find(({ castMemberId }) => castMemberId === dancerId)!;
-  const target = snapToGuides({ x: origin.x + delta.x, y: origin.y + delta.y });
+  const target = snapToGuides({ x: origin.x + delta.x, y: origin.y + delta.y }, guides);
   return { x: target.x - origin.x, y: target.y - origin.y };
 }
 
@@ -85,7 +88,7 @@ export function stagePointAt(plan: HTMLElement, clientX: number, clientY: number
   };
 }
 
-export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
+export function usePlanGestures({ dancers, guides, edit, planRef }: GestureSetup) {
   const [gesture, setGesture] = useState<Gesture | null>(null);
 
   const toStage = (clientX: number, clientY: number) =>
@@ -192,7 +195,11 @@ export function usePlanGestures({ dancers, edit, planRef }: GestureSetup) {
     }
     const { width, height } = planRef.current!.getBoundingClientRect();
     const delta = { x: (dx / width) * spanX, y: (dy / height) * spanY };
-    setGesture({ ...gesture, moved: true, delta: edit?.snap ? snapped(gesture, delta) : delta });
+    setGesture({
+      ...gesture,
+      moved: true,
+      delta: edit?.snap ? snapped(gesture, delta, guides) : delta,
+    });
   }
 
   function release(event: PointerEvent<HTMLElement>) {

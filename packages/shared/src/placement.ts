@@ -6,6 +6,7 @@ import {
   STAGE_QUARTERS,
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
+  type StageGuides,
 } from './stage.ts';
 
 // The wings are part of the plan, the audience isn't: y stops at the downstage edge.
@@ -17,6 +18,8 @@ export const PLAN_BOUNDS = {
 } as const;
 
 export const SNAP_DISTANCE_M = 0.25;
+// Tighter than the guides, or a line every metre would make every spot sticky.
+export const GRID_SNAP_DISTANCE_M = 0.1;
 export const ARROW_STEP_M = 0.25;
 export const ARROW_LARGE_STEP_M = 1;
 
@@ -51,13 +54,22 @@ export function moveGroup<T extends StagePoint>(points: T[], delta: StagePoint):
   }));
 }
 
-function snapAxis(value: number, metresPerUnit: number): number {
-  const guide = GUIDES.find((at) => Math.abs(value - at) * metresPerUnit <= SNAP_DISTANCE_M);
-  return guide ?? value;
+function snapToGrid(value: number, metresPerUnit: number): number {
+  const metres = Math.round(value * metresPerUnit);
+  const onFloor = metres > 0 && metres < metresPerUnit;
+  const near = Math.abs(value * metresPerUnit - metres) <= GRID_SNAP_DISTANCE_M;
+  return onFloor && near ? metres / metresPerUnit : value;
 }
 
-export function snapToGuides({ x, y }: StagePoint): StagePoint {
-  return { x: snapAxis(x, STAGE_WIDTH_M), y: snapAxis(y, STAGE_DEPTH_M) };
+function snapAxis(value: number, metresPerUnit: number, guides: StageGuides): number {
+  if (guides === 'none') return value;
+  const guide = GUIDES.find((at) => Math.abs(value - at) * metresPerUnit <= SNAP_DISTANCE_M);
+  if (guide !== undefined) return guide;
+  return guides === 'grid' ? snapToGrid(value, metresPerUnit) : value;
+}
+
+export function snapToGuides({ x, y }: StagePoint, guides: StageGuides): StagePoint {
+  return { x: snapAxis(x, STAGE_WIDTH_M, guides), y: snapAxis(y, STAGE_DEPTH_M, guides) };
 }
 
 // Up is upstage, so it lowers y. Any key that isn't an arrow gives null.

@@ -137,6 +137,7 @@ export {
 export {
   ARROW_LARGE_STEP_M,
   ARROW_STEP_M,
+  GRID_SNAP_DISTANCE_M,
   PLAN_BOUNDS,
   SNAP_DISTANCE_M,
   arrowStep,

@@ -3,6 +3,7 @@ import {
   ARROW_LARGE_STEP_M,
   ARROW_STEP_M,
   PLAN_BOUNDS,
+  GRID_SNAP_DISTANCE_M,
   SNAP_DISTANCE_M,
   arrowStep,
   clampToPlan,
@@ -103,33 +104,73 @@ describe('moveGroup', () => {
 
 describe('snapToGuides', () => {
   test('snaps x onto the centre line within the snap distance', () => {
-    expect(snapToGuides({ x: 0.5 + snapX * 0.9, y: 0.4 }).x).toBe(0.5);
+    expect(snapToGuides({ x: 0.5 + snapX * 0.9, y: 0.4 }, 'lines').x).toBe(0.5);
   });
 
   test('snaps x onto a quarter line', () => {
-    expect(snapToGuides({ x: 0.75 - snapX * 0.9, y: 0.4 }).x).toBe(0.75);
+    expect(snapToGuides({ x: 0.75 - snapX * 0.9, y: 0.4 }, 'lines').x).toBe(0.75);
   });
 
   test('snaps y onto a quarter line', () => {
-    expect(snapToGuides({ x: 0.4, y: 0.25 + snapY * 0.9 }).y).toBe(0.25);
+    expect(snapToGuides({ x: 0.4, y: 0.25 + snapY * 0.9 }, 'lines').y).toBe(0.25);
   });
 
   test('snaps both axes at once onto a crossing', () => {
-    expect(snapToGuides({ x: 0.51, y: 0.49 })).toEqual({ x: 0.5, y: 0.5 });
+    expect(snapToGuides({ x: 0.51, y: 0.49 }, 'lines')).toEqual({ x: 0.5, y: 0.5 });
   });
 
   test('leaves x alone just past the snap distance', () => {
     const x = 0.5 + snapX * 1.1;
-    expect(snapToGuides({ x, y: 0.4 }).x).toBe(x);
+    expect(snapToGuides({ x, y: 0.4 }, 'lines').x).toBe(x);
   });
 
   test('uses the depth in metres for y, not the width', () => {
     const y = 0.5 + snapX * 1.1;
-    expect(snapToGuides({ x: 0.4, y }).y).toBe(0.5);
+    expect(snapToGuides({ x: 0.4, y }, 'lines').y).toBe(0.5);
   });
 
   test('leaves a spot far from every guide alone', () => {
-    expect(snapToGuides({ x: 0.4, y: 0.4 })).toEqual({ x: 0.4, y: 0.4 });
+    expect(snapToGuides({ x: 0.4, y: 0.4 }, 'lines')).toEqual({ x: 0.4, y: 0.4 });
+  });
+
+  test('snaps nowhere while the guides are hidden', () => {
+    expect(snapToGuides({ x: 0.51, y: 0.49 }, 'none')).toEqual({ x: 0.51, y: 0.49 });
+  });
+});
+
+describe('snapToGuides on the grid', () => {
+  const metreX = 1 / STAGE_WIDTH_M;
+  const gridX = GRID_SNAP_DISTANCE_M / STAGE_WIDTH_M;
+
+  test('snaps x onto the nearest metre line within the grid distance', () => {
+    expect(snapToGuides({ x: 4 * metreX + gridX * 0.9, y: 0.4 }, 'grid').x).toBe(4 * metreX);
+  });
+
+  test('snaps y onto the nearest metre line within the grid distance', () => {
+    const gridY = GRID_SNAP_DISTANCE_M / STAGE_DEPTH_M;
+    expect(snapToGuides({ x: 0.4, y: 3 / STAGE_DEPTH_M - gridY * 0.9 }, 'grid').y).toBe(
+      3 / STAGE_DEPTH_M,
+    );
+  });
+
+  test('leaves x alone just past the grid distance', () => {
+    const x = 4 * metreX + gridX * 1.1;
+    expect(snapToGuides({ x, y: 0.4 }, 'grid').x).toBe(x);
+  });
+
+  test('prefers a quarter line to the metre line beside it', () => {
+    const x = 0.25 + snapX * 0.9;
+    expect(snapToGuides({ x, y: 0.4 }, 'grid').x).toBe(0.25);
+  });
+
+  test('has no metre line on the edge of the floor', () => {
+    const x = -gridX * 0.5;
+    expect(snapToGuides({ x, y: 0.4 }, 'grid').x).toBe(x);
+  });
+
+  test('ignores the grid when only the guide lines show', () => {
+    const x = 4 * metreX + gridX * 0.5;
+    expect(snapToGuides({ x, y: 0.4 }, 'lines').x).toBe(x);
   });
 });
 
