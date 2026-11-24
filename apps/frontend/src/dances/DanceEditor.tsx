@@ -1,5 +1,6 @@
 import {
   isPinned,
+  pinRange,
   songTimed,
   stageAt,
   type Dance,
@@ -191,6 +192,15 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     );
   }
 
+  // A dragged marker lands as near as it may: between its neighbours, inside the song.
+  function moveFigureTo(figureId: string, timeMs: number) {
+    const index = figures.findIndex(({ id }) => id === figureId);
+    const pins = figures.map(({ timeMs: pin }) => pin ?? 0);
+    const { minMs, maxMs } = pinRange(pins, index, songWithWaveform?.durationMs ?? 0);
+    const landed = Math.min(maxMs, Math.max(minMs, timeMs));
+    castActions.saveFigure(figureId, { timeMs: landed }).catch(() => {});
+  }
+
   async function chooseSong(audioId: string | null) {
     playback.stop();
     const updated = await updateDance(schoolId, dance.id, { audioId });
@@ -367,7 +377,19 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                   {song ? <span className={styles.songName}>{song.name}</span> : 'Add music'}
                 </Button>
               </div>
-              {songWithWaveform && <Waveform song={songWithWaveform} />}
+              {songWithWaveform && (
+                <Waveform
+                  song={songWithWaveform}
+                  {...(onSong && {
+                    clock: { media: audio, seek: songPlayback.seek },
+                    markers: {
+                      figures,
+                      activeId: moment?.to.id ?? figure?.id ?? null,
+                      move: stopped ? moveFigureTo : null,
+                    },
+                  })}
+                />
+              )}
               <FigureStrip
                 figures={figures}
                 active={{ id: moment?.to.id ?? figure.id, editable: stopped }}

@@ -23,8 +23,13 @@ vi.mock('../api/cast.ts', () => ({
   removeCastMember: vi.fn(),
 }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
-vi.mock('wavesurfer.js', () => ({ default: { create: vi.fn(() => ({ destroy: vi.fn() })) } }));
+vi.mock('wavesurfer.js', () => ({
+  default: { create: vi.fn(() => ({ destroy: vi.fn(), on: vi.fn() })) },
+}));
 vi.mock('wavesurfer.js/dist/plugins/minimap.esm.js', () => ({ default: { create: vi.fn() } }));
+vi.mock('wavesurfer.js/dist/plugins/regions.esm.js', () => ({
+  default: { create: vi.fn(() => ({ on: vi.fn(), addRegion: vi.fn(), clearRegions: vi.fn() })) },
+}));
 vi.mock('../api/songs.ts', () => ({
   fetchSongs: vi.fn(),
   fetchSong: vi.fn(),

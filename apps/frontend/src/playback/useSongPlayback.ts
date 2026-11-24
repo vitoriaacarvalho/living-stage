@@ -42,6 +42,12 @@ export function useSongPlayback(
     };
   }, [audio, url]);
 
+  // Stopped on a figure, the song waits at its moment, so the playhead shows where the stage is.
+  const selectedPin = pinOf(selectedIndex);
+  useEffect(() => {
+    if (status === 'stopped') audio.currentTime = selectedPin / 1000;
+  }, [audio, status, selectedPin]);
+
   const advance = useEffectEvent((): boolean => {
     const now = audio.currentTime * 1000;
     const { atMs: end, figureId } = stop.current;
