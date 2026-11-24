@@ -25,7 +25,7 @@ The first release is about choreography and shows, and it should ship fast:
 - **Out, for later:** music and the timeline, undo and redo, and PDF export.
 - **Dropped (Nov 2026):** costume photos, live viewing and the edit lock, Portuguese, email invites, installing as an app, layout tools and the ghost view.
 
-Section 7 lists the MVP plans in build order and the three features after it under "After the MVP".
+Section 7 lists the MVP plans in build order and the features after it under "After the MVP".
 
 **Name.** Working name: **Living Stage**. No app or dance software with this name was found, but a former theater company and an eco-theater project used it, so the exact domain is likely taken. Options: livingstage.app, "LivingStage" as one word, or a suffix like "Studio". Domain (Registro.br) and trademark (INPI, USPTO) checks are still to do.
 
@@ -153,6 +153,9 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - ✅ **C14.** A dance shows its cast list and how many dancers are in it.
+- **C15.** The editor's guides include a 1 m grid under the centre and quarter lines. *(after the MVP)*
+- **C16.** While dragging with Snap on, a dancer lines up with the other dancers, and a line shows with whom. *(after the MVP)*
+- **C17.** While dragging with Snap on, a dancer snaps to an equal gap with her neighbours, in rows, columns and diagonals. *(after the MVP)*
 
 ### Part D — Paths and animation
 
@@ -403,7 +406,7 @@ First milestone to show real teachers.
 
 ### After the MVP
 
-In build order: music first, then undo and redo, then PDF export. Each has its own file in `docs/features/`. Everything else that used to be here was dropped in Nov 2026 (see §1).
+In build order: music first, then undo and redo, then the metre grid and smart guides, then PDF export. Each has its own file in `docs/features/`. Everything else that used to be here was dropped in Nov 2026 (see §1).
 
 - ✅ **4.1 Audio upload** · after 2.3
   - Done when: Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song
@@ -423,6 +426,10 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
   - Requirements: C12 · Screens: `Toolbar`
   - Note: moving dancers, paths, and a figure's name, move time and moment in the song can be undone; adding, duplicating, reordering and deleting figures and cast changes can't. Details in `docs/features/2.6-undo-redo.md`
   - Checked on 24 Nov 2026 (driven, headless Chrome at iPad, iPhone and desktop sizes): a dancer nudged twice went back one step on Undo and one more on Ctrl+Z, forward on Shift+Ctrl+Z and Redo, and Redo then turned off; each step was saved, so a reload kept it, and the history started empty again
+- ⬜ **2.9 Metre grid and smart guides** · after 2.4
+  - Done when: In the editor, Guides shows a 1 m grid; with Snap on, a dragged dancer lines up with another dancer or lands at an equal gap, with a line showing why
+  - Requirements: C15, C16, C17 · Screens: `Stage`
+  - Note: Snap drives it all and works with Guides off (dancers only); the grid shows in the editor only. Details in `docs/features/2.9-grid-and-smart-guides.md`
 - ⬜ **7.2 PDF export** · after 2.3
   - Done when: Printable PDF, one figure per page, made in the browser
   - Requirements: I1, I2, I3, I4 · Screens: `PrintView`
