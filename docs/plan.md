@@ -150,7 +150,7 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C7.** A dance is an ordered list of figures (formations): add, duplicate, rename, reorder, delete.
 - ✅ **C8.** Dancers are placed by dragging; several can be selected and moved together.
 - ✅ **C9.** Optional snapping to guide lines.
-- **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
+- ✅ **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - ✅ **C14.** A dance shows its cast list and how many dancers are in it.
 
@@ -418,9 +418,11 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
   - Requirements: E4, E5, E6 · Screens: `Timeline`, `PresentationMode`
   - Note: 4.3 Transport was merged into 4.5 on 24 Nov 2026, so the song and the dancers always share one clock. Each figure is pinned to its own moment in the song; moving one never moves the others. Decisions and slices in `docs/features/4-music.md`
   - Checked on 24 Nov 2026 (driven, Chrome at iPad size): one dancer crossing 9.6 m between pins at 0, 3, 9 and 10 s of a 40 s song, sampled about 90 times a run against the song's own time: in the editor off by a median of 1–2 cm and at worst 12 cm at 1×, 10 cm at 0.75× and 6 cm at 0.5× (one screen frame on the fastest move); scrubbed and paused, exactly in place; playing on after a scrub, at worst 7 cm; in presentation mode at worst 15 cm at 1× and 1 cm at 0.5×. Half speed played 3 s of song in 6 s. The 40-dancer iPad measurement of 2.7 is still to do and applies here too
-- ⬜ **2.6 Undo and redo** · after 2.4
+- ✅ **2.6 Undo and redo** · after 2.4
   - Done when: Undo/redo per figure
   - Requirements: C12 · Screens: `Toolbar`
+  - Note: moving dancers, paths, and a figure's name, move time and moment in the song can be undone; adding, duplicating, reordering and deleting figures and cast changes can't. Details in `docs/features/2.6-undo-redo.md`
+  - Checked on 24 Nov 2026 (driven, headless Chrome at iPad, iPhone and desktop sizes): a dancer nudged twice went back one step on Undo and one more on Ctrl+Z, forward on Shift+Ctrl+Z and Redo, and Redo then turned off; each step was saved, so a reload kept it, and the history started empty again
 - ⬜ **7.2 PDF export** · after 2.3
   - Done when: Printable PDF, one figure per page, made in the browser
   - Requirements: I1, I2, I3, I4 · Screens: `PrintView`
