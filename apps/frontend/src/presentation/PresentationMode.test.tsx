@@ -1,7 +1,7 @@
 import type { CastMember, Dance, Figure } from '@living-stage/shared';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PresentationMode } from './PresentationMode.tsx';
 
 const swans: Dance = {
@@ -42,7 +42,7 @@ function present(startFigureId = 'figure-1', shown = figures) {
   const onLeave = vi.fn();
   render(
     <PresentationMode
-      presented={{ dance: swans, cast, figures: shown }}
+      presented={{ dance: swans, cast, figures: shown, music: null }}
       startFigureId={startFigureId}
       onLeave={onLeave}
     />,
@@ -296,4 +296,72 @@ test('leaves Space on a focused button to the button', () => {
   present();
   fireEvent.keyDown(button('Next figure'), { key: ' ' });
   expect(button('Play')).toBeInTheDocument();
+});
+
+describe('with the song', () => {
+  // Figures at 0:02, 0:10 and 0:20 of a 30 s song.
+  const pinned = figures.map((each, index) => ({
+    ...each,
+    timeMs: [2000, 10_000, 20_000][index]!,
+  }));
+  let audio: {
+    currentTime: number;
+    play: ReturnType<typeof vi.fn>;
+    pause: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(() => {
+    audio = { currentTime: 0, play: vi.fn(() => Promise.resolve()), pause: vi.fn() };
+  });
+
+  function presentOnSong(startFigureId = 'figure-1') {
+    render(
+      <PresentationMode
+        presented={{
+          dance: swans,
+          cast,
+          figures: pinned,
+          music: { audio: audio as unknown as HTMLAudioElement, songMs: 30_000 },
+        }}
+        startFigureId={startFigureId}
+        onLeave={() => {}}
+      />,
+    );
+  }
+
+  function hear(ms: number) {
+    audio.currentTime = ms / 1000;
+    act(() => vi.advanceTimersByTime(16));
+  }
+
+  test('offers the song speeds', () => {
+    presentOnSong();
+    expect(screen.getByRole('group', { name: 'Speed' })).toBeInTheDocument();
+  });
+
+  test('plays the song from the figure shown', () => {
+    presentOnSong('figure-2');
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+    expect(audio.currentTime).toBe(10);
+  });
+
+  test('counts down to the next figure by the song', () => {
+    presentOnSong();
+    expect(screen.getByText(/Next in 00:08/)).toBeInTheDocument();
+  });
+
+  test('moves the dancer with the song', () => {
+    presentOnSong();
+    const standing = dancerLeft();
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+    hear(6000);
+    expect(dancerLeft()).not.toBe(standing);
+  });
+
+  test('stops on the next figure at its moment', () => {
+    presentOnSong();
+    fireEvent.click(screen.getByRole('button', { name: 'Next figure' }));
+    hear(10_000);
+    expect(screen.getByRole('heading', { name: 'Diagonal' })).toBeInTheDocument();
+  });
 });

@@ -218,7 +218,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   if (presenting && cast.status === 'ready' && figure) {
     return (
       <PresentationMode
-        presented={{ dance, cast: cast.cast, figures }}
+        presented={{
+          dance,
+          cast: cast.cast,
+          figures,
+          music: onSong ? { audio, songMs: songWithWaveform.durationMs } : null,
+        }}
         startFigureId={figure.id}
         onLeave={leavePresentation}
       />

@@ -30,6 +30,22 @@
   color: var(--primary-strong);
 }
 
+.stage .repeat {
+  border-color: var(--stage-ink-muted);
+  background: transparent;
+  color: var(--stage-ink);
+}
+
+.stage .repeat[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--stage-accent);
+  color: var(--ink);
+}
+
+.stage .repeat:focus-visible {
+  outline-color: var(--stage-accent);
+}
+
 /* Phones, either way up: the loop icon alone, as in the design. */
 @media (max-width: 599px), (max-height: 499px) {
   .repeat {

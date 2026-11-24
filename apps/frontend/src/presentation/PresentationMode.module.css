@@ -155,3 +155,10 @@
     letter-spacing: var(--text-display-tracking);
   }
 }
+
+.songControls {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  padding-bottom: var(--space-4);
+}

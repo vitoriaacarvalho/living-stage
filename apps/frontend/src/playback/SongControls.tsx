@@ -11,12 +11,15 @@ const speeds = [
 
 type Speed = (typeof speeds)[number]['value'];
 
-// Speed and Repeat figure, for a dance played to its song.
-export function SongControls({ playback }: { playback: SongPlayback }) {
+type SongControlsProps = { playback: SongPlayback; surface?: 'light' | 'stage' };
+
+// Speed and Repeat figure, for a dance played to its song; on the dark stage in presentation.
+export function SongControls({ playback, surface = 'light' }: SongControlsProps) {
   return (
-    <div className={styles.controls}>
+    <div className={`${styles.controls} ${styles[surface]}`}>
       <SegmentedControl
         label="Speed"
+        surface={surface}
         options={speeds}
         value={String(playback.speed) as Speed}
         onChange={(speed) => playback.setSpeed(Number(speed))}

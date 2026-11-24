@@ -1,6 +1,8 @@
 import {
   figureIndexAt,
   figureTimeMs,
+  isPinned,
+  songTimed,
   stageAt,
   type CastMember,
   type Dance,
@@ -10,7 +12,9 @@ import { type CSSProperties, useState } from 'react';
 import { stageDancers } from '../cast/stage-dancers.ts';
 import { figureLabel } from '../figures/figure-label.ts';
 import { countdownTime } from '../playback/clock-time.ts';
+import { SongControls } from '../playback/SongControls.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
+import { useSongPlayback } from '../playback/useSongPlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { leaveFullScreen, useFullScreenExit } from './full-screen.ts';
@@ -20,7 +24,16 @@ import { usePresentationKeys } from './usePresentationKeys.ts';
 
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
 
-export type Presented = { dance: Dance; cast: CastMember[]; figures: Figure[] };
+// The editor's own audio element, already holding the song, so presenting plays the
+// same player; null for a dance presented on its move times.
+export type PresentedMusic = { audio: HTMLAudioElement; songMs: number };
+
+export type Presented = {
+  dance: Dance;
+  cast: CastMember[];
+  figures: Figure[];
+  music: PresentedMusic | null;
+};
 
 type PresentationModeProps = {
   presented: Presented;
@@ -29,19 +42,30 @@ type PresentationModeProps = {
 };
 
 export function PresentationMode({ presented, startFigureId, onLeave }: PresentationModeProps) {
-  const { dance, cast, figures } = presented;
+  const { dance, cast, figures, music } = presented;
+  const [spareAudio] = useState(() => new Audio());
   const [figureId, setFigureId] = useState(startFigureId);
   const selectedIndex = Math.max(
     0,
     figures.findIndex(({ id }) => id === figureId),
   );
-  const playback = usePlayback({ figures, selectedIndex, onFinish: setFigureId });
+  const movesPlayback = usePlayback({ figures, selectedIndex, onFinish: setFigureId });
+  // The song is already loaded by the editor (url null), so leaving never unloads it.
+  const songPlayback = useSongPlayback(
+    music?.audio ?? spareAudio,
+    { figures, selectedIndex, songMs: music?.songMs ?? 0, url: null },
+    setFigureId,
+  );
+  const onSong = music !== null && isPinned(figures);
+  const playback = onSong ? songPlayback : movesPlayback;
+  const timed = onSong ? songTimed(figures) : figures;
+  // Where the move math stands: the song time, counted from the first figure's moment.
+  const stageMs = playback.timeMs - (onSong ? (figures[0]?.timeMs ?? 0) : 0);
   const moving = playback.status !== 'stopped';
   // The figure last reached: while a move plays, the one being left.
-  const currentIndex = moving ? figureIndexAt(figures, playback.timeMs) : selectedIndex;
+  const currentIndex = moving ? figureIndexAt(timed, stageMs) : selectedIndex;
   const current = figures[currentIndex];
-  const positions =
-    (moving ? stageAt(figures, playback.timeMs)?.positions : current?.positions) ?? [];
+  const positions = (moving ? stageAt(timed, stageMs)?.positions : current?.positions) ?? [];
   const nextIndex = currentIndex + 1;
   const next = figures[nextIndex];
   // Part way through a move, Previous goes back to where it started.
@@ -94,7 +118,7 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
         </div>
         {next && (
           <p className={styles.next}>
-            Next in {countdownTime(figureTimeMs(figures, nextIndex) - playback.timeMs)}
+            Next in {countdownTime(figureTimeMs(timed, nextIndex) - stageMs)}
             <b className={styles.nextName}>
               Figure {nextIndex + 1}
               {next.name && ` · ${next.name}`}
@@ -108,6 +132,11 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
         </div>
       </div>
       <PresentationControls playback={playback} steps={steps} />
+      {onSong && (
+        <div className={styles.songControls}>
+          <SongControls playback={songPlayback} surface="stage" />
+        </div>
+      )}
     </main>
   );
 }
