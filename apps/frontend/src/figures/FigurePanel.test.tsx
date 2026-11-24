@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { FigurePanel, type FigureActions } from './FigurePanel.tsx';
 
 const entrance = {
@@ -33,7 +33,7 @@ function renderPanel(changes: Partial<FigureActions> = {}, figure = entrance) {
   render(
     <FigurePanel
       figure={figure}
-      figures={[entrance, finale]}
+      dance={{ figures: [entrance, finale], songMs: null }}
       actions={actions}
       onClose={onClose}
     />,
@@ -168,10 +168,87 @@ test('offers no delete for the only figure of the dance', () => {
   render(
     <FigurePanel
       figure={entrance}
-      figures={[entrance]}
+      dance={{ figures: [entrance], songMs: null }}
       actions={{ save: vi.fn(), remove: vi.fn() }}
       onClose={vi.fn()}
     />,
   );
   expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+});
+
+describe('on a dance with a song', () => {
+  const pinned = [
+    { ...entrance, timeMs: 0 },
+    { ...finale, timeMs: 58_000 },
+    { ...finale, id: 'figure-3', order: 2, name: 'Bow', timeMs: 90_000 },
+  ];
+
+  function renderPinned(figure = pinned[1]!) {
+    const actions = {
+      save: vi.fn().mockResolvedValue(undefined),
+      remove: vi.fn().mockResolvedValue(undefined),
+    };
+    render(
+      <FigurePanel
+        figure={figure}
+        dance={{ figures: pinned, songMs: 220_000 }}
+        actions={actions}
+        onClose={() => {}}
+      />,
+    );
+    return { actions, user: userEvent.setup() };
+  }
+
+  async function reachAt(user: ReturnType<typeof userEvent.setup>, text: string) {
+    await user.clear(screen.getByLabelText('Reached at'));
+    await user.type(screen.getByLabelText('Reached at'), text);
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+  }
+
+  test('shows the moment the figure is reached', () => {
+    renderPinned();
+    expect(screen.getByLabelText('Reached at')).toHaveValue('0:58');
+  });
+
+  test('offers no time to arrive', () => {
+    renderPinned();
+    expect(screen.queryByLabelText('Time to arrive')).not.toBeInTheDocument();
+  });
+
+  test('says between which moments it can go', () => {
+    renderPinned();
+    expect(screen.getByText('The moment in the song, between 0:01 and 1:29.')).toBeInTheDocument();
+  });
+
+  test('saves a new moment', async () => {
+    const { actions, user } = renderPinned();
+    await reachAt(user, '1:05');
+    expect(actions.save).toHaveBeenCalledWith({ name: 'Finale', timeMs: 65_000 });
+  });
+
+  test('leaves the moment alone when it is not changed', async () => {
+    const { actions, user } = renderPinned();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(actions.save).toHaveBeenCalledWith({ name: 'Finale' });
+  });
+
+  test('takes no moment past the next figure', async () => {
+    const { actions, user } = renderPinned();
+    await reachAt(user, '1:30');
+    expect(actions.save).not.toHaveBeenCalled();
+  });
+
+  test('says which moments it takes', async () => {
+    const { user } = renderPinned();
+    await reachAt(user, '1:30');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Type a time between 0:01 and 1:29, as m:ss.',
+    );
+  });
+
+  test('lets the first figure start the song', async () => {
+    const { actions, user } = renderPinned(pinned[0]);
+    await reachAt(user, '0:03');
+    expect(actions.save).toHaveBeenCalledWith({ name: 'Entrance', timeMs: 3000 });
+  });
 });

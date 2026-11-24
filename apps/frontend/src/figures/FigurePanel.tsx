@@ -1,6 +1,8 @@
 import {
   FIGURE_NAME_MAX_LENGTH,
+  formatDuration,
   parseFigureName,
+  pinRange,
   type Figure,
   type FigureUpdate,
 } from '@living-stage/shared';
@@ -11,6 +13,7 @@ import { Button } from '../ui/Button.tsx';
 import formStyles from '../ui/Form.module.css';
 import { TextField } from '../ui/TextField.tsx';
 import { figureLabel } from './figure-label.ts';
+import { parseMoment } from './moment-text.ts';
 import { parseTransitionSeconds, transitionSeconds } from './transition-seconds.ts';
 
 export type FigureActions = {
@@ -18,15 +21,28 @@ export type FigureActions = {
   remove: () => Promise<void>;
 };
 
+// songMs is set when the dance plays to its song, so the figure has a moment in it.
+export type FigureDance = { figures: Figure[]; songMs: number | null };
+
 type FigurePanelProps = {
   figure: Figure;
-  figures: Figure[];
+  dance: FigureDance;
   actions: FigureActions;
   onClose: () => void;
 };
 
-export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelProps) {
+export function FigurePanel({ figure, dance, actions, onClose }: FigurePanelProps) {
+  const { figures, songMs } = dance;
   const index = figures.indexOf(figure);
+  const onSong = songMs !== null && figure.timeMs !== null;
+  const moment = formatDuration(figure.timeMs ?? 0);
+  const range = onSong
+    ? pinRange(
+        figures.map(({ timeMs }) => timeMs ?? 0),
+        index,
+        songMs,
+      )
+    : null;
   const label = figureLabel(figure, index);
   // The first figure is where the dance starts, so nothing moves into it.
   const before = index > 0 ? figureLabel(figures[index - 1]!, index - 1) : null;
@@ -50,7 +66,16 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const update: FigureUpdate = { name: parseFigureName(form.get('name')) ?? null };
-    if (before) {
+    // Sent only when changed, so an untouched field never rounds a dragged moment.
+    const typed = String(form.get('moment') ?? '').trim();
+    if (range && typed !== moment) {
+      const timeMs = parseMoment(typed);
+      if (timeMs === null || timeMs < range.minMs || timeMs > range.maxMs) {
+        setError(`Type a time between ${between(range)}, as m:ss.`);
+        return;
+      }
+      update.timeMs = timeMs;
+    } else if (!range && before) {
       const transitionMs = parseTransitionSeconds(String(form.get('transition')));
       if (transitionMs === null) {
         setError('Choose a time from 1 to 30 seconds, in half seconds.');
@@ -79,15 +104,26 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
           maxLength={FIGURE_NAME_MAX_LENGTH}
           autoComplete="off"
         />
-        {before && (
+        {range ? (
           <TextField
-            label="Time to arrive"
-            name="transition"
-            defaultValue={transitionSeconds(figure.transitionMs)}
-            help={`Seconds to get here from ${before}, 1 to 30.`}
-            inputMode="decimal"
+            label="Reached at"
+            name="moment"
+            defaultValue={moment}
+            help={`The moment in the song, between ${between(range)}.`}
+            inputMode="numeric"
             autoComplete="off"
           />
+        ) : (
+          before && (
+            <TextField
+              label="Time to arrive"
+              name="transition"
+              defaultValue={transitionSeconds(figure.transitionMs)}
+              help={`Seconds to get here from ${before}, 1 to 30.`}
+              inputMode="decimal"
+              autoComplete="off"
+            />
+          )
         )}
         {error && (
           <p role="alert" className={formStyles.error}>
@@ -130,4 +166,11 @@ export function FigurePanel({ figure, figures, actions, onClose }: FigurePanelPr
       </form>
     </aside>
   );
+}
+
+// A pin may sit half a second from its neighbours; the help shows whole seconds inside that.
+function between({ minMs, maxMs }: { minMs: number; maxMs: number }) {
+  const first = formatDuration(Math.ceil(minMs / 1000) * 1000);
+  const last = formatDuration(Math.floor(maxMs / 1000) * 1000);
+  return `${first} and ${last}`;
 }

@@ -28,7 +28,7 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
   2. ✅ The song clock: an `<audio>` element drives the time; Play and Pause on the song; the stage follows the song through the pins; the time as `00:58 / 03:40`.
   3. ✅ The interactive timeline: the playhead moves; tapping or dragging the waveform scrubs; figure markers on the waveform that drag between their neighbours.
   4. ✅ Speed (0.5×, 0.75×, 1×, pitch kept) and Repeat figure.
-  5. The figure panel: "Reached at" (m:ss) in place of "Time to arrive" when the dance has a song.
+  5. ✅ The figure panel: "Reached at" (m:ss) in place of "Time to arrive" when the dance has a song.
   6. Presentation mode plays the song: Next plays to the next figure's moment, speed, the dark timeline.
   7. Check "Done when" in the browser, measuring how far the stage drifts from the song at each speed and after scrubbing.
 

@@ -231,7 +231,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       <FigurePanel
         key={figure.id}
         figure={figure}
-        figures={figures}
+        dance={{ figures, songMs: onSong ? (songWithWaveform?.durationMs ?? null) : null }}
         actions={{
           save: (update) => castActions.saveFigure(figure.id, update),
           remove: () => deleteFigure(figure.id),
