@@ -1,5 +1,6 @@
 import type { StagePoint } from './figure.ts';
 import { snapToGuides } from './placement.ts';
+import { metresApart } from './spacing.ts';
 import { STAGE_DEPTH_M, STAGE_WIDTH_M, type StageGuides } from './stage.ts';
 
 export const ALIGN_DISTANCE_M = 0.15;
@@ -15,10 +16,6 @@ export type SmartSnap = { point: StagePoint; hints: SnapHint[] };
 export type SnapSurroundings = { others: StagePoint[]; guides: StageGuides };
 
 const toMetres = ({ x, y }: StagePoint) => ({ x: x * STAGE_WIDTH_M, y: y * STAGE_DEPTH_M });
-const metresApart = (a: StagePoint, b: StagePoint) => {
-  const [ma, mb] = [toMetres(a), toMetres(b)];
-  return Math.hypot(ma.x - mb.x, ma.y - mb.y);
-};
 
 function nearestTo(point: StagePoint, points: StagePoint[]): StagePoint[] {
   return [...points].sort((a, b) => metresApart(point, a) - metresApart(point, b));

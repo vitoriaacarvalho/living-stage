@@ -244,3 +244,5 @@ export {
   type SnapHint,
   type SnapSurroundings,
 } from './smart-guides.ts';
+
+export { crowdedSpacingM, metresApart } from './spacing.ts';
