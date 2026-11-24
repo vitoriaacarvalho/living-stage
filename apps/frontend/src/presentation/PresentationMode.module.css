@@ -95,12 +95,16 @@
 }
 
 /* The largest stage that fits both ways; 30px is the Stage's audience strip. The stage is
-   also the container its dots and names scale with. */
+   also the container its dots and names scale with. A crowded dance caps the dots at 80% of
+   its tight spacing (--crowded-share, a share of the plan's width), so neighbours stay apart. */
 .stageFit {
   width: min(100cqw, (100cqh - 30px) * var(--plan-aspect));
   container-type: inline-size;
-  --stage-dot: clamp(var(--dancer-dot-phone), 5cqw, 96px);
-  --stage-label-font: 400 clamp(12px, 1.65cqw, 32px) / 1.25 var(--font-sans);
+  --stage-dot: max(
+    16px,
+    min(clamp(var(--dancer-dot-phone), 5cqw, 96px), var(--crowded-share, 1) * 80cqw)
+  );
+  --stage-label-font: 400 clamp(10px, var(--stage-dot) * 0.33, 32px) / 1.25 var(--font-sans);
 }
 
 .controls {

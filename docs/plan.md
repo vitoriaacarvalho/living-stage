@@ -398,7 +398,7 @@ First milestone to show real teachers.
 - ✅ **7.1 Presentation mode** · after 2.7
   - Done when: Full-screen stage readable on a TV; step or play continuously
   - Requirements: G1, G2, G3 · Screens: `PresentationMode`, `Toolbar`
-  - Note: the toolbar's Present tool opens it full screen at the selected figure; X, Escape or leaving full screen goes back to the figure shown. Next plays the move into the next figure, Previous jumps back; dots and labels grow with the stage. Counts, speed, loop and the timeline wait for music
+  - Note: the toolbar's Present tool opens it full screen at the selected figure; X, Escape or leaving full screen goes back to the figure shown. Next plays the move into the next figure, Previous jumps back; dots and labels grow with the stage, but a crowded dance caps them at 80% of its tight spacing (see `docs/features/7.1-presentation-mode.md`). Counts, speed, loop and the timeline wait for music
 - ✅ **8.2 iPhone editor** · after 2.4
   - Done when: Quick edits work on iPhone; landscape hint for heavy editing
   - Requirements: K3 · Screens: `DanceEditorIPhone`

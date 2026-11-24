@@ -1,9 +1,12 @@
 import {
+  SIDE_WING_DEPTH,
+  crowdedSpacingM,
   figureIndexAt,
   figureTimeMs,
   isPinned,
   songTimed,
   stageAt,
+  STAGE_WIDTH_M,
   type CastMember,
   type Dance,
   type Figure,
@@ -23,6 +26,13 @@ import styles from './PresentationMode.module.css';
 import { usePresentationKeys } from './usePresentationKeys.ts';
 
 const stageFit = { '--plan-aspect': STAGE_PLAN_ASPECT } as CSSProperties;
+const planWidthM = STAGE_WIDTH_M * (1 + 2 * SIDE_WING_DEPTH);
+
+// Worked out once for the whole dance, so the dots keep one size through every move.
+function dotRoom(figures: Figure[]): CSSProperties {
+  const spacing = crowdedSpacingM(figures.map(({ positions }) => positions));
+  return spacing === null ? {} : ({ '--crowded-share': spacing / planWidthM } as CSSProperties);
+}
 
 // The editor's own audio element, already holding the song, so presenting plays the
 // same player; null for a dance presented on its move times.
@@ -127,7 +137,7 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
         )}
       </header>
       <div className={styles.stageArea} style={stageFit}>
-        <div className={styles.stageFit}>
+        <div className={styles.stageFit} style={dotRoom(figures)}>
           <Stage
             guides={dance.showGuides ? 'lines' : 'none'}
             dancers={stageDancers(cast, positions, dance)}

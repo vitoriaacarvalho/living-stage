@@ -365,3 +365,24 @@ describe('with the song', () => {
     expect(screen.getByRole('heading', { name: 'Diagonal' })).toBeInTheDocument();
   });
 });
+
+describe('dot size', () => {
+  const stageFit = () => screen.getByRole('img').parentElement!;
+  const pair: Figure = {
+    ...figure(0, null, 0.5),
+    positions: [
+      { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
+      { castMemberId: 'cast-2', x: 0.5 + 1.5 / 12, y: 0.5 },
+    ],
+  };
+
+  test('leaves the dots at full size when no figure has two dancers', () => {
+    present();
+    expect(stageFit().style.getPropertyValue('--crowded-share')).toBe('');
+  });
+
+  test("gives the dots the room of the dance's tight spacing, as a share of the plan", () => {
+    present('figure-1', [pair]);
+    expect(Number(stageFit().style.getPropertyValue('--crowded-share'))).toBeCloseTo(1.5 / 15);
+  });
+});
