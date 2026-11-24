@@ -44,7 +44,7 @@ Section 7 lists the MVP plans in build order and the three features after it und
 | Devices | Mostly iPad and iPhone, also desktop; fully responsive; Chrome as the target browser |
 | Languages | English only; Portuguese (pt-BR) was dropped in Nov 2026 |
 | Stage | Standard rectangular stage with wings; no custom proportions |
-| Music | Uploaded audio files, after the MVP; no Spotify (its API no longer supports this use). Until then playback runs on a time per move that the teacher sets (4 s by default), and a dance's duration is typed by hand |
+| Music | Uploaded audio files from the school's song library; no Spotify (its API no longer supports this use). With a song, each figure is pinned to its own moment and the song is the clock. A dance without a song plays on a time per move that the teacher sets (4 s by default), and its duration is typed by hand |
 | Offline | Not required |
 | Props and set pieces | Not included |
 | Export | Printable PDF of formations, after the MVP |
@@ -168,9 +168,9 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **E1.** A member can upload an audio file (MP3, M4A, AAC, WAV) to a dance.
 - ✅ **E2.** The timeline shows the song's waveform and a playhead below the stage.
 - **E3.** *(Dropped in Nov 2026: musical counts. Figures are placed by time in the song only.)*
-- **E4.** Each figure is pinned to a moment in the song, shown as a time such as `0:58`; the transition fills the time before it.
-- **E5.** Play, pause, scrub, loop a section, and play at 0.5×, 0.75× or 1×.
-- **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
+- ✅ **E4.** Each figure is pinned to a moment in the song, shown as a time such as `0:58`; the transition fills the time before it.
+- ✅ **E5.** Play, pause, scrub, repeat the move into a figure, and play at 0.5×, 0.75× or 1×.
+- ✅ **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
 - ✅ **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
 - ✅ **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
 - **E9.** Up to 40 dancers per dance, rendering and animating smoothly on an iPad.
@@ -413,10 +413,11 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
   - Done when: Waveform and playhead open instantly on reload
   - Requirements: E2, E8 · Screens: `Timeline`
   - Checked on 24 Nov 2026 (driven, Chrome): after a reload the waveform of a 40 s song was drawn 106 ms after opening the dance, with no request to the song file; 56 px with the whole-song strip on iPad, 40 px without it on iPhone both ways up; a 30 MB MP3 decoded in under 2 s at upload. The playhead stays at the start until 4.3 plays the song
-- ⬜ **4.5 Playing to the music** · after 4.2, 2.7
+- ✅ **4.5 Playing to the music** · after 4.2, 2.7
   - Done when: Play, pause, scrub, Repeat figure and 0.5× / 0.75× / 1× work on the song, and the stage stays in sync with it at every speed and after scrubbing, in the editor and in presentation mode
   - Requirements: E4, E5, E6 · Screens: `Timeline`, `PresentationMode`
   - Note: 4.3 Transport was merged into 4.5 on 24 Nov 2026, so the song and the dancers always share one clock. Each figure is pinned to its own moment in the song; moving one never moves the others. Decisions and slices in `docs/features/4-music.md`
+  - Checked on 24 Nov 2026 (driven, Chrome at iPad size): one dancer crossing 9.6 m between pins at 0, 3, 9 and 10 s of a 40 s song, sampled about 90 times a run against the song's own time: in the editor off by a median of 1–2 cm and at worst 12 cm at 1×, 10 cm at 0.75× and 6 cm at 0.5× (one screen frame on the fastest move); scrubbed and paused, exactly in place; playing on after a scrub, at worst 7 cm; in presentation mode at worst 15 cm at 1× and 1 cm at 0.5×. Half speed played 3 s of song in 6 s. The 40-dancer iPad measurement of 2.7 is still to do and applies here too
 - ⬜ **2.6 Undo and redo** · after 2.4
   - Done when: Undo/redo per figure
   - Requirements: C12 · Screens: `Toolbar`

@@ -29,8 +29,8 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
   3. ✅ The interactive timeline: the playhead moves; tapping or dragging the waveform scrubs; figure markers on the waveform that drag between their neighbours.
   4. ✅ Speed (0.5×, 0.75×, 1×, pitch kept) and Repeat figure.
   5. ✅ The figure panel: "Reached at" (m:ss) in place of "Time to arrive" when the dance has a song.
-  6. Presentation mode plays the song: Next plays to the next figure's moment, speed, the dark timeline.
-  7. Check "Done when" in the browser, measuring how far the stage drifts from the song at each speed and after scrubbing.
+  6. ✅ Presentation mode plays the song: Next plays to the next figure's moment, speed, the dark timeline.
+  7. ✅ Check "Done when" in the browser, measuring how far the stage drifts from the song at each speed and after scrubbing.
 
 ## Decisions for 4.5
 
@@ -42,6 +42,8 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
 - **Reordering:** the moments stay where they are; figures take the moments of their new places, so the music keeps its shape.
 - **Deleting a figure** removes its pin; the move into the next figure takes up the gap.
 - **The pins live on the server**, which applies these rules in every figure route, so two teachers' screens agree.
+
+Left out of 4.5: the dark waveform in presentation mode (the speed and Repeat figure controls are there); it can join later without changing anything else.
 
 ## Before starting
 
