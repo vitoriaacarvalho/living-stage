@@ -466,6 +466,23 @@ describe('figure panel', () => {
     });
   });
 
+  test('gives the figure its old name back on Undo', async () => {
+    const user = await openFigurePanel();
+    await user.type(screen.getByLabelText('Name'), 'Entrance');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(updateFigure).toHaveBeenLastCalledWith('school-1', 'dance-1', 'figure-1', {
+      name: null,
+    });
+  });
+
+  test('records no step when the figure is saved unchanged', async () => {
+    const user = await openFigurePanel();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(updateFigure).toHaveBeenCalled());
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
   test('plays a move at its saved time to arrive', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
       {
@@ -1065,6 +1082,17 @@ describe('circling another dancer', () => {
       castMemberId: 'cast-1',
       points: [],
       around: aroundOdile,
+    });
+  });
+
+  test('makes a circling dancer walk straight again on Undo', async () => {
+    const user = await claraAroundOdile();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(savePath).toHaveBeenLastCalledWith('school-1', 'dance-1', 'figure-2', {
+      castMemberId: 'cast-1',
+      points: [],
+      around: null,
     });
   });
 

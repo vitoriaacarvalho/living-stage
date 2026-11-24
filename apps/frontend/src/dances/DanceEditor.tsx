@@ -114,11 +114,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     save: savePath,
   });
   const { picking, cancel: cancelPicking } = circling;
-  const edits = useUndoableEdits(castActions, figure);
-  // Like editing, undo and redo work only while playback is stopped.
+  const edits = useUndoableEdits(castActions);
+  // Like editing, undo and redo work only while playback is stopped, on the figure shown.
+  const undoable = stopped && !presenting && figure ? figure.id : null;
   const history = {
-    undo: stopped && !presenting ? edits.undo : null,
-    redo: stopped && !presenting ? edits.redo : null,
+    undo: undoable && edits.canUndo(undoable) ? () => edits.undo(undoable) : null,
+    redo: undoable && edits.canRedo(undoable) ? () => edits.redo(undoable) : null,
   };
   useUndoKeys(history);
 
@@ -136,13 +137,14 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
 
   // A failed save puts the dancers back, which is the only feedback needed.
   function moveDancers(positions: Position[]) {
-    edits.movePositions(positions).catch(() => {});
+    if (!figure) return;
+    edits.movePositions(figure, positions).catch(() => {});
   }
 
   // Like moving dancers, a failed save puts the path back.
   function savePath(path: Path) {
     if (!figure) return;
-    castActions.setPath(figure.id, path).catch(() => {});
+    edits.setPath(figure, path).catch(() => {});
   }
 
   const bendPath = (castMemberId: string, points: PathPoint[]) =>
@@ -213,7 +215,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     const pins = figures.map(({ timeMs: pin }) => pin ?? 0);
     const { minMs, maxMs } = pinRange(pins, index, songWithWaveform?.durationMs ?? 0);
     const landed = Math.min(maxMs, Math.max(minMs, timeMs));
-    castActions.saveFigure(figureId, { timeMs: landed }).catch(() => {});
+    edits.saveFigure(figures[index]!, { timeMs: landed }).catch(() => {});
   }
 
   async function chooseSong(audioId: string | null) {
@@ -248,11 +250,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const panel =
     showing === 'figure' && figure ? (
       <FigurePanel
-        key={figure.id}
+        // Undo can change the figure under an open panel; its fields start over then.
+        key={`${figure.id}:${figure.name}:${figure.transitionMs}:${figure.timeMs}`}
         figure={figure}
         dance={{ figures, songMs: onSong ? (songWithWaveform?.durationMs ?? null) : null }}
         actions={{
-          save: (update) => castActions.saveFigure(figure.id, update),
+          save: (update) => edits.saveFigure(figure, update),
           remove: () => deleteFigure(figure.id),
         }}
         onClose={() => setPanelView('cast')}
