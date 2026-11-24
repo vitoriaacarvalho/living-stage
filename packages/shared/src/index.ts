@@ -232,3 +232,15 @@ export {
   pinsFromMoves,
   songTimed,
 } from './pins.ts';
+
+export {
+  ALIGN_DISTANCE_M,
+  smartSnap,
+  snapToDancers,
+  snapToGap,
+  type AlignHint,
+  type GapHint,
+  type SmartSnap,
+  type SnapHint,
+  type SnapSurroundings,
+} from './smart-guides.ts';
