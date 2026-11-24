@@ -153,9 +153,9 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 - ✅ **C12.** Undo and redo while editing, kept per figure. *(after the MVP)*
 - ✅ **C13.** A member can create, rename and delete dances; the school's dances are listed on Home.
 - ✅ **C14.** A dance shows its cast list and how many dancers are in it.
-- **C15.** The editor's guides include a 1 m grid under the centre and quarter lines. *(after the MVP)*
-- **C16.** While dragging with Snap on, a dancer lines up with the other dancers, and a line shows with whom. *(after the MVP)*
-- **C17.** While dragging with Snap on, a dancer snaps to an equal gap with her neighbours, in rows, columns and diagonals. *(after the MVP)*
+- ✅ **C15.** The editor's guides include a 1 m grid under the centre and quarter lines. *(after the MVP)*
+- ✅ **C16.** While dragging with Snap on, a dancer lines up with the other dancers, and a line shows with whom. *(after the MVP)*
+- ✅ **C17.** While dragging with Snap on, a dancer snaps to an equal gap with her neighbours, in rows, columns and diagonals. *(after the MVP)*
 
 ### Part D — Paths and animation
 
@@ -426,10 +426,11 @@ In build order: music first, then undo and redo, then the metre grid and smart g
   - Requirements: C12 · Screens: `Toolbar`
   - Note: moving dancers, paths, and a figure's name, move time and moment in the song can be undone; adding, duplicating, reordering and deleting figures and cast changes can't. Details in `docs/features/2.6-undo-redo.md`
   - Checked on 24 Nov 2026 (driven, headless Chrome at iPad, iPhone and desktop sizes): a dancer nudged twice went back one step on Undo and one more on Ctrl+Z, forward on Shift+Ctrl+Z and Redo, and Redo then turned off; each step was saved, so a reload kept it, and the history started empty again
-- ⬜ **2.9 Metre grid and smart guides** · after 2.4
+- ✅ **2.9 Metre grid and smart guides** · after 2.4
   - Done when: In the editor, Guides shows a 1 m grid; with Snap on, a dragged dancer lines up with another dancer or lands at an equal gap, with a line showing why
   - Requirements: C15, C16, C17 · Screens: `Stage`
   - Note: Snap drives it all and works with Guides off (dancers only); the grid shows in the editor only. Details in `docs/features/2.9-grid-and-smart-guides.md`
+  - Checked on 24 Nov 2026 (driven, headless Chrome at 1194 × 834, 393 × 852 and 1440 × 900): Guides drew 12 metre lines under the 6 guide lines in the editor. With Snap on and Guides off, a dancer dragged to 9.08 m across lined up at 9 m under a second dancer with one line; dragged near the next spot after two dancers 2 m apart, she landed exactly there with "2 m" on both halves of a dashed line; dropped between two dancers 2 m apart, she landed in the middle with "1 m" on each half. The lines went on drop. With Guides on and nobody to line up with, she took the quarter line. No errors, no sideways scroll
 - ⬜ **7.2 PDF export** · after 2.3
   - Done when: Printable PDF, one figure per page, made in the browser
   - Requirements: I1, I2, I3, I4 · Screens: `PrintView`
