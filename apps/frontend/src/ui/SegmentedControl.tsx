@@ -7,7 +7,7 @@ type SegmentedControlProps<T extends string> = {
   options: readonly Option<T>[];
   value: T;
   onChange: (value: T) => void;
-  surface?: 'light' | 'stage';
+  surface?: 'light' | 'tinted' | 'stage';
 };
 
 export function SegmentedControl<T extends string>({

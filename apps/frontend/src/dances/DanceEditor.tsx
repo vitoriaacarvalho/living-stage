@@ -308,49 +308,57 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       <div className={styles.body}>
         <main className={styles.main}>
           <div className={styles.viewControls}>
-            <span className={styles.controlLabel} aria-hidden="true">
-              Labels
-            </span>
-            <SegmentedControl
-              label="Labels"
-              options={labelOptions}
-              value={dance.labelMode}
-              onChange={(labelMode) => saveView('labelMode', labelMode)}
-            />
-            <span className={styles.controlLabel} aria-hidden="true">
-              Color by
-            </span>
-            <SegmentedControl
-              label="Color by"
-              options={colorOptions}
-              value={dance.colorMode}
-              onChange={(colorMode) => saveView('colorMode', colorMode)}
-            />
-            <button
-              type="button"
-              className={styles.toggle}
-              aria-label="Guides"
-              aria-pressed={dance.showGuides}
-              onClick={() => saveView('showGuides', !dance.showGuides)}
-            >
-              <Icon name="grid" />
-              <span className={styles.toggleText} aria-hidden="true">
-                Guides
+            <div className={styles.controlGroup}>
+              <span className={styles.controlLabel} aria-hidden="true">
+                Labels
               </span>
-            </button>
-            <button
-              type="button"
-              className={styles.toggle}
-              aria-label="Snap"
-              aria-pressed={snapping}
-              disabled={!dance.showGuides}
-              onClick={() => setSnap(!snap)}
-            >
-              <Icon name="magnet" />
-              <span className={styles.toggleText} aria-hidden="true">
-                Snap
+              <SegmentedControl
+                label="Labels"
+                options={labelOptions}
+                value={dance.labelMode}
+                surface="tinted"
+                onChange={(labelMode) => saveView('labelMode', labelMode)}
+              />
+            </div>
+            <div className={styles.controlGroup}>
+              <span className={styles.controlLabel} aria-hidden="true">
+                Color by
               </span>
-            </button>
+              <SegmentedControl
+                label="Color by"
+                options={colorOptions}
+                value={dance.colorMode}
+                surface="tinted"
+                onChange={(colorMode) => saveView('colorMode', colorMode)}
+              />
+            </div>
+            <div className={styles.controlGroup}>
+              <button
+                type="button"
+                className={styles.toggle}
+                aria-label="Guides"
+                aria-pressed={dance.showGuides}
+                onClick={() => saveView('showGuides', !dance.showGuides)}
+              >
+                <Icon name="grid" />
+                <span className={styles.toggleText} aria-hidden="true">
+                  Guides
+                </span>
+              </button>
+              <button
+                type="button"
+                className={styles.toggle}
+                aria-label="Snap"
+                aria-pressed={snapping}
+                disabled={!dance.showGuides}
+                onClick={() => setSnap(!snap)}
+              >
+                <Icon name="magnet" />
+                <span className={styles.toggleText} aria-hidden="true">
+                  Snap
+                </span>
+              </button>
+            </div>
           </div>
           <div className={styles.tools}>
             <FigureToolbar

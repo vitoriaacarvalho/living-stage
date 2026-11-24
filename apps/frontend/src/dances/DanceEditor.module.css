@@ -82,9 +82,18 @@
   gap: var(--space-2);
 }
 
+.controlGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+}
+
 .controlLabel {
-  margin-left: var(--space-2);
-  color: var(--ink-muted);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  color: var(--primary-strong);
   font: var(--text-caption);
 }
 
@@ -93,11 +102,11 @@
   align-items: center;
   justify-content: center;
   min-height: var(--touch-min);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--border-control);
+  padding: 0 14px;
+  border: 0;
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--ink);
+  background: transparent;
+  color: var(--primary-strong);
   font: var(--text-label);
   white-space: nowrap;
   cursor: pointer;
@@ -117,9 +126,9 @@
 }
 
 .toggle[aria-pressed='true'] {
-  border-color: transparent;
-  background: var(--primary-soft);
-  color: var(--primary-strong);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(43, 30, 47, 0.12);
 }
 
 /* The play row with the dance's music at its far end. */

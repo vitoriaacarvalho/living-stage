@@ -34,6 +34,20 @@
   }
 }
 
+/* Inside a tinted group, which draws the track itself. */
+.tinted {
+  padding: 0;
+  background: transparent;
+}
+
+.tinted .segment {
+  color: var(--primary-strong);
+}
+
+.tinted .segment[aria-pressed='true'] {
+  color: var(--ink);
+}
+
 .stage {
   background: color-mix(in srgb, var(--stage-ink) 8%, transparent);
 }
