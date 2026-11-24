@@ -16,7 +16,15 @@ type FigureActions = {
   copy: (placement: Placement) => Promise<void>;
   // Left out on iPhone, where Present sits in the title bar.
   present?: () => void;
+  // Null while there is nothing to undo or redo.
+  undo: (() => void) | null;
+  redo: (() => void) | null;
 };
+
+const historyTools = [
+  { key: 'undo', icon: 'undo', label: 'Undo' },
+  { key: 'redo', icon: 'redo', label: 'Redo' },
+] as const;
 
 type FigureToolbarProps = {
   disabled: boolean;
@@ -51,6 +59,21 @@ export function FigureToolbar({ disabled, actions, circle }: FigureToolbarProps)
             aria-label={label}
             disabled={disabled || pending}
             onClick={() => copy(placement)}
+          >
+            <Icon name={icon} />
+            <span className={styles.label} aria-hidden="true">
+              {label}
+            </span>
+          </button>
+        ))}
+        {historyTools.map(({ key, icon, label }) => (
+          <button
+            key={key}
+            type="button"
+            className={styles.tool}
+            aria-label={label}
+            disabled={!actions[key]}
+            onClick={() => actions[key]?.()}
           >
             <Icon name={icon} />
             <span className={styles.label} aria-hidden="true">

@@ -1335,3 +1335,69 @@ describe('playing to the song', () => {
     expect(screen.queryByText('/ 03:40')).not.toBeInTheDocument();
   });
 });
+
+describe('undo and redo', () => {
+  const entrance = {
+    id: 'figure-2',
+    order: 1,
+    name: 'Entrance',
+    transitionMs: 4000,
+    timeMs: null,
+    paths: [],
+    positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.25 }],
+  };
+  const nudged = { castMemberId: 'cast-1', x: expect.closeTo(0.5 + 0.25 / 12), y: 0.5 };
+
+  beforeEach(async () => {
+    vi.mocked(fetchFigures).mockResolvedValue([
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        paths: [],
+        positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+      },
+      entrance,
+    ]);
+    vi.mocked(moveFigurePositions).mockReset().mockResolvedValue(entrance);
+    await openKitri();
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'ArrowRight' });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Undo' })).toBeEnabled());
+  });
+
+  test('puts a moved dancer back', async () => {
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Undo' }));
+    expect(moveFigurePositions).toHaveBeenLastCalledWith('school-1', 'dance-1', 'figure-1', {
+      positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
+    });
+  });
+
+  test('moves the dancer again on Redo', async () => {
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    await user.click(screen.getByRole('button', { name: 'Redo' }));
+    expect(moveFigurePositions).toHaveBeenLastCalledWith('school-1', 'dance-1', 'figure-1', {
+      positions: [nudged],
+    });
+  });
+
+  test('undoes on Ctrl+Z', async () => {
+    await userEvent.setup().keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Redo' })).toBeEnabled());
+  });
+
+  test('redoes on Shift+Ctrl+Z', async () => {
+    const user = userEvent.setup();
+    await user.keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Redo' })).toBeEnabled());
+    await user.keyboard('{Control>}{Shift>}Z{/Shift}{/Control}');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Redo' })).toBeDisabled());
+  });
+
+  test('keeps each figure its own history', async () => {
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Entrance' }));
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+});

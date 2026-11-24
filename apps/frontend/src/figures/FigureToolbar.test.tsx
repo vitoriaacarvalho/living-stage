@@ -5,11 +5,17 @@ import { FigureToolbar } from './FigureToolbar.tsx';
 
 const noCircle = { available: false, picking: false, onToggle: vi.fn() };
 
-const noActions = { copy: vi.fn(), present: vi.fn() };
+const noActions = { copy: vi.fn(), present: vi.fn(), undo: null, redo: null };
 
 function renderToolbar(onCopy = vi.fn().mockResolvedValue(undefined)) {
   const present = vi.fn();
-  render(<FigureToolbar disabled={false} actions={{ copy: onCopy, present }} circle={noCircle} />);
+  render(
+    <FigureToolbar
+      disabled={false}
+      actions={{ copy: onCopy, present, undo: null, redo: null }}
+      circle={noCircle}
+    />,
+  );
   return { onCopy, present, user: userEvent.setup() };
 }
 
@@ -66,4 +72,23 @@ test('shows Circle around pressed while picking', () => {
     'aria-pressed',
     'true',
   );
+});
+
+test('turns Undo off when there is nothing to undo', () => {
+  renderToolbar();
+  expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+});
+
+test('undoes the last edit', async () => {
+  const undo = vi.fn();
+  render(<FigureToolbar disabled={false} actions={{ ...noActions, undo }} circle={noCircle} />);
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Undo' }));
+  expect(undo).toHaveBeenCalled();
+});
+
+test('redoes the last undone edit', async () => {
+  const redo = vi.fn();
+  render(<FigureToolbar disabled={false} actions={{ ...noActions, redo }} circle={noCircle} />);
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Redo' }));
+  expect(redo).toHaveBeenCalled();
 });

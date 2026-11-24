@@ -33,6 +33,8 @@ import { useSongPlayback } from '../playback/useSongPlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
 import { BottomSheet } from '../ui/BottomSheet.tsx';
+import { useUndoableEdits } from '../undo/useUndoableEdits.ts';
+import { useUndoKeys } from '../undo/useUndoKeys.ts';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { SegmentedControl } from '../ui/SegmentedControl.tsx';
@@ -112,6 +114,13 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     save: savePath,
   });
   const { picking, cancel: cancelPicking } = circling;
+  const edits = useUndoableEdits(castActions, figure);
+  // Like editing, undo and redo work only while playback is stopped.
+  const history = {
+    undo: stopped && !presenting ? edits.undo : null,
+    redo: stopped && !presenting ? edits.redo : null,
+  };
+  useUndoKeys(history);
 
   // Escape first stops picking a dancer to circle, then clears the selection.
   useEffect(() => {
@@ -127,8 +136,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
 
   // A failed save puts the dancers back, which is the only feedback needed.
   function moveDancers(positions: Position[]) {
-    if (!figure) return;
-    castActions.movePositions(figure.id, positions).catch(() => {});
+    edits.movePositions(positions).catch(() => {});
   }
 
   // Like moving dancers, a failed save puts the path back.
@@ -165,6 +173,12 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
     await castActions.deleteFigure(figureId);
     setSelectedFigureId(next?.id ?? null);
     setPanelView('cast');
+  }
+
+  // Older steps may hold the removed dancer, whom the server no longer knows.
+  async function removeFromCast(castMemberId: string) {
+    await castActions.remove(castMemberId);
+    edits.clear();
   }
 
   function reorderFigures(figureIds: string[]) {
@@ -253,7 +267,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
       <CastList
         schoolId={schoolId}
         state={cast}
-        actions={castActions}
+        actions={{ ...castActions, remove: removeFromCast }}
         colorMode={dance.colorMode}
       />
     );
@@ -338,7 +352,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           <div className={styles.tools}>
             <FigureToolbar
               disabled={!figure}
-              actions={phone ? { copy: copyFigure } : { copy: copyFigure, present }}
+              actions={{ copy: copyFigure, ...history, ...(!phone && { present }) }}
               circle={circling.tool}
             />
             {picking && (
