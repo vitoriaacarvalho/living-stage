@@ -21,6 +21,7 @@ const kitri: DanceSource = {
       order: 0,
       name: 'Entrance',
       transitionMs: 4000,
+      timeMs: 4000,
       positions: [
         { castMemberId: 'cast-1', x: 0.25, y: 0.5 },
         { castMemberId: 'cast-2', x: 0.75, y: 0.5 },
@@ -32,6 +33,7 @@ const kitri: DanceSource = {
       order: 1,
       name: null,
       transitionMs: 2500,
+      timeMs: null,
       positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.25 }],
       paths: [
         {
@@ -89,8 +91,8 @@ describe('danceCopy', () => {
 
   test('copies the figures in order with names and transition times', () => {
     expect(danceCopy(kitri).figures).toMatchObject([
-      { order: 0, name: 'Entrance', transitionMs: 4000 },
-      { order: 1, name: null, transitionMs: 2500 },
+      { order: 0, name: 'Entrance', transitionMs: 4000, timeMs: 4000 },
+      { order: 1, name: null, transitionMs: 2500, timeMs: null },
     ]);
   });
 

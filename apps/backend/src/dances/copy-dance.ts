@@ -52,12 +52,13 @@ export function danceCopy({ cast, figures, ...source }: DanceSource): DanceCopy 
       role,
       createdAt,
     })),
-    figures: figures.map(({ id, order, name, transitionMs }) => ({
+    figures: figures.map(({ id, order, name, transitionMs, timeMs }) => ({
       id: figureIds.get(id)!,
       danceId,
       order,
       name,
       transitionMs,
+      timeMs,
     })),
     positions: figures.flatMap(({ id, positions }) =>
       positions.map(({ castMemberId, x, y }) => ({

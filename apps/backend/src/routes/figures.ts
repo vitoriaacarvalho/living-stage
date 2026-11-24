@@ -1,4 +1,7 @@
 import {
+  newPin,
+  isInPinRange,
+  copyPin,
   parseFigureCopy,
   parseFigureOrder,
   parseFigureUpdate,
@@ -16,6 +19,7 @@ import {
   type PositionsUpdate,
 } from '@living-stage/shared';
 import { Router } from 'express';
+import { pinToSong, pinsOf, songLengthOf } from '../dances/pins.ts';
 import { prisma } from '../db.ts';
 import type { Prisma } from '../generated/prisma/client.ts';
 
@@ -89,6 +93,18 @@ schoolFiguresRouter.patch('/dances/:danceId/figures/:figureId', async (req, res)
   if (!update) {
     res.status(400).json({ error: 'invalid_figure' });
     return;
+  }
+  if (update.timeMs !== undefined) {
+    if (!(await danceOfSchool(req.params.danceId, res.locals.schoolId))) {
+      res.status(404).json({ error: 'not_found' });
+      return;
+    }
+    const check = await checkTime(req.params.danceId, req.params.figureId, update.timeMs);
+    if (check !== 'ok') {
+      const status = { not_found: 404, no_song: 409, out_of_range: 400 }[check];
+      res.status(status).json({ error: check });
+      return;
+    }
   }
 
   const { count } = await prisma.figure.updateMany({
@@ -207,17 +223,24 @@ function copyFigure(danceId: string, { copyOf, placement }: FigureCopy) {
     const { _max } = await tx.figure.aggregate({ where: { danceId }, _max: { order: true } });
     const last = _max.order ?? source.order;
     const order = placement === 'end' ? last + 1 : source.order + 1;
+    const timeMs = await pinForCopy(tx, danceId, { placement, after: source.order });
     if (order <= last) await shiftOrders(tx, danceId, { from: order, last, by: 1 });
 
-    return tx.figure.create({
+    const created = await tx.figure.create({
       data: {
         danceId,
         order,
         transitionMs: source.transitionMs,
+        timeMs,
         positions: { create: source.positions },
       },
       include: figureFields,
     });
+    // A new last figure past the song's end squeezes every pin to fit.
+    const songMs = await songLengthOf(tx, danceId);
+    if (songMs === null) return created;
+    await pinToSong(tx, danceId, songMs);
+    return tx.figure.findUniqueOrThrow({ where: { id: created.id }, include: figureFields });
   });
 }
 
@@ -229,9 +252,11 @@ function reorderFigures(danceId: string, { figureIds }: FigureOrder) {
     const known = new Set(current.map(({ id }) => id));
     if (figureIds.length !== known.size || !figureIds.every((id) => known.has(id))) return null;
 
+    // The moments stay where they are and the figures take those of their new places.
+    const moments = (await pinsOf(tx, danceId)).map(({ timeMs }) => timeMs);
     await tx.figure.updateMany({ where: { danceId }, data: { order: { increment: known.size } } });
     for (const [order, id] of figureIds.entries()) {
-      await tx.figure.update({ where: { id }, data: { order } });
+      await tx.figure.update({ where: { id }, data: { order, timeMs: moments[order] } });
     }
     return tx.figure.findMany({
       where: { danceId },
@@ -343,6 +368,31 @@ async function shiftOrders(
   });
 }
 
+// A copy's moment in the song, or null when the dance has no song.
+async function pinForCopy(
+  tx: Prisma.TransactionClient,
+  danceId: string,
+  { placement, after }: { placement: FigureCopy['placement']; after: number },
+) {
+  const songMs = await songLengthOf(tx, danceId);
+  if (songMs === null) return null;
+  const pins = (await pinsOf(tx, danceId)).map(({ timeMs }) => timeMs ?? 0);
+  return placement === 'end' ? newPin(pins) : copyPin(pins, after);
+}
+
+type TimeCheck = 'ok' | 'not_found' | 'no_song' | 'out_of_range';
+
+// A figure's moment must fall inside the song, half a second clear of its neighbours.
+async function checkTime(danceId: string, figureId: string, timeMs: number): Promise<TimeCheck> {
+  const songMs = await songLengthOf(prisma, danceId);
+  const figures = await pinsOf(prisma, danceId);
+  const index = figures.findIndex(({ id }) => id === figureId);
+  if (index === -1) return 'not_found';
+  if (songMs === null) return 'no_song';
+  const pins = figures.map(({ timeMs: pin }) => pin ?? 0);
+  return isInPinRange(pins, index, songMs, timeMs) ? 'ok' : 'out_of_range';
+}
+
 function danceOfSchool(danceId: string, schoolId: string) {
   return prisma.dance.findFirst({ where: { id: danceId, schoolId }, select: { id: true } });
 }
@@ -358,11 +408,11 @@ type PathRow = {
 type FigureRow = Omit<Figure, 'paths'> & { paths: PathRow[] };
 
 // points is JSON in the database and only ever written after parsePathPoints.
-function toFigure({ id, order, name, transitionMs, positions, paths }: FigureRow): Figure {
+function toFigure({ id, order, name, transitionMs, timeMs, positions, paths }: FigureRow): Figure {
   const routes = paths.map(({ castMemberId, points, aroundId, clockwise, turns }) => ({
     castMemberId,
     points: points as PathPoint[],
     around: aroundId ? { castMemberId: aroundId, clockwise, turns } : null,
   }));
-  return { id, order, name, transitionMs, positions, paths: routes };
+  return { id, order, name, transitionMs, timeMs, positions, paths: routes };
 }

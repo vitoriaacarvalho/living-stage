@@ -194,6 +194,8 @@ model Figure {
   order        Int
   name         String?
   transitionMs Int        @default(4000)
+  // The moment in the dance's song when the figure is reached; null before it has a song.
+  timeMs       Int?
   positions    Position[]
   paths        Path[]
 

@@ -79,6 +79,7 @@ beforeEach(() => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
@@ -259,10 +260,19 @@ describe('figures', () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
-      { id: 'figure-2', order: 1, name: 'Entrance', transitionMs: 4000, positions: [], paths: [] },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: 'Entrance',
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
     ]);
   });
 
@@ -328,6 +338,7 @@ describe('figure tools', () => {
     order: 1,
     name: null,
     transitionMs: 4000,
+    timeMs: null,
     paths: [],
     positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
   };
@@ -384,8 +395,24 @@ describe('figure tools', () => {
 
   test('puts a duplicate between the figure and the ones after it', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [], paths: [] },
-      { id: 'figure-3', order: 1, name: 'Finale', transitionMs: 4000, positions: [], paths: [] },
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
+      {
+        id: 'figure-3',
+        order: 1,
+        name: 'Finale',
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
     ]);
     await openKitri();
     await tap('Duplicate');
@@ -402,6 +429,7 @@ describe('figure panel', () => {
       order: 0,
       name: 'Entrance',
       transitionMs: 4000,
+      timeMs: null,
       paths: [],
       positions: [],
     });
@@ -435,14 +463,31 @@ describe('figure panel', () => {
 
   test('plays a move at its saved time to arrive', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [], paths: [] },
-      { id: 'figure-2', order: 1, name: 'Finale', transitionMs: 4000, positions: [], paths: [] },
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
+      {
+        id: 'figure-2',
+        order: 1,
+        name: 'Finale',
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
     ]);
     vi.mocked(updateFigure).mockResolvedValue({
       id: 'figure-2',
       order: 1,
       name: 'Finale',
       transitionMs: 9500,
+      timeMs: null,
       paths: [],
       positions: [],
     });
@@ -477,6 +522,7 @@ describe('deleting figures', () => {
     order: 0,
     name: 'Entrance',
     transitionMs: 4000,
+    timeMs: null,
     paths: [],
     positions: [],
   };
@@ -485,6 +531,7 @@ describe('deleting figures', () => {
     order: 1,
     name: 'Middle',
     transitionMs: 4000,
+    timeMs: null,
     positions: [],
     paths: [],
   };
@@ -493,6 +540,7 @@ describe('deleting figures', () => {
     order: 2,
     name: 'Finale',
     transitionMs: 4000,
+    timeMs: null,
     positions: [],
     paths: [],
   };
@@ -569,6 +617,7 @@ describe('dragging on the 2D plan', () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
@@ -577,6 +626,7 @@ describe('dragging on the 2D plan', () => {
         order: 1,
         name: 'Entrance',
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.25 }],
       },
@@ -686,6 +736,7 @@ describe('dragging on the 2D plan', () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [
           { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
@@ -716,6 +767,7 @@ describe('dragging on the 2D plan', () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [
           { castMemberId: 'cast-1', x: 0.5, y: 0.5 },
@@ -748,6 +800,7 @@ describe('playback', () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.5, y: 0.5 }],
       },
@@ -756,6 +809,7 @@ describe('playback', () => {
         order: 1,
         name: 'Entrance',
         transitionMs: 4000,
+        timeMs: null,
         paths: [],
         positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
       },
@@ -833,6 +887,7 @@ describe('playback', () => {
       order: 2,
       name: null,
       transitionMs: 4000,
+      timeMs: null,
       paths: [],
       positions: [{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }],
     });
@@ -880,7 +935,15 @@ describe('playback', () => {
 
   test('cannot play a dance with a single figure', async () => {
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: [], paths: [] },
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        positions: [],
+        paths: [],
+      },
     ]);
     await openKitri();
     expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
@@ -928,12 +991,21 @@ describe('circling another dancer', () => {
       { id: 'cast-2', dancer: { id: 'dancer-2', name: 'Odile', color: 6 }, role: null },
     ]);
     vi.mocked(fetchFigures).mockResolvedValue([
-      { id: 'figure-1', order: 0, name: null, transitionMs: 4000, positions: both, paths: [] },
+      {
+        id: 'figure-1',
+        order: 0,
+        name: null,
+        transitionMs: 4000,
+        timeMs: null,
+        positions: both,
+        paths: [],
+      },
       {
         id: 'figure-2',
         order: 1,
         name: 'Entrance',
         transitionMs: 4000,
+        timeMs: null,
         positions: both,
         paths: [],
       },

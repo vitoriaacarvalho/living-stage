@@ -7,6 +7,7 @@ const figure = (order: number, x: number): Figure => ({
   order,
   name: null,
   transitionMs: 4000,
+  timeMs: null,
   positions: [
     { castMemberId: 'cast-1', x, y: 0.5 },
     { castMemberId: 'cast-2', x, y: 0.8 },

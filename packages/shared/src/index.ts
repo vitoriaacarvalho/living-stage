@@ -216,3 +216,15 @@ export {
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
 } from './stage.ts';
+
+export {
+  NEW_PIN_AFTER_MS,
+  PIN_GAP_MS,
+  copyPin,
+  fillPins,
+  fitPins,
+  isInPinRange,
+  newPin,
+  pinRange,
+  pinsFromMoves,
+} from './pins.ts';

@@ -82,6 +82,7 @@ beforeEach(() => {
   vi.mocked(prisma.dance.updateManyAndReturn).mockReset();
   vi.mocked(prisma.dance.deleteMany).mockReset();
   vi.mocked(prisma.audioTrack.findFirst).mockReset();
+  vi.mocked(prisma.$transaction).mockReset();
   vi.mocked(prisma.dance.findFirst).mockReset();
   vi.mocked(prisma.dance.findUniqueOrThrow).mockReset();
   vi.mocked(prisma.dance.create).mockReset();
@@ -371,13 +372,18 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
   const url = () => `${baseUrl}/api/schools/school-1/dances/dance-1`;
 
   describe('choosing a song', () => {
+    // How figures are pinned is tested in dances/pins.test.ts; here it is enough that it ran.
+    beforeEach(() => {
+      vi.mocked(prisma.$transaction).mockResolvedValue(undefined as never);
+    });
+
     test('looks for the song in the same school', async () => {
       vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue({ id: 'song-1' } as never);
       vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
       await fetch(url(), send('PATCH', { audioId: 'song-1' }));
-      expect(prisma.audioTrack.findFirst).toHaveBeenCalledWith({
-        where: { id: 'song-1', schoolId: 'school-1' },
-      });
+      expect(prisma.audioTrack.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'song-1', schoolId: 'school-1' } }),
+      );
     });
 
     test('saves the song', async () => {
@@ -399,6 +405,19 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId', () => {
       vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue(null);
       await fetch(url(), send('PATCH', { audioId: 'song-9' }));
       expect(prisma.dance.updateManyAndReturn).not.toHaveBeenCalled();
+    });
+
+    test('pins the figures to the song', async () => {
+      vi.mocked(prisma.audioTrack.findFirst).mockResolvedValue({ durationMs: 95_000 } as never);
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+      await fetch(url(), send('PATCH', { audioId: 'song-1' }));
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    test('leaves the pins when the song is taken away', async () => {
+      vi.mocked(prisma.dance.updateManyAndReturn).mockResolvedValue([kitri]);
+      await fetch(url(), send('PATCH', { audioId: null }));
+      expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
     test('takes the song away without looking it up', async () => {

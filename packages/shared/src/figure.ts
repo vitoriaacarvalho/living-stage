@@ -14,6 +14,9 @@ export type Figure = {
   order: number;
   name: string | null;
   transitionMs: number;
+  // When the dance has a song: the moment the figure is reached (see pins.ts). Null until
+  // the dance first gets a song, and kept when the song is taken away.
+  timeMs: number | null;
   positions: Position[];
   paths: Path[];
 };
@@ -41,7 +44,7 @@ export const TRANSITION_MAX_MS = 30_000;
 export const TRANSITION_STEP_MS = 500;
 
 // At least one of the two is set.
-export type FigureUpdate = { name?: string | null; transitionMs?: number };
+export type FigureUpdate = { name?: string | null; transitionMs?: number; timeMs?: number };
 
 // Every figure of the dance, each once, in the new order.
 export type FigureOrder = { figureIds: string[] };
@@ -90,6 +93,11 @@ export function parseFigureUpdate(value: unknown): FigureUpdate | null {
     const transitionMs = parseTransitionMs(body.transitionMs);
     if (transitionMs === null) return null;
     update.transitionMs = transitionMs;
+  }
+  if (body.timeMs !== undefined) {
+    const { timeMs } = body;
+    if (typeof timeMs !== 'number' || !Number.isInteger(timeMs) || timeMs < 0) return null;
+    update.timeMs = timeMs;
   }
   return Object.keys(update).length > 0 ? update : null;
 }

@@ -23,6 +23,7 @@ const figure = (order: number, name: string | null, x: number): Figure => ({
   order,
   name,
   transitionMs: 4000,
+  timeMs: null,
   paths: [],
   positions: [{ castMemberId: 'cast-1', x, y: 0.5 }],
 });

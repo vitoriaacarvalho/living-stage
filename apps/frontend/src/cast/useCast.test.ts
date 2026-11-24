@@ -17,6 +17,7 @@ const entrance = {
   order: 0,
   name: 'Entrance',
   transitionMs: 4000,
+  timeMs: null,
   positions: [],
   paths: [],
 };
@@ -25,6 +26,7 @@ const finale = {
   order: 1,
   name: 'Finale',
   transitionMs: 4000,
+  timeMs: null,
   positions: [],
   paths: [],
 };

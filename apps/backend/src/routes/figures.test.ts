@@ -13,7 +13,7 @@ vi.mock('../auth/auth.ts', () => ({
 vi.mock('../db.ts', () => ({
   prisma: {
     school: { findFirst: vi.fn() },
-    dance: { findFirst: vi.fn() },
+    dance: { findFirst: vi.fn(), findUnique: vi.fn() },
     figure: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -47,6 +47,7 @@ const firstFigure = {
   order: 0,
   name: null,
   transitionMs: 4000,
+  timeMs: null,
   positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
   paths: [],
 };
@@ -75,6 +76,10 @@ beforeEach(() => {
   vi.mocked(prisma.dance.findFirst)
     .mockReset()
     .mockResolvedValue({ figures: [firstFigure] } as never);
+  // A dance without a song unless a test gives it one.
+  vi.mocked(prisma.dance.findUnique)
+    .mockReset()
+    .mockResolvedValue({ audio: null } as never);
   vi.mocked(prisma.figure.findFirst)
     .mockReset()
     .mockResolvedValue(firstFigure as never);
@@ -112,6 +117,7 @@ test('lists the figures of the dance with their positions', async () => {
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
         paths: [],
       },
@@ -160,6 +166,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
         order: 3,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
         paths: [],
       },
@@ -186,6 +193,7 @@ describe('POST /api/schools/:schoolId/dances/:danceId/figures', () => {
     vi.mocked(prisma.figure.findFirst).mockResolvedValue({
       ...firstFigure,
       transitionMs: 6500,
+      timeMs: null,
     } as never);
     await copy({ copyOf: 'figure-1', placement: 'end' });
     expect(createdData()).toMatchObject({ transitionMs: 6500 });
@@ -282,6 +290,7 @@ describe('PATCH /api/schools/:schoolId/dances/:danceId/figures/:figureId', () =>
         order: 0,
         name: 'Entrance',
         transitionMs: 4000,
+        timeMs: null,
         positions: [{ castMemberId: 'cast-1', x: -0.0625, y: 0.05 }],
         paths: [],
       },
@@ -355,6 +364,10 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/order', () => {
       .mockReset()
       .mockResolvedValueOnce([{ id: 'figure-1' }, { id: 'figure-2' }] as never)
       .mockResolvedValueOnce([
+        { id: 'figure-1', timeMs: 0, transitionMs: 4000 },
+        { id: 'figure-2', timeMs: 4000, transitionMs: 4000 },
+      ] as never)
+      .mockResolvedValueOnce([
         { ...secondFigure, order: 0 },
         { ...firstFigure, order: 1 },
       ] as never);
@@ -380,9 +393,19 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/order', () => {
 
   test('gives each figure its place in the list', async () => {
     await reorder({ figureIds: ['figure-2', 'figure-1'] });
-    expect(vi.mocked(prisma.figure.update).mock.calls.map(([args]) => args)).toEqual([
-      { where: { id: 'figure-2' }, data: { order: 0 } },
-      { where: { id: 'figure-1' }, data: { order: 1 } },
+    const updates = vi.mocked(prisma.figure.update).mock.calls.map(([args]) => args);
+    expect(updates.map(({ where, data }) => [where.id, data.order])).toEqual([
+      ['figure-2', 0],
+      ['figure-1', 1],
+    ]);
+  });
+
+  test('hands the moment of each place to the figure now in it', async () => {
+    await reorder({ figureIds: ['figure-2', 'figure-1'] });
+    const updates = vi.mocked(prisma.figure.update).mock.calls.map(([args]) => args);
+    expect(updates.map(({ where, data }) => [where.id, data.timeMs])).toEqual([
+      ['figure-2', 0],
+      ['figure-1', 4000],
     ]);
   });
 
@@ -443,6 +466,7 @@ describe('PUT /api/schools/:schoolId/dances/:danceId/figures/:figureId/positions
         order: 0,
         name: null,
         transitionMs: 4000,
+        timeMs: null,
         positions: moved,
         paths: [],
       },
@@ -788,5 +812,93 @@ describe('DELETE /api/schools/:schoolId/dances/:danceId/figures/:figureId/paths/
   test('responds 404 for a dance of another school', async () => {
     vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
     expect((await straighten()).status).toBe(404);
+  });
+});
+
+describe('figures of a dance with a song', () => {
+  const pins = [
+    { id: 'figure-1', timeMs: 0, transitionMs: 4000 },
+    { id: 'figure-2', timeMs: 10_000, transitionMs: 4000 },
+    { id: 'figure-3', timeMs: 20_000, transitionMs: 4000 },
+  ];
+
+  beforeEach(() => {
+    vi.mocked(prisma.dance.findUnique).mockResolvedValue({
+      audio: { durationMs: 60_000 },
+    } as never);
+    vi.mocked(prisma.figure.findMany)
+      .mockReset()
+      .mockResolvedValue(pins as never);
+  });
+
+  function send(method: string, path: string, body: unknown) {
+    return fetch(`${url}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  function createdTime() {
+    return vi.mocked(prisma.figure.create).mock.calls[0]![0].data.timeMs;
+  }
+
+  test('pins a new last figure four seconds after the last one', async () => {
+    await send('POST', '', { copyOf: 'figure-1', placement: 'end' });
+    expect(createdTime()).toBe(24_000);
+  });
+
+  test('pins a duplicate halfway to the next figure', async () => {
+    await send('POST', '', { copyOf: 'figure-1', placement: 'after' });
+    expect(createdTime()).toBe(5000);
+  });
+
+  describe('setting the moment of a figure', () => {
+    beforeEach(() => {
+      vi.mocked(prisma.figure.updateMany).mockResolvedValue({ count: 1 });
+      vi.mocked(prisma.figure.findUniqueOrThrow).mockResolvedValue(firstFigure as never);
+    });
+
+    test('saves a moment between the neighbours', async () => {
+      const res = await send('PATCH', '/figure-2', { timeMs: 15_000 });
+      expect(res.status).toBe(200);
+    });
+
+    test('takes a moment half a second after the figure before', async () => {
+      const res = await send('PATCH', '/figure-2', { timeMs: 500 });
+      expect(res.status).toBe(200);
+    });
+
+    test('responds 400 for a moment closer than half a second to a neighbour', async () => {
+      const res = await send('PATCH', '/figure-2', { timeMs: 19_600 });
+      expect(res.status).toBe(400);
+    });
+
+    test('responds 400 for a moment past the end of the song', async () => {
+      const res = await send('PATCH', '/figure-3', { timeMs: 60_001 });
+      expect(res.status).toBe(400);
+    });
+
+    test('saves nothing out of range', async () => {
+      await send('PATCH', '/figure-2', { timeMs: 25_000 });
+      expect(prisma.figure.updateMany).not.toHaveBeenCalled();
+    });
+
+    test('responds 409 for a dance without a song', async () => {
+      vi.mocked(prisma.dance.findUnique).mockResolvedValue({ audio: null } as never);
+      const res = await send('PATCH', '/figure-2', { timeMs: 15_000 });
+      expect(res.status).toBe(409);
+    });
+
+    test('responds 404 for a figure of another dance', async () => {
+      const res = await send('PATCH', '/figure-9', { timeMs: 15_000 });
+      expect(res.status).toBe(404);
+    });
+
+    test('responds 404 for a dance of another school', async () => {
+      vi.mocked(prisma.dance.findFirst).mockResolvedValue(null);
+      const res = await send('PATCH', '/figure-2', { timeMs: 15_000 });
+      expect(res.status).toBe(404);
+    });
   });
 });

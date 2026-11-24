@@ -10,6 +10,7 @@ import {
 } from '@living-stage/shared';
 import { Router } from 'express';
 import { danceCopy } from '../dances/copy-dance.ts';
+import { pinToSong } from '../dances/pins.ts';
 import { prisma } from '../db.ts';
 import { toCastMember } from './cast.ts';
 
@@ -65,7 +66,8 @@ schoolDancesRouter.patch('/dances/:danceId', async (req, res) => {
     return;
   }
   // A song from another school looks like one that doesn't exist.
-  if (update.audioId && !(await isSongOf(update.audioId, res.locals.schoolId))) {
+  const song = update.audioId ? await songOf(update.audioId, res.locals.schoolId) : null;
+  if (update.audioId && !song) {
     res.status(404).json({ error: 'not_found' });
     return;
   }
@@ -78,6 +80,7 @@ schoolDancesRouter.patch('/dances/:danceId', async (req, res) => {
     res.status(404).json({ error: 'not_found' });
     return;
   }
+  if (song) await prisma.$transaction((tx) => pinToSong(tx, dance.id, song.durationMs));
 
   res.json({ dance: toDance(dance) } satisfies DanceResponse);
 });
@@ -147,7 +150,9 @@ function toDance(dance: DanceRow): Dance {
   };
 }
 
-async function isSongOf(audioId: string, schoolId: string) {
-  const song = await prisma.audioTrack.findFirst({ where: { id: audioId, schoolId } });
-  return song !== null;
+function songOf(audioId: string, schoolId: string) {
+  return prisma.audioTrack.findFirst({
+    where: { id: audioId, schoolId },
+    select: { durationMs: true },
+  });
 }

@@ -16,6 +16,7 @@ const figure = (order: number, transitionMs: number, positions: Position[]): Fig
   order,
   name: null,
   transitionMs,
+  timeMs: null,
   positions,
   paths: [],
 });

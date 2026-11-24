@@ -6,6 +6,7 @@ const figure = {
   order: 0,
   name: null,
   transitionMs: 4000,
+  timeMs: null,
   positions: [],
   paths: [],
 };
