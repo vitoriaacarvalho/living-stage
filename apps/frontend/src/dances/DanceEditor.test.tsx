@@ -181,17 +181,18 @@ describe('snap toggle', () => {
     expect(updateDance).not.toHaveBeenCalled();
   });
 
-  test('is disabled while the guides are hidden', async () => {
+  test('can be turned on while the guides are hidden', async () => {
     await openKitri({ ...kitri, showGuides: false });
-    expect(snapToggle()).toBeDisabled();
+    await userEvent.setup().click(snapToggle());
+    expect(snapToggle()).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('shows snapping off once the guides are hidden', async () => {
+  test('stays on once the guides are hidden', async () => {
     await openKitri();
     const user = userEvent.setup();
     await user.click(snapToggle());
     await user.click(guidesToggle());
-    expect(snapToggle()).toHaveAttribute('aria-pressed', 'false');
+    expect(snapToggle()).toHaveAttribute('aria-pressed', 'true');
   });
 });
 

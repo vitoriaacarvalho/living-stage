@@ -12,6 +12,7 @@ import {
 import { type CSSProperties, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
 import { PathLayer, type StagePath } from './PathLayer.tsx';
+import { SnapHints } from './SnapHints.tsx';
 import styles from './Stage.module.css';
 import { type PathHandle, usePathHandles } from './usePathHandles.ts';
 import { usePlanScale } from './usePlanScale.ts';
@@ -68,7 +69,12 @@ export function Stage({ guides, dancers = [], paths = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const scale = usePlanScale(svgRef, planWidth);
-  const { shown, box, floor, dancerHandlers } = usePlanGestures({ dancers, guides, edit, planRef });
+  const { shown, box, hints, floor, dancerHandlers } = usePlanGestures({
+    dancers,
+    guides,
+    edit,
+    planRef,
+  });
   const { drawn, handles } = usePathHandles({ paths, dancers: shown, edit, planRef });
 
   return (
@@ -96,6 +102,7 @@ export function Stage({ guides, dancers = [], paths = [], edit }: StageProps) {
             y2={STAGE_DEPTH_M}
           />
           <PathLayer paths={drawn} dancers={shown} scale={scale} />
+          <SnapHints hints={hints} scale={scale} />
         </svg>
         <span className={`${styles.zone} ${styles.upstage}`}>Upstage</span>
         <span className={`${styles.zone} ${styles.leftWing}`}>Wing</span>

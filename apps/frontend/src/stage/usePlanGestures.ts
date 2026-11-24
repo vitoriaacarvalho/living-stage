@@ -4,9 +4,10 @@ import {
   PLAN_BOUNDS,
   arrowStep,
   moveGroup,
-  snapToGuides,
+  smartSnap,
   type PathPoint,
   type Position,
+  type SnapHint,
   type StageGuides,
   type StagePoint,
 } from '@living-stage/shared';
@@ -31,6 +32,7 @@ type DragGesture = Press & {
   dancerId: string;
   origins: Position[];
   delta: StagePoint;
+  hints: SnapHint[];
 };
 
 type Gesture = DragGesture | (Press & { kind: 'box'; from: StagePoint; to: StagePoint });
@@ -41,6 +43,8 @@ export type DancerHandlers = {
 };
 
 export type SelectionBox = { left: number; top: number; right: number; bottom: number };
+
+type SnapAround = { dancers: StageDancer[]; guides: StageGuides };
 
 type GestureSetup = {
   dancers: StageDancer[];
@@ -68,15 +72,14 @@ function inBox({ x, y }: StagePoint, box: SelectionBox) {
   return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
 }
 
-// The dragged dancer lands on the guide and the rest of the group keeps its offsets.
-function snapped(
-  { origins, dancerId }: Pick<DragGesture, 'origins' | 'dancerId'>,
-  delta: StagePoint,
-  guides: StageGuides,
-) {
+// The dragged dancer snaps and the rest of the group keeps its offsets, so they aren't targets.
+function snapped(gesture: DragGesture, delta: StagePoint, around: SnapAround) {
+  const { origins, dancerId } = gesture;
   const origin = origins.find(({ castMemberId }) => castMemberId === dancerId)!;
-  const target = snapToGuides({ x: origin.x + delta.x, y: origin.y + delta.y }, guides);
-  return { x: target.x - origin.x, y: target.y - origin.y };
+  const others = around.dancers.filter(({ id }) => !origins.some((o) => o.castMemberId === id));
+  const target = { x: origin.x + delta.x, y: origin.y + delta.y };
+  const { point, hints } = smartSnap(target, { others, guides: around.guides });
+  return { delta: { x: point.x - origin.x, y: point.y - origin.y }, hints };
 }
 
 // The plan box spans exactly PLAN_BOUNDS, so its pixels map straight onto stage units.
@@ -100,6 +103,7 @@ export function usePlanGestures({ dancers, guides, edit, planRef }: GestureSetup
     return spot ? { ...dancer, x: spot.x, y: spot.y } : dancer;
   });
   const box = gesture?.kind === 'box' && gesture.moved ? boxOf(gesture) : null;
+  const hints = gesture?.kind === 'drag' && gesture.moved ? gesture.hints : [];
 
   function start(event: PointerEvent<HTMLElement>): Press {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -144,6 +148,7 @@ export function usePlanGestures({ dancers, guides, edit, planRef }: GestureSetup
       dancerId: dancer.id,
       origins: grab(edit, dancer.id),
       delta: { x: 0, y: 0 },
+      hints: [],
     });
   }
 
@@ -195,11 +200,8 @@ export function usePlanGestures({ dancers, guides, edit, planRef }: GestureSetup
     }
     const { width, height } = planRef.current!.getBoundingClientRect();
     const delta = { x: (dx / width) * spanX, y: (dy / height) * spanY };
-    setGesture({
-      ...gesture,
-      moved: true,
-      delta: edit?.snap ? snapped(gesture, delta, guides) : delta,
-    });
+    const snap = edit?.snap ? snapped(gesture, delta, { dancers, guides }) : { delta, hints: [] };
+    setGesture({ ...gesture, moved: true, ...snap });
   }
 
   function release(event: PointerEvent<HTMLElement>) {
@@ -231,5 +233,5 @@ export function usePlanGestures({ dancers, guides, edit, planRef }: GestureSetup
     onKeyDown: (event) => pressKey(dancer, event),
   });
 
-  return { shown, box, floor, dancerHandlers };
+  return { shown, box, hints, floor, dancerHandlers };
 }

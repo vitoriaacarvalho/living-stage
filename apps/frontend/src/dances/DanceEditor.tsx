@@ -73,8 +73,6 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   const [snap, setSnap] = useState(false);
   const [presenting, setPresenting] = useState(false);
   const phone = usePhone();
-  // Snapping is only on while guides are shown, since nobody can aim at hidden lines.
-  const snapping = snap && dance.showGuides;
   const castIds = cast.status === 'ready' ? cast.cast.map(({ id }) => id) : [];
   // The whole selection goes once one of its dancers leaves the cast.
   const selection = selectedIds.every((id) => castIds.includes(id)) ? selectedIds : [];
@@ -349,8 +347,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                 type="button"
                 className={styles.toggle}
                 aria-label="Snap"
-                aria-pressed={snapping}
-                disabled={!dance.showGuides}
+                aria-pressed={snap}
                 onClick={() => setSnap(!snap)}
               >
                 <Icon name="magnet" />
@@ -383,7 +380,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                   stopped
                     ? {
                         selectedIds: selection,
-                        snap: snapping,
+                        snap,
                         onSelect: setSelectedIds,
                         onMove: moveDancers,
                         onBend: bendPath,

@@ -465,6 +465,66 @@ describe('editing', () => {
     ]);
   });
 
+  describe('smart guides', () => {
+    // 100 px a metre on both axes; Clara starts at 6 m across, 4 m deep.
+    const at = (xM: number, yM: number) => ({ x: xM / STAGE_WIDTH_M, y: yM / STAGE_DEPTH_M });
+    const lead = { ...odile, label: 'Lead', ...at(3, 2) };
+    const first = { ...odile, id: 'cast-3', label: 'First', ...at(1, 2) };
+    const snapping = () => ({ ...editing(['cast-1']), snap: true });
+
+    function holdDrag(target: HTMLElement, dx: number, dy: number) {
+      fireEvent.pointerDown(target, { pointerId: 1, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(target, { pointerId: 1, clientX: 100 + dx, clientY: 100 + dy });
+    }
+
+    test('lines the dragged dancer up with another dancer with the guides hidden', () => {
+      const edit = snapping();
+      render(<Stage guides="none" dancers={[clara, lead]} edit={edit} />);
+      dragBy(hitOf('Clara'), -295, 0);
+      expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.25, y: 0.5 }]);
+    });
+
+    test('draws the line to the dancer she lines up with while dragging', () => {
+      render(<Stage guides="none" dancers={[clara, lead]} edit={snapping()} />);
+      holdDrag(hitOf('Clara'), -295, 0);
+      expect(screen.getByTestId('snap-hints').querySelectorAll('line')).toHaveLength(1);
+    });
+
+    test('takes the line away on drop', () => {
+      render(<Stage guides="none" dancers={[clara, lead]} edit={snapping()} />);
+      dragBy(hitOf('Clara'), -295, 0);
+      expect(screen.queryByTestId('snap-hints')).not.toBeInTheDocument();
+    });
+
+    test('draws no line with snapping off', () => {
+      render(<Stage guides="none" dancers={[clara, lead]} edit={editing(['cast-1'])} />);
+      holdDrag(hitOf('Clara'), -295, 0);
+      expect(screen.queryByTestId('snap-hints')).not.toBeInTheDocument();
+    });
+
+    test('lands the dragged dancer at an equal gap in a row', () => {
+      const edit = snapping();
+      render(<Stage guides="none" dancers={[clara, lead, first]} edit={edit} />);
+      dragBy(hitOf('Clara'), -95, -195);
+      expect(edit.onMove).toHaveBeenCalledWith([
+        { castMemberId: 'cast-1', x: expect.closeTo(5 / 12), y: expect.closeTo(0.25) },
+      ]);
+    });
+
+    test('labels both halves of an equal gap in metres', () => {
+      render(<Stage guides="none" dancers={[clara, lead, first]} edit={snapping()} />);
+      holdDrag(hitOf('Clara'), -95, -195);
+      expect(screen.getAllByText('2 m')).toHaveLength(2);
+    });
+
+    test('does not line up with the dancers dragged along with her', () => {
+      const edit = { ...snapping(), selectedIds: ['cast-1', 'cast-2'] };
+      render(<Stage guides="none" dancers={[clara, lead]} edit={edit} />);
+      holdDrag(hitOf('Clara'), -295, 0);
+      expect(screen.queryByTestId('snap-hints')).not.toBeInTheDocument();
+    });
+  });
+
   test('stops the whole selection when one dancer reaches the edge', () => {
     const edit = editing(['cast-1', 'cast-2']);
     const front = { ...odile, y: 0.9 };
