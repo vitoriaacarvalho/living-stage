@@ -44,6 +44,14 @@ const paths = {
       <path d="M5.5 9.5V20h13V9.5" />
     </>
   ),
+  loop: (
+    <>
+      <path d="M17 2.5l3 3-3 3" />
+      <path d="M4 11V9.5a4 4 0 0 1 4-4h12" />
+      <path d="M7 21.5l-3-3 3-3" />
+      <path d="M20 13v1.5a4 4 0 0 1-4 4H4" />
+    </>
+  ),
   magnet: (
     <>
       <path d="M6 4v7a6 6 0 0 0 12 0V4" />

@@ -125,6 +125,7 @@
 /* The play row with the dance's music at its far end. */
 .transportRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);

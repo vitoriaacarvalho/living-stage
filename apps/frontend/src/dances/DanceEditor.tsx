@@ -28,6 +28,7 @@ import { Transport } from '../playback/Transport.tsx';
 import { enterFullScreen } from '../presentation/full-screen.ts';
 import { PresentationMode } from '../presentation/PresentationMode.tsx';
 import { usePlayback } from '../playback/usePlayback.ts';
+import { SongControls } from '../playback/SongControls.tsx';
 import { useSongPlayback } from '../playback/useSongPlayback.ts';
 import { STAGE_PLAN_ASPECT, Stage } from '../stage/Stage.tsx';
 import { selectedPaths } from '../stage/selected-paths.ts';
@@ -367,6 +368,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
             <section className={styles.timeline} aria-label="Timeline">
               <div className={styles.transportRow}>
                 <Transport playback={playback} />
+                {onSong && <SongControls playback={songPlayback} />}
                 <Button
                   variant="secondary"
                   className={styles.music}

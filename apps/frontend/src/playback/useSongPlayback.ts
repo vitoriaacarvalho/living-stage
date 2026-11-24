@@ -27,6 +27,7 @@ export function useSongPlayback(
   const [status, setStatus] = useState<Status>('stopped');
   const [atMs, setAtMs] = useState(0);
   const [speed, setSpeedState] = useState(1);
+  const [repeat, setRepeat] = useState(false);
   const stop = useRef<Stop>({ atMs: songMs, figureId: null });
   const pinOf = (index: number) => figures[index]?.timeMs ?? 0;
   const lastFigure = figures.at(-1);
@@ -48,8 +49,19 @@ export function useSongPlayback(
     if (status === 'stopped') audio.currentTime = selectedPin / 1000;
   }, [audio, status, selectedPin]);
 
+  // Repeat figure goes over the move into the selected figure (out of the first, for it).
+  const loop = {
+    fromMs: pinOf(selectedIndex === 0 ? 0 : selectedIndex - 1),
+    toMs: pinOf(selectedIndex === 0 ? 1 : selectedIndex),
+  };
+
   const advance = useEffectEvent((): boolean => {
     const now = audio.currentTime * 1000;
+    if (repeat && now >= loop.toMs) {
+      audio.currentTime = loop.fromMs / 1000;
+      setAtMs(loop.fromMs);
+      return true;
+    }
     const { atMs: end, figureId } = stop.current;
     if (now < end && !audio.ended) {
       setAtMs(now);
@@ -91,7 +103,9 @@ export function useSongPlayback(
   }
 
   function play() {
-    start(from(), { atMs: songMs, figureId: null });
+    const fromMs = from();
+    const inLoop = fromMs >= loop.fromMs && fromMs < loop.toMs;
+    start(repeat && !inLoop ? loop.fromMs : fromMs, { atMs: songMs, figureId: null });
   }
 
   // Plays on and stops on that figure; while playing, only where it stops changes.
@@ -136,6 +150,8 @@ export function useSongPlayback(
     timeMs: status === 'stopped' ? pinOf(selectedIndex) : atMs,
     lengthMs: songMs,
     speed,
+    repeat,
+    setRepeat,
     play,
     playTo,
     pause,

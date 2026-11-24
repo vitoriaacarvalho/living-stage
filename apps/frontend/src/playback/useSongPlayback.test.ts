@@ -218,3 +218,45 @@ describe('speed', () => {
     expect(playback.current.speed).toBe(0.75);
   });
 });
+
+describe('repeating a figure', () => {
+  test('starts the move into the selected figure', () => {
+    const playback = setup(2);
+    act(() => playback.current.setRepeat(true));
+    act(() => playback.current.play());
+    expect(audio.currentTime).toBe(10);
+  });
+
+  test('goes back to the start of the move when it reaches the figure', () => {
+    const playback = setup(2);
+    act(() => playback.current.setRepeat(true));
+    act(() => playback.current.play());
+    hear(20_000);
+    expect(audio.currentTime).toBe(10);
+  });
+
+  test('keeps playing round', () => {
+    const playback = setup(2);
+    act(() => playback.current.setRepeat(true));
+    act(() => playback.current.play());
+    hear(20_000);
+    expect(playback.current.status).toBe('playing');
+  });
+
+  test('repeats the move out of the first figure', () => {
+    const playback = setup(0);
+    act(() => playback.current.setRepeat(true));
+    act(() => playback.current.play());
+    hear(10_000);
+    expect(audio.currentTime).toBe(2);
+  });
+
+  test('plays on to the end once repeating is off', () => {
+    const playback = setup(2);
+    act(() => playback.current.setRepeat(true));
+    act(() => playback.current.play());
+    act(() => playback.current.setRepeat(false));
+    hear(20_000);
+    expect(audio.currentTime).toBe(20);
+  });
+});
