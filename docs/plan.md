@@ -166,13 +166,13 @@ Requirements are grouped into parts, each with IDs. A requirement marked ✅ is 
 ### Part E — Music timeline *(after the MVP, except E9)*
 
 - ✅ **E1.** A member can upload an audio file (MP3, M4A, AAC, WAV) to a dance.
-- **E2.** The timeline shows the song's waveform and a playhead below the stage.
+- ✅ **E2.** The timeline shows the song's waveform and a playhead below the stage.
 - **E3.** *(Dropped in Nov 2026: musical counts. Figures are placed by time in the song only.)*
 - **E4.** Each figure is pinned to a moment in the song, shown as a time such as `0:58`; the transition fills the time before it.
 - **E5.** Play, pause, scrub, loop a section, and play at 0.5×, 0.75× or 1×.
 - **E6.** The stage animation stays in sync with the audio at every speed and after scrubbing.
 - ✅ **E7.** Audio files up to 30 MB (MP3, M4A, AAC, WAV). A song can be reused by several dances in the school.
-- **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
+- ✅ **E8.** The waveform is computed once at upload and stored, so it opens instantly afterwards.
 - **E9.** Up to 40 dancers per dance, rendering and animating smoothly on an iPad.
 
 ### Part G — Presentation mode
@@ -409,9 +409,10 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
   - Done when: Upload a 30 MB MP3 and reuse it in a second dance; a dance's duration and the show's running time come from its song
   - Requirements: E1, E7
   - Checked on 23 Nov 2026 (driven, Chrome at iPad size): a 30.00 MB MP3 uploaded from the editor's Music panel and read as 13:06; a second dance picked the same song; on the show page both rows showed 13:06 from the song beside a typed 3:00, and the total was 29min 13s. Song files live in SeaweedFS locally (R2 in production); details in `docs/features/4-music.md`
-- ⬜ **4.2 Waveform** · after 4.1
+- ✅ **4.2 Waveform** · after 4.1
   - Done when: Waveform and playhead open instantly on reload
   - Requirements: E2, E8 · Screens: `Timeline`
+  - Checked on 24 Nov 2026 (driven, Chrome): after a reload the waveform of a 40 s song was drawn 106 ms after opening the dance, with no request to the song file; 56 px with the whole-song strip on iPad, 40 px without it on iPhone both ways up; a 30 MB MP3 decoded in under 2 s at upload. The playhead stays at the start until 4.3 plays the song
 - ⬜ **4.3 Transport controls** · after 4.2
   - Done when: Play, pause, scrub, loop, 0.5× / 0.75× / 1×
   - Requirements: E5 · Screens: `Timeline`

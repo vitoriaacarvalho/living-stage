@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { addCastMember, fetchCast, removeCastMember } from '../api/cast.ts';
 import { fetchDancers } from '../api/dancers.ts';
 import { updateDance } from '../api/dances.ts';
-import { fetchSongs } from '../api/songs.ts';
+import { fetchSong, fetchSongs } from '../api/songs.ts';
 import {
   copyFigure,
   deleteFigure,
@@ -23,8 +23,11 @@ vi.mock('../api/cast.ts', () => ({
   removeCastMember: vi.fn(),
 }));
 vi.mock('../api/dancers.ts', () => ({ fetchDancers: vi.fn() }));
+vi.mock('wavesurfer.js', () => ({ default: { create: vi.fn(() => ({ destroy: vi.fn() })) } }));
+vi.mock('wavesurfer.js/dist/plugins/minimap.esm.js', () => ({ default: { create: vi.fn() } }));
 vi.mock('../api/songs.ts', () => ({
   fetchSongs: vi.fn(),
+  fetchSong: vi.fn(),
   requestUploadLink: vi.fn(),
   saveSong: vi.fn(),
   uploadFile: vi.fn(),
@@ -49,6 +52,15 @@ const kitri: Dance = {
 };
 
 beforeEach(() => {
+  vi.mocked(fetchSong)
+    .mockReset()
+    .mockResolvedValue({
+      id: 'song-1',
+      name: 'Kitri variation',
+      durationMs: 220_000,
+      url: 'https://storage.test/a',
+      peaks: [0.2, 0.6],
+    });
   vi.mocked(fetchSongs)
     .mockReset()
     .mockResolvedValue([
@@ -1170,5 +1182,25 @@ describe('music', () => {
     await user.click(screen.getByRole('button', { name: 'Add music' }));
     await user.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.getByRole('complementary', { name: 'Cast' })).toBeInTheDocument();
+  });
+});
+
+describe('waveform', () => {
+  test('draws the dance song under the stage', async () => {
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    expect(
+      await screen.findByRole('img', { name: 'Waveform of Kitri variation, 3:40' }),
+    ).toBeInTheDocument();
+  });
+
+  test('fetches only the dance song', async () => {
+    await openKitri({ ...kitri, audioId: 'song-1' });
+    await screen.findByRole('img', { name: /Waveform/ });
+    expect(fetchSong).toHaveBeenCalledWith('school-1', 'song-1', expect.any(AbortSignal));
+  });
+
+  test('draws nothing for a dance without music', async () => {
+    await openKitri();
+    expect(screen.queryByRole('img', { name: /Waveform/ })).not.toBeInTheDocument();
   });
 });

@@ -18,7 +18,8 @@
     "@living-stage/shared": "*",
     "better-auth": "^1.7.10",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "wavesurfer.js": "^7.12.12"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",

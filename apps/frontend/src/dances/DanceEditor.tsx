@@ -13,7 +13,9 @@ import { stageDancers } from '../cast/stage-dancers.ts';
 import { useCast } from '../cast/useCast.ts';
 import { FigurePanel } from '../figures/FigurePanel.tsx';
 import { MusicPanel } from '../music/MusicPanel.tsx';
+import { useSong } from '../music/useSong.ts';
 import { useSongs } from '../music/useSongs.ts';
+import { Waveform } from '../music/Waveform.tsx';
 import { FigureStrip } from '../figures/FigureStrip.tsx';
 import { FigureToolbar } from '../figures/FigureToolbar.tsx';
 import { CirclingRow } from '../paths/CirclingRow.tsx';
@@ -59,6 +61,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
   // What the sidebar (the bottom sheet on a phone) shows: the cast unless a panel is open.
   const [panelView, setPanelView] = useState<'cast' | 'figure' | 'music'>('cast');
   const songs = useSongs(schoolId);
+  const songWithWaveform = useSong(schoolId, dance.audioId);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [snap, setSnap] = useState(false);
   const [presenting, setPresenting] = useState(false);
@@ -343,6 +346,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
                   {song ? <span className={styles.songName}>{song.name}</span> : 'Add music'}
                 </Button>
               </div>
+              {songWithWaveform && <Waveform song={songWithWaveform} />}
               <FigureStrip
                 figures={figures}
                 active={{ id: moment?.to.id ?? figure.id, editable: stopped }}

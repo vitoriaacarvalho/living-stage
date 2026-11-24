@@ -1,5 +1,7 @@
 import type {
   AudioTrack,
+  AudioTrackDetail,
+  AudioTrackDetailResponse,
   AudioTrackInput,
   AudioTrackResponse,
   AudioUploadLinkResponse,
@@ -12,6 +14,17 @@ export async function fetchSongs(schoolId: string, signal: AbortSignal): Promise
   if (!res.ok) throw new Error(`GET songs answered ${res.status}`);
   const body: ListAudioTracksResponse = await res.json();
   return body.audioTracks;
+}
+
+export async function fetchSong(
+  schoolId: string,
+  songId: string,
+  signal: AbortSignal,
+): Promise<AudioTrackDetail> {
+  const res = await fetch(`/api/schools/${schoolId}/songs/${songId}`, { signal });
+  if (!res.ok) throw new Error(`GET song answered ${res.status}`);
+  const body: AudioTrackDetailResponse = await res.json();
+  return body.audioTrack;
 }
 
 export async function requestUploadLink(
