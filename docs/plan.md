@@ -413,12 +413,10 @@ In build order: music first, then undo and redo, then PDF export. Each has its o
   - Done when: Waveform and playhead open instantly on reload
   - Requirements: E2, E8 · Screens: `Timeline`
   - Checked on 24 Nov 2026 (driven, Chrome): after a reload the waveform of a 40 s song was drawn 106 ms after opening the dance, with no request to the song file; 56 px with the whole-song strip on iPad, 40 px without it on iPhone both ways up; a 30 MB MP3 decoded in under 2 s at upload. The playhead stays at the start until 4.3 plays the song
-- ⬜ **4.3 Transport controls** · after 4.2
-  - Done when: Play, pause, scrub, loop, 0.5× / 0.75× / 1×
-  - Requirements: E5 · Screens: `Timeline`
-- ⬜ **4.5 Figures on the timeline** · after 4.3, 2.7
-  - Done when: Stage stays in sync with the music at every speed and after scrubbing, in the editor and in presentation mode
-  - Requirements: E4, E6 · Screens: `Timeline`, `PresentationMode`
+- ⬜ **4.5 Playing to the music** · after 4.2, 2.7
+  - Done when: Play, pause, scrub, Repeat figure and 0.5× / 0.75× / 1× work on the song, and the stage stays in sync with it at every speed and after scrubbing, in the editor and in presentation mode
+  - Requirements: E4, E5, E6 · Screens: `Timeline`, `PresentationMode`
+  - Note: 4.3 Transport was merged into 4.5 on 24 Nov 2026, so the song and the dancers always share one clock. Each figure is pinned to its own moment in the song; moving one never moves the others. Decisions and slices in `docs/features/4-music.md`
 - ⬜ **2.6 Undo and redo** · after 2.4
   - Done when: Undo/redo per figure
   - Requirements: C12 · Screens: `Toolbar`

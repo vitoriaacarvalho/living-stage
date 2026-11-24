@@ -23,10 +23,27 @@ Status: decisions agreed on 18 Nov 2026. Musical counts (E3, plan 4.4) were drop
 
 - **4.1 Audio upload** (E1, E7): ✅ SeaweedFS in Compose and the storage client (slice 1); ✅ the `AudioTrack` and `Dance.audioId` migration with shared types and validation: MP3, M4A, AAC or WAV, up to 30 MB, names up to 100 characters, lengths up to an hour (slice 2); ✅ upload link and "done" routes (slice 3: `POST songs/upload-link` hands out a key under the school's folder; `POST songs` checks the file is in storage and within 30 MB, deleting it if not, then saves the song; `GET songs` lists them with fresh play links); ✅ the music control (slice 4: a button at the end of the play row, "Add music" or the song's name, opens a Music panel in the sidebar, or the bottom sheet on a phone, to upload a song with a progress bar, pick one of the school's songs, or remove it; the browser reads the length from the file's header); ✅ durations from the song (slice 5: show rows show the song's length, muted and not editable, and the show's total adds it); ✅ checked in the browser (slice 6): a 30.00 MB MP3 read as 13:06, reused by a second dance, and a show of both plus a typed 3:00 totalled 29min 13s.
 - **4.2 Waveform** (E2, E8): ✅ done. The browser decodes the song once at upload at 8 kHz (about 50 MB for 13 minutes) and keeps the loudest point of each twentieth of a second; the decoded length is the song's length, so the two always agree. The peaks are stored on the song and fetched only by `GET songs/:id`, for the dance that plays it. `wavesurfer.js` draws them without downloading the song: 2 px bars with a 1 px gap, played part `primary`, the rest `ink-muted` at 45%, a 2 px playhead, about 50 s across the iPad timeline with the whole-song strip above, 45 s and no strip on iPhone. Songs saved before 4.2 have no peaks and say so; uploading them again draws them.
-- **4.3 Transport** (E5): play and pause on the audio, scrubbing, speed, Repeat figure, the time as `00:58 / 03:40`.
-- **4.5 Figures on the timeline** (E4, E6): `Figure.timeMs` migration; markers dragged along the timeline; `stageAt` driven by figure times; presentation mode with the dark timeline and speed; checked in sync at every speed and after scrubbing.
+- **4.5 Playing to the music** (E4, E5, E6), with 4.3 Transport merged in on 24 Nov 2026 so the song and the dancers always share one clock. Slices:
+  1. Pins: the `Figure.timeMs` migration; shared rules for placing pins, with tests; the server keeps pins right when a song is attached or changed and when figures are added, duplicated, reordered or deleted; `PATCH` a figure's time between its neighbours.
+  2. The song clock: an `<audio>` element drives the time; Play and Pause on the song; the stage follows the song through the pins; the time as `00:58 / 03:40`.
+  3. The interactive timeline: the playhead moves; tapping or dragging the waveform scrubs; figure markers on the waveform that drag between their neighbours.
+  4. Speed (0.5×, 0.75×, 1×, pitch kept) and Repeat figure.
+  5. The figure panel: "Reached at" (m:ss) in place of "Time to arrive" when the dance has a song.
+  6. Presentation mode plays the song: Next plays to the next figure's moment, speed, the dark timeline.
+  7. Check "Done when" in the browser, measuring how far the stage drifts from the song at each speed and after scrubbing.
+
+## Decisions for 4.5
+
+- **Each figure is pinned to its own moment** (`Figure.timeMs`, the moment it is reached). Moving one figure changes only the moves into and out of it; the figures after it stay on their beats. A pin can't pass its neighbours: at least half a second apart.
+- **Before the first pin the dancers hold the first figure; after the last pin they hold the last one** until the song ends.
+- **Attaching a song to a dance with no pins** pins each figure where its move times put it today (the first figure at 0:00); if they run past the song's end, they are squeezed in proportion to fit.
+- **Changing the song** keeps the pins, squeezed to fit if the new song is shorter. **Removing the song** goes back to the move times, which were never changed.
+- **New figure:** 4 s after the last pin, or halfway to the song's end if less is left. **Duplicate:** halfway between the figure and the next one (as a new figure when it is the last).
+- **Reordering:** the moments stay where they are; figures take the moments of their new places, so the music keeps its shape.
+- **Deleting a figure** removes its pin; the move into the next figure takes up the gap.
+- **The pins live on the server**, which applies these rules in every figure route, so two teachers' screens agree.
 
 ## Before starting
 
-- The 2.7 iPad measurement (40 dancers) should be done before 4.5, which builds on smooth playback.
+- The 2.7 iPad measurement (40 dancers) should be done before 4.5's check, which builds on smooth playback.
 - Hosting: choose where R2 and the API live (the open question in §7) before 4.1 ships beyond local development.
