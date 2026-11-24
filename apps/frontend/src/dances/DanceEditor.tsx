@@ -376,7 +376,7 @@ export function DanceEditor({ schoolId, dance: opened, onBack }: DanceEditorProp
           <div className={styles.stageArea} style={stageFit}>
             <div className={styles.stageFit}>
               <Stage
-                showGuides={dance.showGuides}
+                guides={dance.showGuides ? 'grid' : 'none'}
                 dancers={dancers}
                 paths={paths}
                 edit={

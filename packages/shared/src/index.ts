@@ -215,6 +215,7 @@ export {
   STAGE_QUARTERS,
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
+  type StageGuides,
 } from './stage.ts';
 
 export {

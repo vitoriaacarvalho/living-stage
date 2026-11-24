@@ -128,7 +128,10 @@ export function PresentationMode({ presented, startFigureId, onLeave }: Presenta
       </header>
       <div className={styles.stageArea} style={stageFit}>
         <div className={styles.stageFit}>
-          <Stage showGuides={dance.showGuides} dancers={stageDancers(cast, positions, dance)} />
+          <Stage
+            guides={dance.showGuides ? 'lines' : 'none'}
+            dancers={stageDancers(cast, positions, dance)}
+          />
         </div>
       </div>
       <PresentationControls playback={playback} steps={steps} />

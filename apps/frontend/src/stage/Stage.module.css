@@ -24,10 +24,16 @@
   fill: var(--stage-floor);
 }
 
+.grid line,
 .quarter,
 .center {
   stroke: var(--stage-line);
   vector-effect: non-scaling-stroke;
+}
+
+.grid line {
+  stroke-width: 1px;
+  opacity: 0.5;
 }
 
 .quarter {

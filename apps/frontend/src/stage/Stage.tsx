@@ -7,6 +7,7 @@ import {
   STAGE_WIDTH_M,
   UPSTAGE_WING_DEPTH,
   type DancerColor,
+  type StageGuides,
 } from '@living-stage/shared';
 import { type CSSProperties, useRef } from 'react';
 import { dancerColorVar } from '../dancers/dancer-colors.ts';
@@ -57,13 +58,13 @@ export type StageDancer = {
 
 // Without edit the plan is only shown, as in print and thumbnails.
 export type StageProps = {
-  showGuides: boolean;
+  guides: StageGuides;
   dancers?: StageDancer[];
   paths?: StagePath[];
   edit?: StageEditing;
 };
 
-export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps) {
+export function Stage({ guides, dancers = [], paths = [], edit }: StageProps) {
   const planRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const scale = usePlanScale(svgRef, planWidth);
@@ -85,7 +86,8 @@ export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps
       >
         <svg ref={svgRef} className={styles.svg} viewBox={PLAN_VIEW_BOX}>
           <rect className={styles.floor} width={STAGE_WIDTH_M} height={STAGE_DEPTH_M} />
-          {showGuides && <Guides />}
+          {guides === 'grid' && <Grid />}
+          {guides !== 'none' && <Guides />}
           <line
             className={styles.edge}
             x1={0}
@@ -115,6 +117,25 @@ export function Stage({ showGuides, dancers = [], paths = [], edit }: StageProps
         <span className={styles.zone}>Audience</span>
       </div>
     </div>
+  );
+}
+
+const onGuide = (at: number) => at === STAGE_CENTER || STAGE_QUARTERS.some((q) => q === at);
+const metresUpTo = (length: number) => Array.from({ length: length - 1 }, (_, index) => index + 1);
+// A grid line under a dashed quarter line would fill in its dashes.
+const gridXs = metresUpTo(STAGE_WIDTH_M).filter((x) => !onGuide(x / STAGE_WIDTH_M));
+const gridYs = metresUpTo(STAGE_DEPTH_M).filter((y) => !onGuide(y / STAGE_DEPTH_M));
+
+function Grid() {
+  return (
+    <g data-testid="grid" className={styles.grid}>
+      {gridXs.map((x) => (
+        <line key={`x${x}`} x1={x} y1={0} x2={x} y2={STAGE_DEPTH_M} />
+      ))}
+      {gridYs.map((y) => (
+        <line key={`y${y}`} x1={0} y1={y} x2={STAGE_WIDTH_M} y2={y} />
+      ))}
+    </g>
   );
 }
 

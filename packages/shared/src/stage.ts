@@ -8,3 +8,6 @@ export const UPSTAGE_WING_DEPTH = 0.125;
 
 export const STAGE_CENTER = 0.5;
 export const STAGE_QUARTERS = [0.25, 0.75] as const;
+
+// The grid adds a line every metre under the centre and quarter lines.
+export type StageGuides = 'none' | 'lines' | 'grid';

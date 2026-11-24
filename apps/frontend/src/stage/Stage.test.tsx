@@ -4,49 +4,49 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Stage, type StagePath } from './Stage.tsx';
 
 test('is named as the stage seen from above', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   expect(
     screen.getByRole('img', { name: 'Stage seen from above, audience at the bottom' }),
   ).toBeInTheDocument();
 });
 
 test('draws the floor 12 metres across', () => {
-  const { container } = render(<Stage showGuides />);
+  const { container } = render(<Stage guides="lines" />);
   expect(container.querySelector('rect')).toHaveAttribute('width', '12');
 });
 
 test('draws the floor 8 metres deep', () => {
-  const { container } = render(<Stage showGuides />);
+  const { container } = render(<Stage guides="lines" />);
   expect(container.querySelector('rect')).toHaveAttribute('height', '8');
 });
 
 test('frames the floor with wings on both sides and upstage', () => {
-  const { container } = render(<Stage showGuides />);
+  const { container } = render(<Stage guides="lines" />);
   expect(container.querySelector('svg')).toHaveAttribute('viewBox', '-1.5 -1 15 9');
 });
 
 test('labels a wing on each side', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   expect(screen.getAllByText('Wing')).toHaveLength(2);
 });
 
 test('labels the upstage wing', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   expect(screen.getByText('Upstage')).toBeInTheDocument();
 });
 
 test('labels the audience', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   expect(screen.getByText('Audience')).toBeInTheDocument();
 });
 
 test('draws the center and quarter lines across and down the floor', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   expect(screen.getByTestId('guides').querySelectorAll('line')).toHaveLength(6);
 });
 
 test('draws the center lines through the middle of the floor', () => {
-  render(<Stage showGuides />);
+  render(<Stage guides="lines" />);
   const lines = [...screen.getByTestId('guides').querySelectorAll('line')];
   const center = lines.filter(
     (line) => line.getAttribute('x1') === '6' || line.getAttribute('y1') === '4',
@@ -54,8 +54,18 @@ test('draws the center lines through the middle of the floor', () => {
   expect(center).toHaveLength(2);
 });
 
+test('draws a line every metre between the guide lines on the grid', () => {
+  render(<Stage guides="grid" />);
+  expect(screen.getByTestId('grid').querySelectorAll('line')).toHaveLength(12);
+});
+
+test('leaves the grid out of the guide lines alone', () => {
+  render(<Stage guides="lines" />);
+  expect(screen.queryByTestId('grid')).not.toBeInTheDocument();
+});
+
 test('hides the guide lines when the dance turns them off', () => {
-  render(<Stage showGuides={false} />);
+  render(<Stage guides="none" />);
   expect(screen.queryByTestId('guides')).not.toBeInTheDocument();
 });
 
@@ -71,39 +81,39 @@ const clara = {
 };
 
 test('labels each dancer with her name', () => {
-  render(<Stage showGuides dancers={[clara]} />);
+  render(<Stage guides="lines" dancers={[clara]} />);
   expect(screen.getByText('Clara')).toBeInTheDocument();
 });
 
 test('puts the role under the name', () => {
-  render(<Stage showGuides dancers={[{ ...clara, role: 'Kitri' }]} />);
+  render(<Stage guides="lines" dancers={[{ ...clara, role: 'Kitri' }]} />);
   expect(screen.getByText('Kitri')).toBeInTheDocument();
 });
 
 test('puts a dancer at the center of the floor', () => {
-  render(<Stage showGuides dancers={[clara]} />);
+  render(<Stage guides="lines" dancers={[clara]} />);
   expect(screen.getByTestId('dancer')).toHaveStyle({ left: '50%', top: `${(5 / 9) * 100}%` });
 });
 
 test('puts a dancer waiting in the left wing beside the floor', () => {
-  render(<Stage showGuides dancers={[{ ...clara, x: -0.0625, y: 0.05 }]} />);
+  render(<Stage guides="lines" dancers={[{ ...clara, x: -0.0625, y: 0.05 }]} />);
   expect(screen.getByTestId('dancer')).toHaveStyle({ left: '5%' });
 });
 
 test('dims a dancer waiting off stage', () => {
-  render(<Stage showGuides dancers={[{ ...clara, x: -0.0625 }]} />);
+  render(<Stage guides="lines" dancers={[{ ...clara, x: -0.0625 }]} />);
   expect(screen.getByTestId('dancer')).toHaveClass(/offStage/);
 });
 
 test('does not dim a dancer on stage', () => {
-  render(<Stage showGuides dancers={[clara]} />);
+  render(<Stage guides="lines" dancers={[clara]} />);
   expect(screen.getByTestId('dancer')).not.toHaveClass(/offStage/);
 });
 
 test('draws an open spot apart from the dancers', () => {
   render(
     <Stage
-      showGuides
+      guides="lines"
       dancers={[{ ...clara, label: 'Open spot', dancerId: null, color: null, open: true }]}
     />,
   );
@@ -158,49 +168,49 @@ describe('editing', () => {
   });
 
   test('is a group named as the stage while editing', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     expect(
       screen.getByRole('group', { name: 'Stage seen from above, audience at the bottom' }),
     ).toBeInTheDocument();
   });
 
   test('makes each dancer a button named after her', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     expect(screen.getByRole('button', { name: 'Clara' })).toBeInTheDocument();
   });
 
   test('names a dancer button with her role too', () => {
-    render(<Stage showGuides dancers={[{ ...clara, role: 'Kitri' }]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[{ ...clara, role: 'Kitri' }]} edit={editing()} />);
     expect(screen.getByRole('button', { name: 'Clara, Kitri' })).toBeInTheDocument();
   });
 
   test('shows a selected dancer button as pressed', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing(['cast-1'])} />);
     expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('shows a dancer button that is not selected as not pressed', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     expect(screen.getByRole('button', { name: 'Clara' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('selects only the dancer when Enter is pressed on her', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'Enter' });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('selects the dancer when Space is pressed on her', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: ' ' });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('adds the dancer to the selection with Shift and Enter', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
       key: 'Enter',
       shiftKey: true,
@@ -210,7 +220,7 @@ describe('editing', () => {
 
   test('takes a selected dancer out of the selection with Shift and Enter', () => {
     const edit = editing(['cast-1', 'cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
       key: 'Enter',
       shiftKey: true,
@@ -220,7 +230,7 @@ describe('editing', () => {
 
   test('ignores other keys on a dancer', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), { key: 'a' });
     expect(edit.onSelect).not.toHaveBeenCalled();
   });
@@ -231,7 +241,7 @@ describe('editing', () => {
 
   test('moves the dancer 0.25 m to the right with the right arrow', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     press('Clara', { key: 'ArrowRight' });
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: 0.5 + 0.25 / STAGE_WIDTH_M, y: 0.5 },
@@ -240,7 +250,7 @@ describe('editing', () => {
 
   test('moves the dancer 1 m with Shift and an arrow', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     press('Clara', { key: 'ArrowRight', shiftKey: true });
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: 0.5 + 1 / STAGE_WIDTH_M, y: 0.5 },
@@ -249,7 +259,7 @@ describe('editing', () => {
 
   test('moves the dancer upstage with the up arrow', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     press('Clara', { key: 'ArrowUp' });
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: 0.5, y: 0.5 - 0.25 / STAGE_DEPTH_M },
@@ -258,7 +268,7 @@ describe('editing', () => {
 
   test('moves the whole selection with an arrow', () => {
     const edit = editing(['cast-1', 'cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     press('Clara', { key: 'ArrowLeft' });
     const step = 0.25 / STAGE_WIDTH_M;
     expect(edit.onMove).toHaveBeenCalledWith([
@@ -269,14 +279,14 @@ describe('editing', () => {
 
   test('selects a dancer who is not selected when an arrow moves her', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     press('Clara', { key: 'ArrowRight' });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('moves only a dancer who is not selected, not the selection', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     press('Clara', { key: 'ArrowRight' });
     expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ castMemberId: 'cast-1' })]);
   });
@@ -284,20 +294,20 @@ describe('editing', () => {
   test('stops a dancer at the downstage edge', () => {
     const edit = editing(['cast-1']);
     const front = { ...clara, y: 1 - 0.1 / STAGE_DEPTH_M };
-    render(<Stage showGuides dancers={[front]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[front]} edit={edit} />);
     press('Clara', { key: 'ArrowDown' });
     expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.5, y: 1 }]);
   });
 
   test('saves nothing when the dancer is already at the edge', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[{ ...clara, y: 1 }]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[{ ...clara, y: 1 }]} edit={edit} />);
     press('Clara', { key: 'ArrowDown' });
     expect(edit.onMove).not.toHaveBeenCalled();
   });
 
   test('keeps the page from scrolling when an arrow moves a dancer', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing(['cast-1'])} />);
     const pressed = fireEvent.keyDown(screen.getByRole('button', { name: 'Clara' }), {
       key: 'ArrowDown',
     });
@@ -305,51 +315,51 @@ describe('editing', () => {
   });
 
   test('gives no dancer a drag area when the plan is only shown', () => {
-    render(<Stage showGuides dancers={[clara]} />);
+    render(<Stage guides="lines" dancers={[clara]} />);
     expect(screen.queryByTestId('dancer-hit')).not.toBeInTheDocument();
   });
 
   test('selects a dancer when she is tapped', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 0, 0);
     expect(edit.onSelect).toHaveBeenLastCalledWith(['cast-1']);
   });
 
   test('replaces the selection with the dancer tapped', () => {
     const edit = editing(['cast-1', 'cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     dragBy(hitOf('Odile'), 0, 0);
     expect(edit.onSelect).toHaveBeenLastCalledWith(['cast-2']);
   });
 
   test('rings a selected dancer', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing(['cast-1'])} />);
     expect(screen.getByTestId('dancer')).toHaveClass(/selected/);
   });
 
   test('does not ring a dancer who is not selected', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     expect(screen.getByTestId('dancer')).not.toHaveClass(/selected/);
   });
 
   test('clears the selection when the floor is tapped', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(floor(), 0, 0);
     expect(edit.onSelect).toHaveBeenCalledWith([]);
   });
 
   test('selects every dancer inside a box drawn on the floor', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     boxFrom(floor(), { x: 0.2, y: 0.4 }, { x: 0.6, y: 0.6 });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1', 'cast-2']);
   });
 
   test('leaves out a dancer outside the box', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     boxFrom(floor(), { x: 0.4, y: 0.4 }, { x: 0.6, y: 0.6 });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
@@ -357,55 +367,55 @@ describe('editing', () => {
   test('selects a dancer in the wing with a box drawn there', () => {
     const edit = editing();
     const waiting = { ...clara, x: -0.0625, y: 0.05 };
-    render(<Stage showGuides dancers={[waiting]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[waiting]} edit={edit} />);
     boxFrom(floor(), { x: -0.1, y: 0 }, { x: 0, y: 0.1 });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('selects a box drawn from its bottom right corner', () => {
     const edit = editing();
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     boxFrom(floor(), { x: 0.6, y: 0.6 }, { x: 0.4, y: 0.4 });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('clears the selection with a box around nobody', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     boxFrom(floor(), { x: 0, y: 0 }, { x: 0.2, y: 0.2 });
     expect(edit.onSelect).toHaveBeenCalledWith([]);
   });
 
   test('draws the box while it is dragged', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     fireEvent.pointerDown(floor(), { pointerId: 1, ...client({ x: 0, y: 0 }) });
     fireEvent.pointerMove(floor(), { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
     expect(screen.getByTestId('selection-box')).toBeInTheDocument();
   });
 
   test('takes the box away once it is let go', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing()} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing()} />);
     boxFrom(floor(), { x: 0, y: 0 }, { x: 0.5, y: 0.5 });
     expect(screen.queryByTestId('selection-box')).not.toBeInTheDocument();
   });
 
   test('adds a dancer to the selection with Shift-click', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.pointerDown(hitOf('Odile'), { pointerId: 1, shiftKey: true });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1', 'cast-2']);
   });
 
   test('takes a dancer out of the selection with Shift-click', () => {
     const edit = editing(['cast-1', 'cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, shiftKey: true });
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-2']);
   });
 
   test('moves the whole selection when one of its dancers is dragged', () => {
     const edit = editing(['cast-1', 'cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     dragBy(hitOf('Odile'), 120, 0);
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 },
@@ -415,14 +425,14 @@ describe('editing', () => {
 
   test('snaps the dragged dancer onto a quarter line', () => {
     const edit = { ...editing(['cast-1']), snap: true };
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 276, 0);
     expect(edit.onMove).toHaveBeenCalledWith([{ castMemberId: 'cast-1', x: 0.75, y: 0.5 }]);
   });
 
   test('leaves the dragged dancer where she is dropped when snapping is off', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 276, 0);
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: expect.closeTo(0.73), y: 0.5 },
@@ -431,7 +441,7 @@ describe('editing', () => {
 
   test('does not snap a dancer dropped far from every guide', () => {
     const edit = { ...editing(['cast-1']), snap: true };
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 120, 0);
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: 0.5 },
@@ -440,7 +450,7 @@ describe('editing', () => {
 
   test('keeps the offsets of the rest of the group when snapping', () => {
     const edit = { ...editing(['cast-1', 'cast-2']), snap: true };
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     dragBy(hitOf('Clara'), 276, 0);
     expect(edit.onMove).toHaveBeenCalledWith([
       expect.objectContaining({ x: 0.75 }),
@@ -451,7 +461,7 @@ describe('editing', () => {
   test('stops the whole selection when one dancer reaches the edge', () => {
     const edit = editing(['cast-1', 'cast-2']);
     const front = { ...odile, y: 0.9 };
-    render(<Stage showGuides dancers={[clara, front]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, front]} edit={edit} />);
     dragBy(hitOf('Odile'), 0, 800);
     expect(edit.onMove).toHaveBeenCalledWith([
       expect.objectContaining({ y: expect.closeTo(0.6) }),
@@ -461,7 +471,7 @@ describe('editing', () => {
 
   test('moves a dragged dancer by the distance dragged', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 120, 80);
     expect(edit.onMove).toHaveBeenCalledWith([
       { castMemberId: 'cast-1', x: expect.closeTo(0.6), y: expect.closeTo(0.6) },
@@ -469,7 +479,7 @@ describe('editing', () => {
   });
 
   test('keeps the dancer under the finger while dragging', () => {
-    render(<Stage showGuides dancers={[clara]} edit={editing(['cast-1'])} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={editing(['cast-1'])} />);
     fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
     fireEvent.pointerMove(hitOf('Clara'), { pointerId: 1, clientX: 220, clientY: 100 });
     expect(parseFloat(screen.getByTestId('dancer').style.left)).toBeCloseTo(58);
@@ -477,35 +487,35 @@ describe('editing', () => {
 
   test('selects a dancer who was not selected before dragging her', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     dragBy(hitOf('Clara'), 120, 0);
     expect(edit.onSelect).toHaveBeenCalledWith(['cast-1']);
   });
 
   test('moves only the dragged dancer when she was not selected', () => {
     const edit = editing(['cast-2']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     dragBy(hitOf('Clara'), 120, 0);
     expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ castMemberId: 'cast-1' })]);
   });
 
   test('treats a press that barely moves as a tap', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 2, 2);
     expect(edit.onMove).not.toHaveBeenCalled();
   });
 
   test('stops a dancer at the downstage edge', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     dragBy(hitOf('Clara'), 0, 800);
     expect(edit.onMove).toHaveBeenCalledWith([expect.objectContaining({ y: 1 })]);
   });
 
   test('ignores a second finger while one dancer is dragged', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara, odile]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara, odile]} edit={edit} />);
     fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
     dragBy(hitOf('Odile'), 120, 0, 2);
     expect(edit.onMove).not.toHaveBeenCalled();
@@ -513,7 +523,7 @@ describe('editing', () => {
 
   test('moves nobody when the drag is cancelled', () => {
     const edit = editing(['cast-1']);
-    render(<Stage showGuides dancers={[clara]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[clara]} edit={edit} />);
     fireEvent.pointerDown(hitOf('Clara'), { pointerId: 1, clientX: 100, clientY: 100 });
     fireEvent.pointerMove(hitOf('Clara'), { pointerId: 1, clientX: 220, clientY: 100 });
     fireEvent.pointerCancel(hitOf('Clara'), { pointerId: 1 });
@@ -531,12 +541,12 @@ describe('paths', () => {
   }
 
   test('draws the path of a dancer who has one', () => {
-    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     expect(screen.getAllByTestId('path')).toHaveLength(1);
   });
 
   test('marks where she stood in the figure before', () => {
-    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     const start = screen.getByTestId('path-start');
     expect([Number(start.getAttribute('cx')), Number(start.getAttribute('cy'))]).toEqual([
       expect.closeTo(2.4),
@@ -545,37 +555,37 @@ describe('paths', () => {
   });
 
   test('stops the line short of her circle', () => {
-    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const { container } = render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     const [x] = linePoints(container).at(-1)!;
     expect(x).toBeLessThan(0.8 * STAGE_WIDTH_M - 0.2);
   });
 
   test('starts the line outside the circle where she stood', () => {
-    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const { container } = render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     const [x] = linePoints(container)[0]!;
     expect(x).toBeGreaterThan(0.2 * STAGE_WIDTH_M + 0.2);
   });
 
   test('ends the line in an arrowhead', () => {
-    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    const { container } = render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     expect(container.querySelector('polygon')).toBeInTheDocument();
   });
 
   test('bends the line through its point', () => {
     const bent = { ...fromLeft, points: [{ along: 0.5, side: 0.25 }] };
-    const { container } = render(<Stage showGuides dancers={[crossing]} paths={[bent]} />);
+    const { container } = render(<Stage guides="lines" dancers={[crossing]} paths={[bent]} />);
     const upstageMost = Math.min(...linePoints(container).map(([, y]) => y));
     expect(upstageMost).toBeCloseTo(0.5 * STAGE_DEPTH_M - 0.25 * 7.2, 1);
   });
 
   test('draws no path for a dancer who stays put', () => {
     const still = { ...fromLeft, from: { x: 0.8, y: 0.5 } };
-    render(<Stage showGuides dancers={[crossing]} paths={[still]} />);
+    render(<Stage guides="lines" dancers={[crossing]} paths={[still]} />);
     expect(screen.queryByTestId('path')).not.toBeInTheDocument();
   });
 
   test('draws no path for a dancer not on the plan', () => {
-    render(<Stage showGuides dancers={[]} paths={[fromLeft]} />);
+    render(<Stage guides="lines" dancers={[]} paths={[fromLeft]} />);
     expect(screen.queryByTestId('path')).not.toBeInTheDocument();
   });
 });
@@ -609,7 +619,7 @@ describe('bending a path', () => {
   function renderBending(edit = editing(), path = fromLeft) {
     render(
       <Stage
-        showGuides
+        guides="lines"
         dancers={[crossing, { ...clara, id: 'cast-2', x: 0.1 }]}
         paths={[path]}
         edit={edit}
@@ -652,7 +662,7 @@ describe('bending a path', () => {
   });
 
   test('offers no handle while the plan is only shown', () => {
-    render(<Stage showGuides dancers={[crossing]} paths={[fromLeft]} />);
+    render(<Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} />);
     expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
   });
 
@@ -666,7 +676,7 @@ describe('bending a path', () => {
 
   test('bends the line while the handle is dragged', () => {
     const { container } = render(
-      <Stage showGuides dancers={[crossing]} paths={[fromLeft]} edit={editing()} />,
+      <Stage guides="lines" dancers={[crossing]} paths={[fromLeft]} edit={editing()} />,
     );
     const handle = screen.getByTestId('path-handle');
     fireEvent.pointerDown(handle, { pointerId: 1, ...client({ x: 0.5, y: 0.5 }) });
@@ -773,7 +783,7 @@ describe('waypoints', () => {
       onBend: vi.fn(),
     };
     const path = { ...winding, points: through };
-    render(<Stage showGuides dancers={[crossing]} paths={[path]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[crossing]} paths={[path]} edit={edit} />);
     return edit;
   }
 
@@ -899,13 +909,13 @@ describe('circling paths', () => {
   }
 
   test('draws a circle around the other dancer back to the same spot', () => {
-    render(<Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />);
+    render(<Stage guides="lines" dancers={[claraBeside, bia]} paths={[circling]} />);
     expect(screen.getByTestId('path')).toBeInTheDocument();
   });
 
   test('passes on the far side of the dancer circled', () => {
     const { container } = render(
-      <Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />,
+      <Stage guides="lines" dancers={[claraBeside, bia]} paths={[circling]} />,
     );
     const leftMost = Math.min(...linePoints(container).map(([x]) => x));
     expect(leftMost).toBeCloseTo(0.5 * 12 - 2, 1);
@@ -913,7 +923,7 @@ describe('circling paths', () => {
 
   test('goes downstage first when circling clockwise from stage right', () => {
     const { container } = render(
-      <Stage showGuides dancers={[claraBeside, bia]} paths={[circling]} />,
+      <Stage guides="lines" dancers={[claraBeside, bia]} paths={[circling]} />,
     );
     const [, y] = linePoints(container)[3]!;
     expect(y).toBeGreaterThan(0.5 * 8);
@@ -921,7 +931,9 @@ describe('circling paths', () => {
 
   test('goes upstage first when circling counterclockwise', () => {
     const other = { ...circling, around: { ...aroundBia, clockwise: false } };
-    const { container } = render(<Stage showGuides dancers={[claraBeside, bia]} paths={[other]} />);
+    const { container } = render(
+      <Stage guides="lines" dancers={[claraBeside, bia]} paths={[other]} />,
+    );
     const [, y] = linePoints(container)[3]!;
     expect(y).toBeLessThan(0.5 * 8);
   });
@@ -936,12 +948,12 @@ describe('circling paths', () => {
       onBend: vi.fn(),
     };
     const away = { ...circling, from: { x: 0.1, y: 0.2 } };
-    render(<Stage showGuides dancers={[claraBeside, bia]} paths={[away]} edit={edit} />);
+    render(<Stage guides="lines" dancers={[claraBeside, bia]} paths={[away]} edit={edit} />);
     expect(screen.queryByTestId('path-handle')).not.toBeInTheDocument();
   });
 
   test('walks straight when the dancer circled is not on the plan', () => {
-    render(<Stage showGuides dancers={[claraBeside]} paths={[circling]} />);
+    render(<Stage guides="lines" dancers={[claraBeside]} paths={[circling]} />);
     expect(screen.queryByTestId('path')).not.toBeInTheDocument();
   });
 });
